@@ -249,22 +249,11 @@ async function initDatabase() {
     const senhaProdutor = bcrypt.hashSync('produtor123', 10);
 
     const usuariosSeed = [
-      ['Marina da Feira', 'admin@vitrineagro.local', senhaAdmin, null, 'Coordenação Central', 'admin', 'ativo'],
-      ['José Bento', 'jose@vitrineagro.local', senhaProdutor, null, 'Comunidade Boa Vista', 'produtor', 'ativo'],
-      ['Ana das Frutas', 'ana@vitrineagro.local', senhaProdutor, null, 'Sítio São Pedro', 'produtor', 'ativo'],
-      ['Cooperativa Serra Verde', 'serra@vitrineagro.local', senhaProdutor, null, 'Assentamento Horizonte', 'produtor', 'invisivel']
+      ['Marina da Feira', 'admin@vitrineagro.local', senhaAdmin, null, 'Coordenação Central', 'admin', 'ativo']
     ];
+
     for (const u of usuariosSeed) {
       await runAsync(`INSERT INTO usuarios (nome, email, senha, foto, comunidade, tipo_acesso, status) VALUES (?, ?, ?, ?, ?, ?, ?)`, u);
-    }
-
-    const produtosSeed = [
-      [2, 'Alface Crespa', 'Verduras'], [2, 'Queijo Frescal', 'Derivados'], [2, 'Cebolinha', 'Verduras'],
-      [3, 'Banana Prata', 'Frutas'], [3, 'Mamão Formosa', 'Frutas'], [3, 'Doce de Goiaba', 'Derivados'],
-      [4, 'Abóbora Cabotiá', 'Verduras']
-    ];
-    for (const p of produtosSeed) {
-      await runAsync('INSERT INTO produtos (produtor_id, nome, categoria) VALUES (?, ?, ?)', p);
     }
 
     const mensagensSeed = [
