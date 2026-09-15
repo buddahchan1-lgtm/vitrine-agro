@@ -240,7 +240,7 @@ async function initDatabase() {
   await addColumnIfMissingAsync('produtos', 'imagem', 'TEXT');
   await addColumnIfMissingAsync('usuarios', 'whatsapp', 'TEXT');
   await runAsync("UPDATE produtos SET criado_em = CURRENT_TIMESTAMP WHERE criado_em IS NULL");
-  await runAsync("UPDATE usuarios SET foto = NULL WHERE foto = 'https://via.placeholder.com/150'");
+  await runAsync("UPDATE usuarios SET foto = NULL");
   await runAsync("DELETE FROM tickets WHERE produtor_id NOT IN (SELECT id FROM usuarios)");
 
   const row = await dbGet('SELECT COUNT(*) AS total FROM usuarios');
@@ -249,10 +249,10 @@ async function initDatabase() {
     const senhaProdutor = bcrypt.hashSync('produtor123', 10);
 
     const usuariosSeed = [
-      ['Marina da Feira', 'admin@vitrineagro.local', senhaAdmin, 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80', 'Coordenação Central', 'admin', 'ativo'],
-      ['José Bento', 'jose@vitrineagro.local', senhaProdutor, 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&q=80', 'Comunidade Boa Vista', 'produtor', 'ativo'],
-      ['Ana das Frutas', 'ana@vitrineagro.local', senhaProdutor, 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=300&q=80', 'Sítio São Pedro', 'produtor', 'ativo'],
-      ['Cooperativa Serra Verde', 'serra@vitrineagro.local', senhaProdutor, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80', 'Assentamento Horizonte', 'produtor', 'invisivel']
+      ['Marina da Feira', 'admin@vitrineagro.local', senhaAdmin, null, 'Coordenação Central', 'admin', 'ativo'],
+      ['José Bento', 'jose@vitrineagro.local', senhaProdutor, null, 'Comunidade Boa Vista', 'produtor', 'ativo'],
+      ['Ana das Frutas', 'ana@vitrineagro.local', senhaProdutor, null, 'Sítio São Pedro', 'produtor', 'ativo'],
+      ['Cooperativa Serra Verde', 'serra@vitrineagro.local', senhaProdutor, null, 'Assentamento Horizonte', 'produtor', 'invisivel']
     ];
     for (const u of usuariosSeed) {
       await runAsync(`INSERT INTO usuarios (nome, email, senha, foto, comunidade, tipo_acesso, status) VALUES (?, ?, ?, ?, ?, ?, ?)`, u);
