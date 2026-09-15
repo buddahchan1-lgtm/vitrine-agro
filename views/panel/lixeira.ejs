@@ -1,0 +1,188 @@
+<%- include('../partials/head', { pageTitle }) %>
+
+<div class="min-h-screen bg-slate-50">
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Vitrine Agro</p>
+        <h1 class="text-lg font-bold text-slate-900">Lixeira de lançamentos</h1>
+      </div>
+      <a href="/painel/relatorio" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-agro-500 hover:text-agro-700">Voltar aos relatórios</a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <%- include('../partials/notice') %>
+
+    <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+      <% if (lixeira.length) { %>
+        <form action="/painel/tickets/restaurar-lote" method="POST" id="formRestaurarLote" class="select-none">
+          <div id="inputsSelecionadosLixeira"></div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 select-none cursor-pointer">
+              <input type="checkbox" id="marcarTodosLixeira" class="h-4 w-4 rounded border-slate-300 text-agro-600" />
+              Selecionar todos
+            </label>
+            <p class="text-xs text-slate-400">Clique para selecionar (Ctrl/Cmd+clique acumula) · Delete restaura</p>
+            <div class="flex gap-2">
+              <button type="submit" id="btnRestaurarLote" disabled
+                class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40">
+                ↩️ Restaurar selecionados (<span id="contadorSelecionadosLixeira">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-3 space-y-2" id="listaLixeira">
+            <% lixeira.forEach((l) => { %>
+              <div class="lixeira-row flex items-center gap-3 rounded-2xl border border-transparent bg-slate-50 px-4 py-3 cursor-pointer transition hover:bg-slate-100" data-id="<%= l.id %>">
+                <span class="flex-1 font-semibold text-slate-900"><%= l.produtor_nome %></span>
+                <span class="text-sm text-slate-600"><%= new Date(l.data_feira + 'T00:00:00').toLocaleDateString('pt-BR') %></span>
+                <span class="text-sm text-slate-600"><%= l.quantidade %> tickets</span>
+                <span class="font-semibold text-agro-700">R$ <%= (l.quantidade * l.valor_unitario).toFixed(2) %></span>
+                <span class="text-xs text-slate-400">excluído em <%= new Date(l.excluido_em).toLocaleDateString('pt-BR') %></span>
+              </div>
+            <% }) %>
+          </div>
+        </form>
+
+                <form action="/painel/lixeira/esvaziar" method="POST" class="mt-4" id="formEsvaziarLixeira">
+          <button type="submit" class="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100">
+            Esvaziar lixeira
+          </button>
+        </form>
+            <% } else { %>
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">A lixeira está vazia.</div>
+      <% } %>
+    </section>
+  </main>
+</div>
+
+<!-- Modal de confirmação genérico -->
+<div id="modalConfirmarAcao" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900" id="confirmarAcaoTitulo">Confirmar ação</h3>
+    <p class="mt-2 text-sm text-slate-600" id="confirmarAcaoTexto"></p>
+    <div class="flex items-center justify-end gap-3 pt-5">
+      <button type="button" id="btnConfirmarAcaoCancelar" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+      <button type="button" id="btnConfirmarAcaoOk" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmarAcao(mensagem, aoConfirmar) {
+    const modal = document.getElementById('modalConfirmarAcao');
+    const texto = document.getElementById('confirmarAcaoTexto');
+    const btnOk = document.getElementById('btnConfirmarAcaoOk');
+    const btnCancelar = document.getElementById('btnConfirmarAcaoCancelar');
+    if (!modal) { aoConfirmar(); return; }
+
+    texto.textContent = mensagem;
+    modal.classList.remove('hidden');
+
+    function limpar() {
+      modal.classList.add('hidden');
+      btnOk.removeEventListener('click', onOk);
+      btnCancelar.removeEventListener('click', onCancelar);
+    }
+    function onOk() { limpar(); aoConfirmar(); }
+    function onCancelar() { limpar(); }
+
+    btnOk.addEventListener('click', onOk);
+    btnCancelar.addEventListener('click', onCancelar);
+  }
+</script>
+
+<script>
+  (function () {
+    const form = document.getElementById('formRestaurarLote');
+    if (!form) return;
+
+    const linhas = Array.from(document.querySelectorAll('.lixeira-row'));
+    const marcarTodos = document.getElementById('marcarTodosLixeira');
+    const btnRestaurar = document.getElementById('btnRestaurarLote');
+    const contador = document.getElementById('contadorSelecionadosLixeira');
+    const inputsContainer = document.getElementById('inputsSelecionadosLixeira');
+    const listaEl = document.getElementById('listaLixeira');
+
+    const selecionados = new Set();
+
+    function atualizarUI() {
+      linhas.forEach((row) => {
+        const sel = selecionados.has(row.dataset.id);
+        row.classList.toggle('bg-agro-100', sel);
+        row.classList.toggle('border-agro-400', sel);
+      });
+      if (contador) contador.textContent = selecionados.size;
+      if (btnRestaurar) btnRestaurar.disabled = selecionados.size === 0;
+      if (marcarTodos) marcarTodos.checked = linhas.length > 0 && selecionados.size === linhas.length;
+    }
+
+    // Clique simples em qualquer linha liga/desliga a seleção (mesmo padrão da tela de Relatórios)
+    listaEl.addEventListener('click', (e) => {
+      const row = e.target.closest('.lixeira-row');
+      if (!row) return;
+      const id = row.dataset.id;
+      if (selecionados.has(id)) selecionados.delete(id);
+      else selecionados.add(id);
+      atualizarUI();
+    });
+
+    if (marcarTodos) {
+      marcarTodos.addEventListener('change', () => {
+        if (marcarTodos.checked) linhas.forEach((row) => selecionados.add(row.dataset.id));
+        else selecionados.clear();
+        atualizarUI();
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const alvoEhCampo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+      if (alvoEhCampo) return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selecionados.size > 0) {
+        e.preventDefault();
+        form.requestSubmit ? form.requestSubmit() : form.submit();
+      }
+      if (e.key === 'Escape') {
+        selecionados.clear();
+        atualizarUI();
+      }
+    });
+
+        form.addEventListener('submit', (e) => {
+      if (!form.dataset.confirmado) {
+        e.preventDefault();
+        confirmarAcao('Restaurar os lançamentos selecionados?', () => {
+          form.dataset.confirmado = '1';
+          form.requestSubmit ? form.requestSubmit() : form.submit();
+        });
+        return;
+      }
+      delete form.dataset.confirmado;
+      inputsContainer.innerHTML = '';
+      selecionados.forEach((id) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids';
+        input.value = id;
+        inputsContainer.appendChild(input);
+      });
+    });
+
+    atualizarUI();
+
+    const formEsvaziar = document.getElementById('formEsvaziarLixeira');
+    if (formEsvaziar) {
+      formEsvaziar.addEventListener('submit', (e) => {
+        if (!formEsvaziar.dataset.confirmado) {
+          e.preventDefault();
+          confirmarAcao('Isso apaga tudo da lixeira PERMANENTEMENTE, sem volta. Continuar?', () => {
+            formEsvaziar.dataset.confirmado = '1';
+            formEsvaziar.requestSubmit ? formEsvaziar.requestSubmit() : formEsvaziar.submit();
+          });
+        }
+      });
+    }
+  })();
+</script>

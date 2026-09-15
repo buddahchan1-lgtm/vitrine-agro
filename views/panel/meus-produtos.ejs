@@ -1,0 +1,757 @@
+<%- include('../partials/head', { pageTitle }) %>
+<%- include('../partials/panel-header') %>
+
+      <div class="space-y-6">
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Meu catálogo da semana</p>
+          <h2 class="mt-1 text-2xl font-bold text-slate-900">Gerencie seus produtos e sua visibilidade</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Adicione, edite ou remova os produtos que estarão disponíveis na feira. O status invisível remove sua linha da vitrine pública sem apagar o cadastro.</p>
+        </div>
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+              <img src="<%= produtor.foto %>" alt="<%= produtor.nome %>" class="h-20 w-20 rounded-full border-4 border-emerald-100 object-cover" />
+              <div>
+                <h3 class="text-2xl font-bold text-slate-900"><%= produtor.nome %></h3>
+                <p class="text-sm text-slate-600"><%= produtor.comunidade %></p>
+                <p class="text-xs uppercase tracking-[0.16em] text-slate-500">Conta do produtor</p>
+              </div>
+            </div>
+
+             <form action="/painel/status" method="POST" class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <input type="hidden" name="usuario_id" value="<%= produtor.id %>" />
+              <input type="hidden" name="status" value="<%= produtor.status === 'ativo' ? 'invisivel' : 'ativo' %>" />
+              <input type="hidden" name="voltar_para" value="/painel/produtos" />
+              <span class="text-sm font-medium text-slate-600">Status na Vitrine</span>
+              <button type="submit" class="toggle-pill <%= produtor.status === 'ativo' ? 'on' : 'off' %>">
+                <span class="toggle-label"><%= produtor.status === 'ativo' ? 'Ativo' : 'Invisível' %></span>
+                <span class="toggle-dot"></span>
+              </button>
+            </form>
+          </div>
+
+          <div class="mt-6 flex gap-2 rounded-2xl bg-slate-100 p-1.5">
+            <button type="button" id="tabBtnCadastro" class="modo-tab-btn flex-1 rounded-xl px-4 py-3 text-sm font-bold transition hover:ring-1 hover:ring-agro-700/40">Oferta da Semana</button>
+            <button type="button" id="tabBtnFechamento" class="modo-tab-btn flex-1 rounded-xl px-4 py-3 text-sm font-bold transition hover:ring-1 hover:ring-agro-700/40">Fechamento da Feira</button>
+          </div>
+
+          <div id="tabCadastro">
+           <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <h4 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Adicionar produto da semana</h4>
+              <form action="/painel/produtos" method="POST" class="mt-4 grid gap-3 md:grid-cols-[64px_1fr_140px_120px_auto] md:items-center">
+              <input type="hidden" name="produtor_id" value="<%= produtor.id %>" />
+
+              <div class="relative">
+                <input type="hidden" name="imagem" class="produto-imagem-valor" value="" />
+                <button type="button" class="produto-foto-btn flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-white text-slate-400 transition hover:border-agro-500 hover:text-agro-600" title="Adicionar foto do produto">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </button>
+                <input type="file" accept="image/*" class="produto-foto-input hidden" />
+              </div>
+
+              <input name="nome" required placeholder="Ex: Alface Crespa" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-agro-500" />
+                <div class="categoria-dropdown relative">
+                <input type="hidden" name="categoria" class="categoria-dropdown-valor" value="" />
+                <button type="button" class="categoria-dropdown-btn flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-slate-400 outline-none transition hover:border-agro-500 focus:border-agro-500">
+                  <span class="categoria-dropdown-label truncate">Classe...</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="categoria-tooltip-erro hidden absolute left-0 top-full z-30 mt-2 flex items-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
+                  <span class="absolute -top-1.5 left-4 h-3 w-3 rotate-45 border-l border-t border-slate-300 bg-white"></span>
+                  <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-600 text-[10px] font-bold text-white">!</span>
+                  Escolha uma Classe.
+                </div>
+                <div class="categoria-dropdown-menu hidden absolute left-0 top-full z-20 mt-2 w-56 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                  <% categorias.forEach((categoria) => { %>
+                    <button type="button" data-categoria="<%= categoria %>" class="categoria-dropdown-opcao flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                      <%= categoria %>
+                    </button>
+                  <% }) %>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="number" name="quantidade_valor" min="0" step="0.01" placeholder="Ex: 20" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 outline-none focus:border-agro-500" />
+                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
+              </div>
+              <button type="submit" class="rounded-2xl bg-agro-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Adicionar produto</button>
+            </form>
+          </div>
+
+           <div class="mt-6 space-y-3">
+            <% if (produtos.length) { %>
+              <% produtos.forEach((produto) => { %>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <form action="/painel/produtos/<%= produto.id %>/editar" method="POST" class="grid gap-3 lg:grid-cols-[56px_1fr_140px_120px_auto_auto] lg:items-center">
+                    <div class="relative">
+                      <input type="hidden" name="imagem" class="produto-imagem-valor" value="<%= produto.imagem || '' %>" />
+                      <button type="button" class="produto-foto-btn flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-2 <%= produto.imagem ? 'border-slate-200' : 'border-dashed border-slate-300' %> bg-slate-50 text-slate-400 transition hover:border-agro-500 hover:text-agro-600" title="Alterar foto do produto">
+                        <% if (produto.imagem) { %>
+                          <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="h-full w-full object-cover" />
+                        <% } else { %>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <% } %>
+                      </button>
+                      <input type="file" accept="image/*" class="produto-foto-input hidden" />
+                    </div>
+                    <input name="nome" value="<%= produto.nome %>" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+                    <div class="categoria-dropdown relative">
+                      <input type="hidden" name="categoria" class="categoria-dropdown-valor" value="<%= produto.categoria %>" />
+                      <button type="button" class="categoria-dropdown-btn flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500 focus:border-agro-500 focus:bg-white">
+                        <span class="categoria-dropdown-label truncate"><%= produto.categoria %></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <div class="categoria-dropdown-menu hidden absolute left-0 top-full z-20 mt-2 w-56 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                        <% categorias.forEach((categoria) => { %>
+                          <button type="button" data-categoria="<%= categoria %>" class="categoria-dropdown-opcao flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50 <%= produto.categoria === categoria ? 'bg-agro-50 text-agro-700' : '' %>">
+                            <%= categoria %>
+                          </button>
+                        <% }) %>
+                      </div>
+                    </div>
+                    <div class="relative">
+                      <input type="number" name="quantidade_valor" min="0" step="0.01" value="<%= produto.quantidade_valor != null ? produto.quantidade_valor : '' %>" placeholder="Ex: 20" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-10 outline-none focus:border-agro-500 focus:bg-white" />
+                      <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
+                    </div>
+                    <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Salvar</button>
+                    <button formaction="/painel/produtos/<%= produto.id %>/excluir" formmethod="POST" type="submit" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">Apagar</button>
+                  </form>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">Nenhum produto cadastrado ainda. Adicione seu primeiro item acima.</div>
+            <% } %>
+          </div>
+          </div>
+
+          <div id="tabFechamento" class="hidden mt-6">
+            <% const comMeta = produtos.filter(p => p.quantidade_valor !== null && p.quantidade_valor !== undefined); %>
+            <% const totalFechados = comMeta.filter(p => p.baixa_em).length; %>
+           <div class="flex items-center justify-between gap-3">
+              <div id="progressoFechamento" class="flex-1 rounded-2xl px-4 py-3 text-sm font-semibold <%= (comMeta.length && totalFechados === comMeta.length) ? 'bg-emerald-50 text-emerald-800' : 'bg-slate-50 text-slate-700' %>">
+                <%= (comMeta.length && totalFechados === comMeta.length) ? '✓ Fechamento da feira concluído com sucesso.' : (comMeta.length ? totalFechados + ' de ' + comMeta.length + ' produtos fechados.' : '') %>
+              </div>
+                  <button type="button" id="btnMarcarTodosVendidos" class="shrink-0 rounded-lg border border-emerald-600 bg-transparent px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 hover:ring-1 hover:ring-agro-700/40 <%= (comMeta.length && totalFechados === comMeta.length) ? 'hidden' : '' %>">Marcar todos vendidos</button>
+            </div>
+
+            <% if (!comMeta.length) { %>
+              <div class="mt-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">Nenhum produto com quantidade cadastrada essa semana.</div>
+            <% } %>
+
+               <div class="mt-3 space-y-2">
+              <% comMeta.forEach((produto) => { %>
+                <div class="group rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition hover:border-slate-300 hover:shadow-sm" data-baixa-produto="<%= produto.id %>" data-sobra="<%= produto.baixa_em ? (produto.quantidade_sobra || 0) : '' %>">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+
+                    <div class="flex items-center gap-3 min-w-0">
+                      <span data-status-dot class="h-2.5 w-2.5 shrink-0 rounded-full <%= produto.baixa_em ? 'bg-emerald-500' : 'bg-slate-300' %>"></span>
+                      <div class="min-w-0">
+                        <h4 class="truncate text-sm font-bold text-slate-900"><%= produto.nome %></h4>
+                        <p class="text-xs font-medium text-slate-500">Levou <%= produto.quantidade_valor %> <%= produto.unidade || 'kg' %></p>
+                      </div>
+                    </div>
+
+                    <div data-baixa-status class="flex items-center gap-3 <%= produto.baixa_em ? '' : 'hidden' %>">
+                      <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                        <%= (produto.quantidade_valor || 0) - (produto.quantidade_sobra || 0) %> <%= produto.unidade || '' %> vendido<% if (produto.quantidade_sobra > 0) { %> · <%= produto.quantidade_sobra %> <%= produto.unidade || '' %> sobra<% } %>
+                      </span>
+                      <button type="button" data-action="refazer" class="btn-refazer-fechamento rounded-full px-2 py-1 text-xs font-semibold text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">Alterar</button>
+                    </div>
+
+                    <div data-baixa-form class="flex flex-wrap items-center gap-2 <%= produto.baixa_em ? 'hidden' : '' %>" data-quantidade-total="<%= produto.quantidade_valor %>">
+                      <button type="button" data-action="vendi-tudo" class="rounded-full border border-emerald-600 px-3.5 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-600 hover:text-white">Vendi tudo</button>
+                      <button type="button" data-action="metade" class="rounded-full border border-slate-300 px-3.5 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-100">Sobrou metade</button>
+
+                      <div class="flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5">
+                        <button type="button" data-action="sobra-menos" class="flex h-7 w-7 items-center justify-center rounded-full font-bold text-slate-500 transition hover:bg-white hover:text-slate-900">−</button>
+                        <input type="number" min="0" step="0.01" value="0" class="input-sobra h-7 w-14 bg-transparent text-center text-sm font-semibold text-slate-900 outline-none" />
+                        <span class="pr-1.5 text-[10px] font-medium text-slate-400"><%= produto.unidade || 'kg' %></span>
+                        <button type="button" data-action="sobra-mais" class="flex h-7 w-7 items-center justify-center rounded-full font-bold text-slate-500 transition hover:bg-white hover:text-slate-900">+</button>
+                      </div>
+
+                      <button type="button" data-action="confirmar-sobra" class="rounded-full bg-agro-600 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-agro-700">Confirmar</button>
+                    </div>
+
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+
+          <script>
+          (function () {
+            'use strict';
+
+            const tabBtnCadastro = document.getElementById('tabBtnCadastro');
+            const tabBtnFechamento = document.getElementById('tabBtnFechamento');
+            const tabCadastro = document.getElementById('tabCadastro');
+            const tabFechamento = document.getElementById('tabFechamento');
+
+            // ===== SISTEMA DE MODAL PRÓPRIO ===========================================
+            // Motivo: o modal antigo em panel-footer.ejs (confirmModal / customAlertModal)
+            // prende os listeners desde o carregamento da página, o que faz o "Confirmar"
+            // precisar de 2 cliques. Aqui clonamos o botão a cada abertura + usamos
+            // { once: true } para garantir que cada clique dispara e se autodestrói.
+            function obterModalUnico() {
+              let backdrop = document.getElementById('vaModalBackdrop');
+              if (backdrop) return backdrop;
+              backdrop = document.createElement('div');
+              backdrop.id = 'vaModalBackdrop';
+              backdrop.className = 'hidden fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4';
+              backdrop.innerHTML =
+                '<div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl text-center text-slate-900 border border-slate-200 space-y-4">' +
+                  '<h4 id="vaModalTitulo" class="text-base font-bold text-slate-900"></h4>' +
+                  '<p id="vaModalMensagem" class="whitespace-pre-line text-sm leading-relaxed text-slate-600"></p>' +
+                  '<div id="vaModalBotoesConfirmar" class="hidden gap-3 pt-2">' +
+                    '<button type="button" data-va="cancelar" class="flex-1 rounded-2xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50">Cancelar</button>' +
+                    '<button type="button" data-va="confirmar" class="flex-1 rounded-2xl bg-agro-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-agro-700">Confirmar</button>' +
+                  '</div>' +
+                  '<div id="vaModalBotoesAviso" class="hidden pt-2">' +
+                    '<button type="button" data-va="fechar" class="w-full rounded-2xl bg-agro-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-agro-700">OK</button>' +
+                  '</div>' +
+                '</div>';
+              document.body.appendChild(backdrop);
+              // Clique no fundo escuro (não no conteúdo) também fecha o modal.
+              backdrop.addEventListener('click', function (e) {
+                if (e.target === backdrop) backdrop.classList.add('hidden');
+              });
+              return backdrop;
+            }
+
+            function vaMostrarAviso(titulo, mensagem) {
+              const backdrop = obterModalUnico();
+              document.getElementById('vaModalTitulo').textContent = titulo || 'Aviso';
+              document.getElementById('vaModalMensagem').textContent = mensagem || '';
+              document.getElementById('vaModalBotoesConfirmar').classList.add('hidden');
+              document.getElementById('vaModalBotoesAviso').classList.remove('hidden');
+              backdrop.classList.remove('hidden');
+              // Clona para descartar QUALQUER listener antigo grudado no botão "OK".
+              const btnFechar = backdrop.querySelector('[data-va="fechar"]');
+              const novoFechar = btnFechar.cloneNode(true);
+              btnFechar.replaceWith(novoFechar);
+              novoFechar.addEventListener('click', function () {
+                backdrop.classList.add('hidden');
+              }, { once: true });
+            }
+
+            function vaMostrarConfirmacao(titulo, mensagem, aoConfirmar) {
+              const backdrop = obterModalUnico();
+              document.getElementById('vaModalTitulo').textContent = titulo || 'Confirmar';
+              document.getElementById('vaModalMensagem').textContent = mensagem || '';
+              document.getElementById('vaModalBotoesAviso').classList.add('hidden');
+              document.getElementById('vaModalBotoesConfirmar').classList.remove('hidden');
+              backdrop.classList.remove('hidden');
+              // Clonar os DOIS botões é o segredo que zera listeners antigos e
+              // obriga o "Confirmar" a disparar já no primeiro clique.
+              const btnOk = backdrop.querySelector('[data-va="confirmar"]');
+              const btnCancelar = backdrop.querySelector('[data-va="cancelar"]');
+              const novoOk = btnOk.cloneNode(true);
+              const novoCancelar = btnCancelar.cloneNode(true);
+              btnOk.replaceWith(novoOk);
+              btnCancelar.replaceWith(novoCancelar);
+              novoCancelar.addEventListener('click', function () {
+                backdrop.classList.add('hidden');
+              }, { once: true });
+              novoOk.addEventListener('click', function () {
+                backdrop.classList.add('hidden');
+                if (typeof aoConfirmar === 'function') aoConfirmar();
+              }, { once: true });
+            }
+
+            // ===== ABAS ==============================================================
+            function ativarModo(modo) {
+              const ehFechamento = modo === 'fechamento';
+              tabCadastro.classList.toggle('hidden', ehFechamento);
+              tabFechamento.classList.toggle('hidden', !ehFechamento);
+              [tabBtnCadastro, tabBtnFechamento].forEach(function (b) {
+                const ativo = (b === tabBtnFechamento) === ehFechamento;
+                b.classList.toggle('bg-white', ativo);
+                b.classList.toggle('shadow-sm', ativo);
+                b.classList.toggle('text-agro-700', ativo);
+                b.classList.toggle('text-slate-500', !ativo);
+              });
+              try { localStorage.setItem('vitrineAgroAbaProdutos', modo); } catch (e) {}
+            }
+
+            if (tabBtnCadastro && tabBtnFechamento && tabCadastro && tabFechamento) {
+              tabBtnCadastro.addEventListener('click', function () { ativarModo('cadastro'); });
+              tabBtnFechamento.addEventListener('click', function () { ativarModo('fechamento'); });
+              let abaSalva = 'cadastro';
+              try { abaSalva = localStorage.getItem('vitrineAgroAbaProdutos') || 'cadastro'; } catch (e) {}
+              ativarModo(abaSalva);
+            }
+
+            // ===== PROGRESSO =========================================================
+            function atualizarProgresso() {
+              const boxes = document.querySelectorAll('[data-baixa-produto]');
+              const total = boxes.length;
+              const el = document.getElementById('progressoFechamento');
+              const btnTodos = document.getElementById('btnMarcarTodosVendidos');
+              if (!total) return;
+              let feitos = 0;
+              boxes.forEach(function (box) {
+                if (!box.querySelector('[data-baixa-status]').classList.contains('hidden')) feitos++;
+              });
+              const concluido = feitos === total;
+              el.textContent = concluido
+                ? '✓ Fechamento da feira concluído com sucesso.'
+                : (feitos + ' de ' + total + ' produtos fechados.');
+              el.classList.toggle('bg-emerald-50', concluido);
+              el.classList.toggle('text-emerald-800', concluido);
+              el.classList.toggle('bg-slate-50', !concluido);
+              el.classList.toggle('text-slate-700', !concluido);
+              if (btnTodos) btnTodos.classList.toggle('hidden', concluido);
+            }
+
+            // Trava todos os botões da linha, evitando duplo clique / clique concorrente.
+            function travarLinha(box, travar) {
+              box.querySelectorAll('button[data-action]').forEach(function (b) {
+                b.disabled = travar;
+              });
+            }
+
+            // Requisição com timeout, pra nunca mais travar em "Salvando..." pra sempre.
+            async function fetchComTimeout(url, options, timeoutMs) {
+              const controller = new AbortController();
+              const timer = setTimeout(function () { controller.abort(); }, timeoutMs || 15000);
+              try {
+                return await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+              } finally {
+                clearTimeout(timer);
+              }
+            }
+
+            // Detecta a mensagem de "já foi registrado hoje" vinda do backend.
+            // Tratamos isso como sucesso (idempotente), não como erro.
+            function eDuplicidadeJaFechada(data) {
+              const msg = ((data && data.message) || '').toLowerCase();
+              return msg.includes('já foi registrado');
+            }
+
+            // Marca visualmente a linha como fechada — usada no clique individual,
+            // no "Marcar todos vendidos" e no caso de duplicidade.
+            function marcarLinhaComoFechada(box, vendidoValor, sobraValor, unidade) {
+              const statusBox = box.querySelector('[data-baixa-status]');
+              const formBox = box.querySelector('[data-baixa-form]');
+              const dot = box.querySelector('[data-status-dot]');
+              const badge = statusBox.querySelector('span');
+
+              if (badge) {
+                badge.textContent = (sobraValor > 0)
+                  ? vendidoValor + ' ' + unidade + ' vendido · ' + sobraValor + ' ' + unidade + ' sobra'
+                  : vendidoValor + ' ' + unidade + ' vendido';
+              }
+              if (dot) {
+                dot.classList.remove('bg-slate-300');
+                dot.classList.add('bg-emerald-500');
+              }
+                statusBox.classList.remove('hidden');
+              formBox.classList.add('hidden');
+              box.dataset.reaberto = '0';
+              box.dataset.sobra = sobraValor;
+            }
+
+            // ===== CLIQUE NAS LINHAS (Vendi tudo / Sobra / Confirmar / Refazer) =====
+            document.addEventListener('click', async function (ev) {
+              const btn = ev.target.closest('[data-baixa-produto] [data-action]');
+              if (!btn) return;
+
+              const box = btn.closest('[data-baixa-produto]');
+              if (!box) return;
+
+              // Se essa linha já está processando algo, ignora qualquer novo clique nela.
+              if (box.dataset.processando === '1') return;
+
+              const produtoId = String(box.dataset.baixaProduto || '').trim();
+              if (!produtoId || produtoId === 'undefined' || produtoId === 'null') return;
+
+              const statusBox = box.querySelector('[data-baixa-status]');
+              const formBox = box.querySelector('[data-baixa-form]');
+              const inputSobra = formBox && formBox.querySelector('.input-sobra');
+              const total = formBox ? Number(formBox.dataset.quantidadeTotal || 0) : 0;
+              const acao = btn.dataset.action;
+
+              if (acao === 'metade' && inputSobra) {
+                inputSobra.value = (total / 2).toFixed(2);
+                return;
+              }
+              if (acao === 'sobra-menos' && inputSobra) {
+                const atual = Number(inputSobra.value) || 0;
+                inputSobra.value = Math.max(0, atual - 1);
+                return;
+              }
+              if (acao === 'sobra-mais' && inputSobra) {
+                const atual = Number(inputSobra.value) || 0;
+                inputSobra.value = total ? Math.min(total, atual + 1) : atual + 1;
+                return;
+              }
+
+              if (acao === 'refazer' && statusBox && formBox) {
+                box.dataset.processando = '1';
+                travarLinha(box, true);
+                btn.textContent = 'Reabrindo...';
+                try {
+                  const resp = await fetchComTimeout('/painel/produtos/' + produtoId + '/reabrir', { method: 'POST' }, 15000);
+                  const data = await resp.json().catch(function () { return {}; });
+                  if (!resp.ok || data.success === false) {
+                    vaMostrarAviso('Não foi possível reabrir', (data && data.message) || 'Tente novamente em alguns instantes.');
+                    return;
+                  }
+                  box.dataset.reaberto = '1';
+                  statusBox.classList.add('hidden');
+                  formBox.classList.remove('hidden');
+                  const dot = box.querySelector('[data-status-dot]');
+                  if (dot) { dot.classList.remove('bg-emerald-500'); dot.classList.add('bg-slate-300'); }
+                  atualizarProgresso();
+                } catch (e) {
+                  vaMostrarAviso('Erro de conexão', 'Não foi possível reabrir o fechamento.');
+                } finally {
+                  travarLinha(box, false);
+                  btn.textContent = 'Alterar';
+                  box.dataset.processando = '0';
+                }
+                return;
+              }
+
+              if (acao !== 'vendi-tudo' && acao !== 'confirmar-sobra') return;
+
+              let modo = '';
+              let sobra;
+              if (acao === 'vendi-tudo') {
+                modo = 'vendeu_tudo';
+              } else {
+                const valor = (inputSobra && inputSobra.value || '').trim();
+                if (valor === '') {
+                  vaMostrarAviso('Atenção', 'Informe a quantidade que sobrou antes de confirmar.');
+                  return;
+                }
+                modo = 'sobra';
+                sobra = valor;
+              }
+
+              box.dataset.processando = '1';
+              travarLinha(box, true);
+              const textoOriginal = btn.textContent;
+              btn.textContent = 'Salvando...';
+
+              try {
+                const params = new URLSearchParams();
+                params.set('modo', modo);
+                if (sobra !== undefined) params.set('sobra', sobra);
+                const resp = await fetchComTimeout('/painel/produtos/' + produtoId + '/baixa', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: params.toString()
+                }, 15000);
+                const data = await resp.json().catch(function () { return {}; });
+
+                const sucesso = resp.ok && data.success;
+                const duplicidadeJaFechada = !sucesso && eDuplicidadeJaFechada(data);
+
+                if (!sucesso && !duplicidadeJaFechada) {
+                  vaMostrarAviso('Não foi possível fechar', (data && data.message) || 'Tente novamente em alguns instantes.');
+                  return;
+                }
+
+                const unidade = (formBox && formBox.querySelector('.input-sobra ~ span'))
+                  ? formBox.querySelector('.input-sobra ~ span').textContent.trim() || 'kg'
+                  : 'kg';
+                const sobraValor = (modo === 'vendeu_tudo') ? 0 : Number(sobra || 0);
+                const vendidoValor = total - sobraValor;
+                marcarLinhaComoFechada(box, vendidoValor, sobraValor, unidade);
+                atualizarProgresso();
+              } catch (e) {
+                vaMostrarAviso('Erro de conexão', 'Não foi possível registrar o fechamento.');
+              } finally {
+                travarLinha(box, false);
+                btn.textContent = textoOriginal;
+                box.dataset.processando = '0';
+              }
+            });
+
+            // ===== "MARCAR TODOS VENDIDOS" =========================================
+            const btnMarcarTodosVendidos = document.getElementById('btnMarcarTodosVendidos');
+
+               async function processarMarcarTodosVendidos() {
+              if (!btnMarcarTodosVendidos) return;
+              if (btnMarcarTodosVendidos.dataset.busy === '1') return;
+
+              btnMarcarTodosVendidos.dataset.busy = '1';
+              btnMarcarTodosVendidos.disabled = true;
+              btnMarcarTodosVendidos.dataset.textoOriginal = btnMarcarTodosVendidos.textContent;
+              btnMarcarTodosVendidos.textContent = 'Processando...';
+
+              try {
+                await new Promise(function (resolve) { setTimeout(resolve, 0); });
+
+                const todasAsLinhas = Array.from(document.querySelectorAll('[data-baixa-produto]'));
+
+                // Já estava 100% vendido (fechado e sobra = 0) -> não mexe, só avisa no final
+                const jaVendidoTudo = [];
+                // Precisa ser marcado agora: pendente OU fechado-com-sobra (inclusive reaberto)
+                const aMarcar = [];
+
+                todasAsLinhas.forEach(function (box) {
+                  if (box.dataset.processando === '1') return;
+                  const statusBox = box.querySelector('[data-baixa-status]');
+                  const fechado = statusBox && !statusBox.classList.contains('hidden');
+                  const sobraAtual = Number(box.dataset.sobra || 0);
+
+                  if (fechado && sobraAtual === 0) {
+                    const nome = box.querySelector('h4') ? box.querySelector('h4').textContent.trim() : '';
+                    if (nome) jaVendidoTudo.push(nome);
+                  } else {
+                    aMarcar.push(box);
+                  }
+                });
+
+                if (!aMarcar.length) {
+                  atualizarProgresso();
+                  if (jaVendidoTudo.length) {
+                    vaMostrarAviso(
+                      'Tudo certo',
+                      jaVendidoTudo.join(', ') + (jaVendidoTudo.length > 1 ? ' já estavam' : ' já estava') + ' como vendido tudo.'
+                    );
+                  }
+                  return;
+                }
+
+                const falhas = [];
+                for (const box of aMarcar) {
+                  const produtoId = String(box.dataset.baixaProduto || '').trim();
+                  const nomeProduto = box.querySelector('h4') ? box.querySelector('h4').textContent.trim() : produtoId;
+                  const formBox = box.querySelector('[data-baixa-form]');
+                  const total = formBox ? Number(formBox.dataset.quantidadeTotal || 0) : 0;
+
+                  if (!produtoId) { falhas.push(nomeProduto || 'produto sem ID'); continue; }
+
+                  box.dataset.processando = '1';
+                  try {
+                    const resp = await fetchComTimeout('/painel/produtos/' + produtoId + '/baixa', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      body: new URLSearchParams({ modo: 'vendeu_tudo' }).toString()
+                    }, 15000);
+                    const data = await resp.json().catch(function () { return {}; });
+
+                    const sucesso = resp.ok && data.success;
+                    const duplicidadeJaFechada = !sucesso && eDuplicidadeJaFechada(data);
+
+                    if (!sucesso && !duplicidadeJaFechada) {
+                      falhas.push(nomeProduto + ((data && data.message) ? ' (' + data.message + ')' : ''));
+                    } else {
+                      marcarLinhaComoFechada(box, total, 0, 'kg');
+                    }
+                  } catch (e) {
+                    falhas.push(nomeProduto + ' (falha de conexão)');
+                  } finally {
+                    box.dataset.processando = '0';
+                  }
+                }
+
+                atualizarProgresso();
+
+                const partesAviso = [];
+                if (falhas.length) partesAviso.push('Alguns não puderam ser fechados:\n' + falhas.join('\n'));
+                if (jaVendidoTudo.length) {
+                  partesAviso.push(
+                    jaVendidoTudo.join(', ') + (jaVendidoTudo.length > 1 ? ' já estavam' : ' já estava') + ' como vendido tudo.'
+                  );
+                }
+                if (partesAviso.length) {
+                  vaMostrarAviso(falhas.length ? 'Alguns não puderam ser fechados' : 'Tudo certo', partesAviso.join('\n\n'));
+                }
+              } finally {
+                btnMarcarTodosVendidos.dataset.busy = '0';
+                btnMarcarTodosVendidos.disabled = false;
+                btnMarcarTodosVendidos.textContent = btnMarcarTodosVendidos.dataset.textoOriginal || 'Marcar todos vendidos';
+              }
+            }
+
+            if (btnMarcarTodosVendidos) {
+              btnMarcarTodosVendidos.addEventListener('click', function () {
+                vaMostrarConfirmacao(
+                  'Confirmar fechamento em massa',
+                  'Marcar todos os produtos restantes como vendidos (sem sobra)?',
+                  function () {
+                    processarMarcarTodosVendidos();
+                  }
+                );
+              });
+            }
+
+          atualizarProgresso();
+          })();
+
+          // ===== FOTO DO PRODUTO (mesmo menu de opções do perfil: Mostrar/Tirar/Carregar) =====
+          (function () {
+            let produtoFotoAlvoWrapper = null;
+
+            function fecharMenuFotoProduto() {
+              const menu = document.getElementById('menuFotoProduto');
+              if (menu) menu.classList.add('hidden');
+            }
+
+            function aplicarFotoProduto(wrapper, fileOuBase64) {
+              const btn = wrapper.querySelector('.produto-foto-btn');
+              const valorInput = wrapper.querySelector('.produto-imagem-valor');
+              function definir(base64) {
+                btn.innerHTML = '<img src="' + base64 + '" alt="Foto do produto" class="h-full w-full object-cover" />';
+                btn.classList.remove('border-dashed', 'border-slate-300');
+                btn.classList.add('border-slate-200');
+                if (valorInput) valorInput.value = base64;
+              }
+              if (typeof fileOuBase64 === 'string') definir(fileOuBase64);
+              else redimensionarImagemBase64(fileOuBase64, definir);
+            }
+
+            // Chamada pela câmera global (panel-footer.ejs) quando capturaFotoAlvo === 'produto'
+            window.salvarFotoProdutoCapturada = function (base64Photo) {
+              if (produtoFotoAlvoWrapper) aplicarFotoProduto(produtoFotoAlvoWrapper, base64Photo);
+            };
+
+            function criarMenuFotoProduto() {
+              let menu = document.getElementById('menuFotoProduto');
+              if (menu) return menu;
+              menu = document.createElement('div');
+              menu.id = 'menuFotoProduto';
+              menu.className = 'hidden fixed z-[70] w-52 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200 text-slate-700 text-sm';
+              menu.innerHTML =
+                '<button type="button" data-acao="mostrar" class="menu-foto-produto-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>' +
+                  '<span>Mostrar foto</span></button>' +
+                '<button type="button" data-acao="tirar" class="menu-foto-produto-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>' +
+                  '<span>Tirar foto</span></button>' +
+                '<button type="button" data-acao="carregar" class="menu-foto-produto-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.93 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>' +
+                  '<span>Carregar foto</span></button>';
+              document.body.appendChild(menu);
+
+              menu.addEventListener('click', function (e) {
+                const item = e.target.closest('.menu-foto-produto-item');
+                if (!item || !produtoFotoAlvoWrapper) return;
+                const acao = item.dataset.acao;
+                fecharMenuFotoProduto();
+
+                if (acao === 'mostrar') {
+                  const img = produtoFotoAlvoWrapper.querySelector('.produto-foto-btn img');
+                  if (img) {
+                    document.getElementById('fullPhotoView').src = img.src;
+                    document.getElementById('viewPhotoModal').classList.remove('hidden');
+                  }
+                } else if (acao === 'tirar') {
+                  capturaFotoAlvo = 'produto';
+                  openCameraModal();
+                } else if (acao === 'carregar') {
+                  const input = produtoFotoAlvoWrapper.querySelector('.produto-foto-input');
+                  if (input) input.click();
+                }
+              });
+
+              document.addEventListener('click', function (e) {
+                if (!menu.classList.contains('hidden') && !menu.contains(e.target) && !e.target.closest('.produto-foto-btn')) {
+                  fecharMenuFotoProduto();
+                }
+              });
+
+              return menu;
+            }
+
+            function abrirMenuFotoProduto(btn, wrapper) {
+              produtoFotoAlvoWrapper = wrapper;
+              const menu = criarMenuFotoProduto();
+              const temFoto = !!wrapper.querySelector('.produto-foto-btn img');
+              menu.querySelector('[data-acao="mostrar"]').classList.toggle('hidden', !temFoto);
+
+              const rect = btn.getBoundingClientRect();
+              const menuLargura = 208;
+              const menuAltura = 150;
+              let left = rect.left;
+              let top = rect.bottom + 6;
+              if (left + menuLargura > window.innerWidth - 12) left = window.innerWidth - menuLargura - 12;
+              if (top + menuAltura > window.innerHeight - 12) top = rect.top - menuAltura - 6;
+              menu.style.left = left + 'px';
+              menu.style.top = top + 'px';
+              menu.classList.remove('hidden');
+            }
+
+            document.addEventListener('click', function (e) {
+              const btn = e.target.closest('.produto-foto-btn');
+              if (!btn) return;
+              e.stopPropagation();
+              abrirMenuFotoProduto(btn, btn.parentElement);
+            });
+
+            document.addEventListener('change', function (e) {
+              const input = e.target.closest('.produto-foto-input');
+              if (!input || !input.files || !input.files[0]) return;
+              const file = input.files[0];
+              if (!file.type.startsWith('image/')) {
+                if (typeof showCustomAlert === 'function') showCustomAlert('Arquivo inválido', 'Selecione uma imagem válida.');
+                input.value = '';
+                return;
+              }
+              aplicarFotoProduto(input.parentElement, file);
+              input.value = '';
+            });
+          })();
+
+          // ===== DROPDOWN DE CATEGORIA (estilo do painel de notificações) =====
+          (function () {
+            function fecharTodosDropdownsCategoria() {
+              document.querySelectorAll('.categoria-dropdown-menu').forEach(function (menu) {
+                menu.classList.add('hidden');
+              });
+            }
+
+            document.addEventListener('click', function (e) {
+              const btn = e.target.closest('.categoria-dropdown-btn');
+              if (btn) {
+                const dropdown = btn.closest('.categoria-dropdown');
+                const menu = dropdown.querySelector('.categoria-dropdown-menu');
+                const jaAberto = !menu.classList.contains('hidden');
+                fecharTodosDropdownsCategoria();
+                menu.classList.toggle('hidden', jaAberto);
+                return;
+              }
+
+               const opcao = e.target.closest('.categoria-dropdown-opcao');
+              if (opcao) {
+                const dropdown = opcao.closest('.categoria-dropdown');
+                dropdown.querySelector('.categoria-dropdown-valor').value = opcao.dataset.categoria;
+                const label = dropdown.querySelector('.categoria-dropdown-label');
+                label.textContent = opcao.dataset.categoria;
+                dropdown.querySelector('.categoria-dropdown-btn').classList.remove('text-slate-400');
+                dropdown.querySelector('.categoria-dropdown-btn').classList.add('text-slate-700');
+                const tooltipErro = dropdown.querySelector('.categoria-tooltip-erro');
+                if (tooltipErro) tooltipErro.classList.add('hidden');
+                dropdown.querySelectorAll('.categoria-dropdown-opcao').forEach(function (o) {
+                  o.classList.toggle('bg-agro-50', o === opcao);
+                  o.classList.toggle('text-agro-700', o === opcao);
+                });
+                dropdown.querySelector('.categoria-dropdown-menu').classList.add('hidden');
+                return;
+              }
+
+              if (!e.target.closest('.categoria-dropdown')) fecharTodosDropdownsCategoria();
+            });
+
+            // Impede salvar sem escolher a categoria (balão discreto, sem vermelho)
+            document.addEventListener('submit', function (ev) {
+              const dropdown = ev.target.querySelector && ev.target.querySelector('.categoria-dropdown-valor');
+              if (!dropdown) return;
+              if (dropdown.value.trim() === '') {
+                ev.preventDefault();
+                const tooltipErro = dropdown.closest('.categoria-dropdown').querySelector('.categoria-tooltip-erro');
+                if (tooltipErro) {
+                  tooltipErro.classList.remove('hidden');
+                  setTimeout(function () { tooltipErro.classList.add('hidden'); }, 3000);
+                }
+              }
+            });
+          })();
+          </script>
+        </section>
+      </div>
+
+<%- include('../partials/panel-footer') %>

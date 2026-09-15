@@ -1,0 +1,1787 @@
+<!-- ========================================================= -->
+<!-- MODAL DE EDIÇÃO DE PERFIL                                 -->
+<!-- ========================================================= -->
+<div id="profileModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onclick="closeOnBackdrop(event, closeProfileModal)">
+  <div class="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl transition-all relative">
+    
+    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+      <h3 class="text-lg font-bold text-slate-900">Editar Meu Perfil</h3>
+      <button type="button" onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-600 font-bold text-2xl leading-none">&times;</button>
+    </div>
+
+    <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-4 text-left">
+      
+      <!-- Área do Avatar + Popover de Opções -->
+      <div class="flex flex-col items-center gap-2 pb-2 relative">
+        <div class="relative">
+          
+          <!-- Círculo Clicável -->
+          <div 
+            id="avatarButton" 
+            onclick="togglePhotoMenu(event)"
+            class="relative group cursor-pointer rounded-full p-1 border-2 border-dashed border-slate-300 hover:border-agro-500 transition"
+            title="Clique para opções da foto"
+          >
+             <img 
+              id="previewPhoto" 
+              src="<%= currentUser.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>" 
+              class="h-24 w-24 rounded-full object-cover shadow-md"
+              draggable="false"
+            />
+            <div class="absolute bottom-0 right-0 rounded-full bg-agro-600 p-2 text-white shadow-md group-hover:bg-agro-700 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+          </div>
+
+          <!-- Menu estilo WhatsApp -->
+          <div 
+            id="photoOptionsMenu" 
+                 class="hidden absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 z-20 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200 text-slate-700 text-sm"
+          >
+             <button 
+              type="button" 
+              onclick="viewCurrentPhoto()" 
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Mostrar foto</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="openCameraModal()" 
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              <span>Tirar foto</span>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="triggerFileInput()" 
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.93 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+              <span>Carregar foto</span>
+            </button>
+
+            <div class="my-1 border-t border-slate-100"></div>
+
+            <button 
+              type="button" 
+              onclick="removerFotoPerfil()" 
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-50 transition text-left font-medium text-rose-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+              <span>Remover foto</span>
+            </button>
+          </div>
+
+        </div>
+
+         <!-- Inputs ocultos para controle da imagem e upload local -->
+        <input type="file" id="photoFileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+        <input type="hidden" id="profileFotoUrl" value="<%= currentUser.foto || '' %>" />
+         <span class="text-xs text-slate-500">Clique na foto para ver opções</span>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nome Completo</label>
+        <input type="text" id="profileNome" value="<%= currentUser.nome %>" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">E-mail</label>
+        <input type="email" id="profileEmail" value="<%= currentUser.email %>" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">WhatsApp / Telefone</label>
+        <input type="tel" id="profileWhatsapp" placeholder="(28) 99999-9999" value="<%= currentUser.whatsapp || '' %>" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <button type="button" onclick="closeProfileModal()" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button type="submit" id="btnSaveProfile" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-agro-700 transition">Salvar Alterações</button>
+      </div>
+     </form>
+  </div>
+</div>
+
+<!-- Modal: Alterar senha -->
+<div id="modalAlterarSenha" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-lg font-bold text-slate-900">Alterar senha</h3>
+      <button type="button" id="btnFecharAlterarSenha" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+    <form id="formAlterarSenha" class="mt-4 space-y-3">
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase text-slate-500">Senha atual</label>
+        <input type="password" id="senhaAtualInput" required autocomplete="current-password" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase text-slate-500">Nova senha</label>
+        <input type="password" id="senhaNovaInput" required minlength="6" autocomplete="new-password" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+        <p class="mt-1 text-xs text-slate-400">Mínimo de 6 caracteres.</p>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase text-slate-500">Confirmar nova senha</label>
+        <input type="password" id="senhaNovaConfirmarInput" required minlength="6" autocomplete="new-password" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" id="btnCancelarAlterarSenha" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button type="submit" id="btnSalvarAlterarSenha" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Salvar nova senha</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Cadastrar administrador -->
+<div id="modalCadastrarAdmin" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-lg font-bold text-slate-900">Cadastrar administrador</h3>
+      <button type="button" id="btnFecharCadastrarAdmin" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+    <form action="/painel/administradores" method="POST" class="mt-4 space-y-3">
+      <input name="nome" type="text" required placeholder="Nome do administrador" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <input name="email" type="email" required placeholder="E-mail de acesso" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <input name="senha" type="text" required placeholder="Senha inicial" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <button type="submit" class="w-full rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Cadastrar administrador</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Cadastrar produtor (via engrenagem) -->
+<div id="modalCadastrarProdutorRapido" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-lg font-bold text-slate-900">Cadastrar produtor</h3>
+      <button type="button" id="btnFecharCadastrarProdutorRapido" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+    <form action="/painel/produtores" method="POST" class="mt-4 space-y-3">
+      <input name="nome" type="text" required placeholder="Nome do produtor" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <input name="email" type="email" required placeholder="E-mail de acesso" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <input name="senha" type="text" required placeholder="Senha inicial" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <input name="comunidade" type="text" placeholder="Comunidade / Localidade (opcional)" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      <button type="submit" class="w-full rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Cadastrar produtor</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Visualização da Foto -->
+<div id="viewPhotoModal" class="fixed inset-0 z-[95] hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4" onclick="closeViewPhoto()">
+  <div class="relative max-w-lg w-full flex flex-col items-center">
+    <img id="fullPhotoView" src="" class="max-h-[80vh] max-w-full rounded-2xl shadow-2xl object-contain" />
+    <p class="text-white/80 text-xs mt-3">Clique em qualquer lugar para fechar</p>
+  </div>
+</div>
+
+<!-- Modal: Captura de Câmera -->
+<div id="cameraModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4" onclick="closeOnBackdrop(event, closeCameraModal)">
+  <div class="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl space-y-4 text-center">
+    <h4 class="text-base font-bold text-slate-900">Tirar Foto</h4>
+    <video id="webcamVideo" autoplay playsinline class="w-full h-64 bg-slate-900 rounded-2xl object-cover"></video>
+    <div class="flex justify-center gap-3">
+      <button type="button" onclick="closeCameraModal()" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600">Cancelar</button>
+      <button type="button" onclick="takeSnapshot()" class="rounded-2xl bg-agro-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-agro-700">Capturar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Estilizado de Aviso/Erro (Estilo WhatsApp/Custom) -->
+<div id="customAlertModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onclick="closeOnBackdrop(event, closeCustomAlert)">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl text-center text-slate-900 border border-slate-200 space-y-4">
+    <h4 id="customAlertTitle" class="text-base font-bold text-slate-900">Aviso</h4>
+    <p id="customAlertMessage" class="text-sm text-slate-600 leading-relaxed"></p>
+    <div class="pt-2">
+      <button type="button" onclick="closeCustomAlert()" class="w-full rounded-2xl bg-agro-600 hover:bg-agro-700 py-2.5 text-sm font-bold text-white transition">
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Estilizado de Confirmação (usado para excluir mensagens etc.) -->
+<div id="confirmModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onclick="closeOnBackdrop(event, closeConfirmModal)">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl text-center text-slate-900 border border-slate-200 space-y-4">
+    <h4 id="confirmTitle" class="text-base font-bold text-slate-900">Confirmar</h4>
+    <p id="confirmMessage" class="text-sm text-slate-600 leading-relaxed"></p>
+    <div class="flex gap-3 pt-2">
+      <button type="button" id="confirmCancelBtn" class="flex-1 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 py-2.5 text-sm font-bold transition">Cancelar</button>
+      <button type="button" id="confirmOkBtn" class="flex-1 rounded-2xl bg-agro-600 hover:bg-agro-700 py-2.5 text-sm font-bold text-white transition">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let mediaStream = null;
+ let originalPhotoUrl = "<%= currentUser.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>";
+  let capturaFotoAlvo = 'perfil'; // 'perfil' ou 'grupo' - define para onde vai a foto tirada/carregada
+
+  // Fecha um modal ao clicar apenas no fundo escurecido (não no conteúdo dele).
+  function closeOnBackdrop(e, closeFn) {
+    if (e.target === e.currentTarget) closeFn();
+  }
+
+  // Função para exibir alertas sem popup nativo do navegador
+  function showCustomAlert(title, message) {
+    document.getElementById('customAlertTitle').innerText = title;
+    document.getElementById('customAlertMessage').innerText = message;
+    document.getElementById('customAlertModal').classList.remove('hidden');
+  }
+
+  function closeCustomAlert() {
+    document.getElementById('customAlertModal').classList.add('hidden');
+  }
+
+  // Confirmação estilizada (substitui o confirm() nativo do navegador para excluir mensagens).
+  let _confirmCallback = null;
+  function showConfirm(title, message, onConfirm) {
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmMessage').innerText = message;
+    _confirmCallback = onConfirm;
+    document.getElementById('confirmModal').classList.remove('hidden');
+  }
+  function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+    _confirmCallback = null;
+  }
+ document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmModal);
+  document.getElementById('confirmOkBtn').addEventListener('click', () => {
+    const cb = _confirmCallback;
+    closeConfirmModal();
+    if (cb) cb();
+  });
+
+  // Menu de configurações (engrenagem)
+  const btnAbrirConfig = document.getElementById('btnAbrirConfig');
+  const menuConfig = document.getElementById('menuConfig');
+  if (btnAbrirConfig && menuConfig) {
+    btnAbrirConfig.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menuConfig.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+      if (!menuConfig.classList.contains('hidden') && !menuConfig.contains(e.target) && !btnAbrirConfig.contains(e.target)) {
+        menuConfig.classList.add('hidden');
+      }
+    });
+  }
+
+   // Alterar senha
+  const modalAlterarSenha = document.getElementById('modalAlterarSenha');
+  const btnAbrirAlterarSenha = document.getElementById('btnAbrirAlterarSenha');
+  if (btnAbrirAlterarSenha) {
+    const formAlterarSenha = document.getElementById('formAlterarSenha');
+    const senhaAtualInput = document.getElementById('senhaAtualInput');
+    const senhaNovaInput = document.getElementById('senhaNovaInput');
+    const senhaNovaConfirmarInput = document.getElementById('senhaNovaConfirmarInput');
+    const btnSalvarAlterarSenha = document.getElementById('btnSalvarAlterarSenha');
+
+    function fecharModalAlterarSenha() {
+      formAlterarSenha.reset();
+      modalAlterarSenha.classList.add('hidden');
+    }
+
+    btnAbrirAlterarSenha.addEventListener('click', () => {
+      menuConfig.classList.add('hidden');
+      modalAlterarSenha.classList.remove('hidden');
+    });
+    document.getElementById('btnFecharAlterarSenha').addEventListener('click', fecharModalAlterarSenha);
+    document.getElementById('btnCancelarAlterarSenha').addEventListener('click', fecharModalAlterarSenha);
+    modalAlterarSenha.addEventListener('click', (e) => closeOnBackdrop(e, fecharModalAlterarSenha));
+
+    formAlterarSenha.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (senhaNovaInput.value !== senhaNovaConfirmarInput.value) {
+        showCustomAlert('Senhas não conferem', 'A nova senha e a confirmação precisam ser iguais.');
+        return;
+      }
+      if (senhaNovaInput.value.length < 6) {
+        showCustomAlert('Senha muito curta', 'A nova senha deve ter ao menos 6 caracteres.');
+        return;
+      }
+
+      btnSalvarAlterarSenha.disabled = true;
+      btnSalvarAlterarSenha.textContent = 'Salvando...';
+
+      try {
+        const resp = await fetch('/painel/senha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senhaAtual: senhaAtualInput.value,
+            senhaNova: senhaNovaInput.value
+          })
+        });
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok || !data.success) {
+          showCustomAlert('Não foi possível alterar', data.message || 'Verifique a senha atual e tente novamente.');
+          return;
+        }
+
+        fecharModalAlterarSenha();
+        showCustomAlert('Senha alterada', 'Sua senha foi atualizada com sucesso.');
+      } catch (err) {
+        showCustomAlert('Erro de conexão', 'Não foi possível falar com o servidor. Tente novamente.');
+      } finally {
+        btnSalvarAlterarSenha.disabled = false;
+        btnSalvarAlterarSenha.textContent = 'Salvar nova senha';
+      }
+    });
+  }
+
+  const modalCadastrarAdmin = document.getElementById('modalCadastrarAdmin');
+  const btnAbrirCadastrarAdmin = document.getElementById('btnAbrirCadastrarAdmin');
+  if (btnAbrirCadastrarAdmin) {
+    btnAbrirCadastrarAdmin.addEventListener('click', () => {
+      menuConfig.classList.add('hidden');
+      modalCadastrarAdmin.classList.remove('hidden');
+    });
+    document.getElementById('btnFecharCadastrarAdmin').addEventListener('click', () => modalCadastrarAdmin.classList.add('hidden'));
+    modalCadastrarAdmin.addEventListener('click', (e) => closeOnBackdrop(e, () => modalCadastrarAdmin.classList.add('hidden')));
+  }
+
+  const modalCadastrarProdutorRapido = document.getElementById('modalCadastrarProdutorRapido');
+  const btnAbrirCadastrarProdutor = document.getElementById('btnAbrirCadastrarProdutor');
+  if (btnAbrirCadastrarProdutor) {
+    btnAbrirCadastrarProdutor.addEventListener('click', () => {
+      menuConfig.classList.add('hidden');
+      modalCadastrarProdutorRapido.classList.remove('hidden');
+    });
+    document.getElementById('btnFecharCadastrarProdutorRapido').addEventListener('click', () => modalCadastrarProdutorRapido.classList.add('hidden'));
+    modalCadastrarProdutorRapido.addEventListener('click', (e) => closeOnBackdrop(e, () => modalCadastrarProdutorRapido.classList.add('hidden')));
+  }
+
+  // Controlling Photo Menu
+  function togglePhotoMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('photoOptionsMenu');
+    if (menu) menu.classList.toggle('hidden');
+  }
+
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('photoOptionsMenu');
+    const avatarBtn = document.getElementById('avatarButton');
+    if (menu && avatarBtn && !menu.contains(e.target) && !avatarBtn.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // Mostrar foto em tamanho grande
+  function viewCurrentPhoto() {
+    const menu = document.getElementById('photoOptionsMenu');
+    if (menu) menu.classList.add('hidden');
+    const currentSrc = document.getElementById('previewPhoto').src;
+    document.getElementById('fullPhotoView').src = currentSrc;
+    document.getElementById('viewPhotoModal').classList.remove('hidden');
+  }
+
+  function closeViewPhoto() {
+    document.getElementById('viewPhotoModal').classList.add('hidden');
+  }
+
+   // Câmera / Webcam
+  async function openCameraModal() {
+    const menuPerfil = document.getElementById('photoOptionsMenu');
+    if (menuPerfil) menuPerfil.classList.add('hidden');
+    const menuGrupo = document.getElementById('chatAvatarMenu');
+    if (menuGrupo) menuGrupo.classList.add('hidden');
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('webcamVideo');
+
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      video.srcObject = mediaStream;
+      modal.classList.remove('hidden');
+    } catch (err) {
+      showCustomAlert('Câmera não encontrada', 'Não foi possível acessar a câmera. Verifique se ela está conectada e se você concedeu as permissões no navegador.');
+    }
+  }
+
+  function takeSnapshot() {
+    const video = document.getElementById('webcamVideo');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const base64Photo = canvas.toDataURL('image/jpeg', 0.8);
+
+    if (capturaFotoAlvo === 'grupo') {
+      if (typeof salvarFotoGrupoCapturada === 'function') salvarFotoGrupoCapturada(base64Photo);
+    } else if (capturaFotoAlvo === 'produto') {
+      if (typeof salvarFotoProdutoCapturada === 'function') salvarFotoProdutoCapturada(base64Photo);
+    } else {
+      document.getElementById('previewPhoto').src = base64Photo;
+      document.getElementById('profileFotoUrl').value = base64Photo;
+    }
+
+    closeCameraModal();
+  }
+
+  function closeCameraModal() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      mediaStream = null;
+    }
+    document.getElementById('cameraModal').classList.add('hidden');
+  }
+
+   // Upload Local de Arquivo (com redimensionamento/compressão)
+  function triggerFileInput() {
+    const menu = document.getElementById('photoOptionsMenu');
+    if (menu) menu.classList.add('hidden');
+    capturaFotoAlvo = 'perfil';
+    document.getElementById('photoFileInput').click();
+  }
+
+  function redimensionarImagemBase64(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const MAX_SIZE = 500; // px, lado maior
+        let { width, height } = img;
+
+        if (width > height && width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        } else if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+        callback(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showCustomAlert('Arquivo Inválido', 'Por favor, selecione uma imagem válida.');
+      return;
+    }
+
+    redimensionarImagemBase64(file, (base64Image) => {
+      document.getElementById('previewPhoto').src = base64Image;
+      document.getElementById('profileFotoUrl').value = base64Image;
+    });
+    event.target.value = '';
+  }
+
+  // Volta a foto de perfil para o padrão (a folhinha), limpando o valor salvo.
+  const FOTO_PADRAO_SVG = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E';
+  function removerFotoPerfil() {
+    const menu = document.getElementById('photoOptionsMenu');
+    if (menu) menu.classList.add('hidden');
+    document.getElementById('previewPhoto').src = FOTO_PADRAO_SVG;
+    document.getElementById('profileFotoUrl').value = '';
+  }
+
+  // Modal Principal de Perfil
+  function openProfileModal() {
+    const preview = document.getElementById('previewPhoto');
+    if (preview) {
+      originalPhotoUrl = preview.src;
+    }
+    document.getElementById('profileModal').classList.remove('hidden');
+  }
+
+  function closeProfileModal() {
+    // Restaura a foto original caso o usuário cancele sem salvar
+    document.getElementById('previewPhoto').src = originalPhotoUrl;
+    document.getElementById('profileFotoUrl').value = originalPhotoUrl;
+    document.getElementById('profileModal').classList.add('hidden');
+    
+    const menu = document.getElementById('photoOptionsMenu');
+    if (menu) menu.classList.add('hidden');
+  }
+
+  // Salvar formulário no servidor via PUT
+  async function saveProfile(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('btnSaveProfile');
+    btn.innerText = 'Salvando...';
+    btn.disabled = true;
+
+    const dadosPerfil = {
+      nome: document.getElementById('profileNome').value,
+      email: document.getElementById('profileEmail').value,
+      whatsapp: document.getElementById('profileWhatsapp').value,
+      foto: document.getElementById('profileFotoUrl').value
+    };
+
+    try {
+      const response = await fetch('/painel/perfil', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dadosPerfil)
+      });
+
+      if (response.ok) {
+        // Só recarrega a página DEPOIS de confirmar que o servidor salvou
+        window.location.reload();
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        showCustomAlert('Erro ao Salvar', errData.message || 'Não foi possível atualizar o perfil no momento. Tente novamente.');
+        btn.innerText = 'Salvar Alterações';
+        btn.disabled = false;
+      }
+    } catch (err) {
+      console.error(err);
+      showCustomAlert('Erro de Conexão', 'Ocorreu uma falha na conexão ao tentar salvar.');
+      btn.innerText = 'Salvar Alterações';
+      btn.disabled = false;
+    }
+  }
+</script>
+
+<!-- Modal: Central de Mensagens (Mural + Conversas + Chat) -->
+<div id="modalMensagensCentral" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="flex h-[85vh] w-full max-w-2xl md:max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+
+    <!-- Cabeçalho padrão (lista) -->
+    <div id="cabecalhoMensagensPadrao" class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+      <h3 class="text-2xl font-bold text-slate-900">Mensagens</h3>
+      <button type="button" id="btnFecharMensagensCentral" class="text-3xl leading-none text-slate-400 hover:text-slate-600" aria-label="Fechar">&times;</button>
+    </div>
+
+    <!-- Cabeçalho do chat (some quando não está numa conversa) -->
+    <div id="cabecalhoChat" class="hidden items-center gap-3 border-b border-slate-100 px-4 py-4">
+      <button type="button" id="btnVoltarChat" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-3xl text-slate-500 hover:bg-slate-100" aria-label="Voltar">&larr;</button>
+     <div class="relative shrink-0">
+        <div id="chatAvatarButton" class="cursor-pointer rounded-full border-2 border-dashed border-transparent hover:border-agro-500 transition" title="Opções da foto do grupo">
+          <div id="chatAvatarWrap"></div>
+        </div>
+       <div id="chatAvatarMenu" class="hidden absolute left-0 top-full mt-2 w-52 z-30 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200 text-slate-700 text-sm">
+          <button type="button" id="btnChatVerFoto" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span>Mostrar foto</span>
+          </button>
+          <button type="button" id="btnChatTirarFoto" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <span>Tirar foto</span>
+          </button>
+          <button type="button" id="btnChatCarregarFoto" class="hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L8.6 3.3A2 2 0 0 0 6.93 2.5H4a2 2 0 0 0-2 2v13.5a2 2 0 0 0 2 2z"/></svg>
+            <span>Carregar foto</span>
+          </button>
+        </div>
+        <input type="file" id="chatFotoFileInput" accept="image/*" class="hidden" />
+      </div>
+      <div id="chatInfoArea" class="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-slate-50" title="Ver participantes do grupo">
+        <div class="min-w-0 flex-1">
+          <h3 class="truncate text-2xl font-bold text-slate-900" id="chatTitulo">Conversa</h3>
+          <p id="chatSubtitulo" class="hidden truncate text-sm font-medium text-slate-400">Toque para ver participantes</p>
+        </div>
+      </div>
+    </div>
+    <!-- Abas (somem durante o chat) -->
+    <div id="abasMensagens" class="flex items-center gap-2 border-b border-slate-100 bg-slate-50 p-2">
+      <button type="button" data-aba-msg="mural" class="aba-msg-btn flex-1 rounded-2xl px-4 py-3.5 text-lg font-bold transition">📋 Mural de avisos</button>
+      <button type="button" data-aba-msg="privado" class="aba-msg-btn flex-1 rounded-2xl px-4 py-3.5 text-lg font-bold transition">💬 Conversas privadas</button>
+    </div>
+
+    <!-- ABA MURAL -->
+    <div id="abaMural" class="flex-1 overflow-y-auto p-6 space-y-5">
+       <% if (currentUser.tipo_acesso === 'admin') { %>
+        <form id="formPublicarMural" class="space-y-2">
+          <textarea id="muralTextoInput" name="texto" required rows="5" maxlength="3000" placeholder="Escreva um aviso para todos..." class="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-lg outline-none focus:border-agro-500 focus:bg-white"></textarea>
+          <p id="muralTextoContador" class="text-right text-xs font-medium text-slate-400">0 / 3000</p>
+          <button type="submit" id="btnPublicarMural" class="w-full rounded-2xl bg-agro-600 px-4 py-3.5 text-lg font-bold text-white hover:bg-agro-700">Publicar aviso para todos</button>
+        </form>
+        <p class="flex items-center gap-1.5 text-xs text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          Toque no ícone de opções de cada aviso para editar ou excluir.
+        </p>
+      <% } else { %>
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-base text-slate-500">Somente a gestora pode publicar avisos aqui. Toque e segure um aviso seu para ver as opções.</div>
+      <% } %>
+      <div class="space-y-4 pt-4 border-t-2 border-slate-100" id="listaMuralMensagens"></div>
+      <div id="muralVazio" class="hidden px-5 py-10 text-center text-base text-slate-400">Nenhum aviso publicado ainda.</div>
+    </div>
+
+     <!-- ABA PRIVADO (lista de conversas/contatos) -->
+    <div id="abaPrivado" class="hidden flex-1 flex-col overflow-hidden">
+      <div id="topoConversas">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
+          <div class="flex-1">
+            <input type="text" id="buscarContatoInput" placeholder="Digite o número (WhatsApp) da pessoa..." class="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+          </div>
+          <button type="button" id="btnNovaConversa" class="shrink-0 rounded-xl border-2 border-agro-500 px-3 py-2 text-xs font-bold text-agro-700 hover:bg-agro-50">+ Criar grupo</button>
+        </div>
+        <div class="flex items-center gap-2 border-b border-slate-100 px-4 py-2" id="filtrosConversas">
+          <button type="button" data-filtro="tudo" class="filtro-conv-btn rounded-full px-3 py-1.5 text-xs font-bold transition">Tudo</button>
+          <button type="button" data-filtro="grupos" class="filtro-conv-btn rounded-full px-3 py-1.5 text-xs font-bold transition">Grupos</button>
+        </div>
+        <button type="button" id="btnAbaArquivadas" class="flex w-full items-center gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100">
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>
+          </span>
+          <span class="text-sm font-bold text-slate-700">Arquivadas</span>
+        </button>
+      </div>
+      <div id="cabecalhoArquivadas" class="hidden items-center gap-3 border-b border-slate-100 px-4 py-3">
+        <button type="button" id="btnVoltarArquivadas" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-2xl text-slate-500 hover:bg-slate-100" aria-label="Voltar">&larr;</button>
+        <h3 class="text-lg font-bold text-slate-900">Arquivadas</h3>
+      </div>
+      <div class="flex-1 overflow-y-auto" id="listaConversas"></div>
+      <div id="listaConversasVazia" class="hidden px-5 py-10 text-center text-base text-slate-400">Nenhuma conversa ainda.</div>
+    </div>
+
+    <!-- PAINEL DE CHAT (mesma tela, some quando está na lista) -->
+    <div id="painelChat" class="hidden flex-1 flex-col overflow-hidden">
+      <div class="flex-1 space-y-3 overflow-y-auto px-5 py-4" id="chatMensagens"></div>
+       <form id="formEnviarMensagem" class="flex items-center gap-2 border-t border-slate-100 p-4">
+        <input type="text" id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" class="flex-1 rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3.5 text-lg outline-none focus:border-agro-500 focus:bg-white" />
+        <button type="submit" class="shrink-0 rounded-2xl bg-agro-600 px-6 py-3.5 text-lg font-bold text-white hover:bg-agro-700">Enviar</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<!-- Menu de contexto (Editar/Excluir) estilo WhatsApp, reaproveitado para todas as mensagens -->
+<div id="menuMensagemContexto" class="hidden fixed z-[90] w-44 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200 text-slate-700 text-sm">
+  <button type="button" id="btnMenuEditarMsg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+    <span>Editar</span>
+  </button>
+  <button type="button" id="btnMenuExcluirMsg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-50 transition text-left font-medium text-rose-600">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+    <span>Excluir</span>
+  </button>
+</div>
+
+<!-- Menu de contexto da conversa (fixar/arquivar/excluir) -->
+<div id="menuConversaContexto" class="hidden fixed z-[90] w-48 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200 text-slate-700 text-sm">
+  <button type="button" id="btnMenuFixarConversa" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+    <svg id="iconMenuFixar" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M8 13.5V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6.5l1.5 2.5h-11z"/></svg>
+    <span id="txtMenuFixarConversa">Fixar</span>
+  </button>
+  <button type="button" id="btnMenuArquivarConversa" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>
+    <span id="txtMenuArquivarConversa">Arquivar</span>
+  </button>
+  <button type="button" id="btnMenuExcluirConversa" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-50 transition text-left font-medium text-rose-600">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+    <span>Excluir contato</span>
+  </button>
+</div>
+
+<!-- Modal: Nova conversa (criar grupo) -->
+<div id="modalNovaConversa" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-lg font-bold text-slate-900">Criar grupo</h3>
+      <button type="button" id="btnFecharNovaConversa" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+    <input type="text" id="nomeGrupoInput" placeholder="Nome do grupo" class="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-agro-500" />
+    <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Escolha ao menos 2 pessoas</p>
+    <div class="mt-2 max-h-64 space-y-1 overflow-y-auto" id="listaContatos"></div>
+    <button type="button" id="btnConfirmarNovaConversa" class="mt-4 w-full rounded-2xl bg-agro-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-agro-700 disabled:opacity-60">Criar grupo</button>
+  </div>
+</div>
+
+<!-- Modal: Participantes do grupo -->
+<div id="modalParticipantes" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-lg font-bold text-slate-900">Participantes do grupo</h3>
+      <button type="button" id="btnFecharParticipantes" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+    <div class="mt-4 max-h-80 space-y-2 overflow-y-auto" id="listaParticipantes"></div>
+  </div>
+</div>
+
+<!-- Modal: Editar foto do grupo -->
+<div id="modalFotoGrupo" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <h3 class="text-lg font-bold text-slate-900">Foto do grupo</h3>
+      <button type="button" id="btnFecharFotoGrupo" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+    <p class="mt-3 text-sm text-slate-500">Qualquer pessoa do grupo pode trocar a foto.</p>
+    <input type="url" id="inputFotoGrupo" placeholder="URL da nova foto" class="mt-4 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-agro-500" />
+    <button type="button" id="btnSalvarFotoGrupo" class="mt-4 w-full rounded-2xl bg-agro-600 px-4 py-3 text-base font-bold text-white hover:bg-agro-700 disabled:opacity-60">Salvar foto</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const souAdmin = <%= currentUser.tipo_acesso === 'admin' ? 'true' : 'false' %>;
+  const meuId = <%= currentUser.id %>;
+  const btnAbrir = document.getElementById('btnAbrirConversas');
+  const modalMensagens = document.getElementById('modalMensagensCentral');
+  const btnFecharMensagens = document.getElementById('btnFecharMensagensCentral');
+  const listaEl = document.getElementById('listaConversas');
+  const vaziaEl = document.getElementById('listaConversasVazia');
+  const badge = document.getElementById('badgeConversas');
+  const btnNotif = document.getElementById('btnAbrirNotificacoes');
+  const painelNotif = document.getElementById('painelNotificacoes');
+  const listaNotifEl = document.getElementById('listaNotificacoes');
+  const notifVazioEl = document.getElementById('notificacoesVazio');
+  const badgeNotif = document.getElementById('badgeNotificacoes');
+  if (!btnAbrir) return;
+
+  const cabecalhoPadrao = document.getElementById('cabecalhoMensagensPadrao');
+  const cabecalhoChat = document.getElementById('cabecalhoChat');
+  const abasMensagens = document.getElementById('abasMensagens');
+  const chatAvatarWrap = document.getElementById('chatAvatarWrap');
+  const chatAvatarButton = document.getElementById('chatAvatarButton');
+  const chatAvatarMenu = document.getElementById('chatAvatarMenu');
+  const btnChatVerFoto = document.getElementById('btnChatVerFoto');
+  const btnChatTirarFoto = document.getElementById('btnChatTirarFoto');
+  const btnChatCarregarFoto = document.getElementById('btnChatCarregarFoto');
+  const chatFotoFileInput = document.getElementById('chatFotoFileInput');
+  const chatInfoArea = document.getElementById('chatInfoArea');
+  const chatSubtitulo = document.getElementById('chatSubtitulo');
+  const painelChat = document.getElementById('painelChat');
+  const btnVoltarChat = document.getElementById('btnVoltarChat');
+
+  const modalNova = document.getElementById('modalNovaConversa');
+  const listaContatosEl = document.getElementById('listaContatos');
+  const nomeGrupoInput = document.getElementById('nomeGrupoInput');
+  const btnConfirmarGrupo = document.getElementById('btnConfirmarNovaConversa');
+
+  const modalParticipantes = document.getElementById('modalParticipantes');
+  const listaParticipantesEl = document.getElementById('listaParticipantes');
+
+  const modalFotoGrupo = document.getElementById('modalFotoGrupo');
+  const inputFotoGrupo = document.getElementById('inputFotoGrupo');
+  const btnSalvarFotoGrupo = document.getElementById('btnSalvarFotoGrupo');
+
+  const listaMuralEl = document.getElementById('listaMuralMensagens');
+  const muralVazioEl = document.getElementById('muralVazio');
+  const formPublicarMural = document.getElementById('formPublicarMural');
+
+  const menuContexto = document.getElementById('menuMensagemContexto');
+  const btnMenuEditar = document.getElementById('btnMenuEditarMsg');
+  const btnMenuExcluir = document.getElementById('btnMenuExcluirMsg');
+
+   let contatosCache = [];
+  let conversasCache = [];
+  let conversaAtual = null; // { id, nome, grupo, foto }
+  let abaAntesDoChat = 'mural';
+  let menuContextoAlvo = null; // { tipo: 'mural'|'privado', id, conversaId, textoAtual }
+  let filtroConversaAtual = 'tudo';
+  let alvoMenuConversa = null; // conversa selecionada no menu de arquivar
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function iniciais(nome) {
+    return nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+  }
+
+  function tempoCurto(d) {
+    if (!d) return '';
+    const dt = new Date(d.replace(' ', 'T') + 'Z');
+    return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  }
+
+  function horaMinuto(d) {
+    if (!d) return '';
+    const dt = new Date(d.replace(' ', 'T') + 'Z');
+    return dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function dataHoraCompleta(d) {
+    if (!d) return '';
+    const dt = new Date(d.replace(' ', 'T') + 'Z');
+    return dt.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function avatarHtml(foto, nome, sizeClass) {
+    if (foto) {
+      return `<img src="${foto}" alt="${escapeHtml(nome)}" class="${sizeClass} shrink-0 rounded-full object-cover border-2 border-agro-100" />`;
+    }
+    return `<span class="flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-agro-100 text-sm font-bold text-agro-700">${iniciais(nome)}</span>`;
+  }
+
+  async function apiFetch(url, options, mensagemErro) {
+    try {
+      const resp = await fetch(url, options);
+      let data = {};
+      try { data = await resp.json(); } catch (_) { data = {}; }
+      if (!resp.ok || data.success === false) {
+        showCustomAlert('Não foi possível', data.message || mensagemErro || 'Tente novamente em instantes.');
+        return null;
+      }
+      return data;
+    } catch (err) {
+      console.error(err);
+      showCustomAlert('Erro de conexão', 'Não foi possível falar com o servidor. Verifique sua internet e tente novamente.');
+      return null;
+    }
+  }
+
+  async function iniciarConversaCom(id, nomeFallback, fotoFallback) {
+    const data = await apiFetch('/painel/conversas/individual', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario_id: id })
+    }, 'Não foi possível iniciar essa conversa.');
+    if (data && data.success) {
+      abrirChat(data.conversa_id, nomeFallback, fotoFallback, false);
+    }
+  }
+
+  function somenteDigitos(str) {
+    return (str || '').replace(/\D/g, '');
+  }
+
+  function renderContatosAdminFixos(admins) {
+    const container = document.createElement('div');
+    admins.forEach((p) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-agro-50 border-b border-slate-100 bg-agro-50/40';
+      item.innerHTML = `
+        ${avatarHtml(p.foto, p.nome, 'h-14 w-14')}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-lg font-bold text-slate-900">${escapeHtml(p.nome)}</span>
+          <span class="block text-sm font-bold uppercase tracking-wide text-agro-700">Gestor a</span>
+        </span>
+      `;
+      item.addEventListener('click', () => iniciarConversaCom(p.id, p.nome, p.foto));
+      container.appendChild(item);
+    });
+    return container;
+  }
+
+  function renderContatosFiltrados(termo) {
+    const container = document.createElement('div');
+    const termoDigitos = somenteDigitos(termo);
+    if (!termoDigitos) return container;
+
+    const idsComConversaIndividual = new Set(
+      conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
+    );
+    const filtrados = contatosCache.filter((p) => p.whatsapp && somenteDigitos(p.whatsapp) === termoDigitos && !idsComConversaIndividual.has(p.id));
+
+    if (!filtrados.length) return container;
+
+    filtrados.forEach((p) => {
+
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-slate-50';
+      item.innerHTML = `
+        ${avatarHtml(p.foto, p.nome, 'h-14 w-14')}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-lg font-semibold text-slate-800">${escapeHtml(p.nome)}</span>
+         <span class="block text-sm uppercase tracking-wide text-slate-400">${p.tipo_acesso === 'admin' ? 'Gestor a' : 'Produtor a'} · ${escapeHtml(p.whatsapp)}</span>
+        </span>
+      `;
+      item.addEventListener('click', () => iniciarConversaCom(p.id, p.nome, p.foto));
+      container.appendChild(item);
+    });
+
+    return container;
+  }
+
+  function renderListaConversas(termoBusca) {
+    listaEl.innerHTML = '';
+
+    const totalNaoLidas = conversasCache.reduce((s, c) => s + (c.arquivada ? 0 : c.nao_lidas), 0);
+    if (badge) {
+      badge.classList.toggle('hidden', totalNaoLidas === 0);
+      badge.textContent = totalNaoLidas;
+    }
+
+    const conversasFiltradas = conversasCache.filter((c) => {
+      if (filtroConversaAtual === 'arquivadas') return c.arquivada;
+      if (c.arquivada) return false;
+      if (filtroConversaAtual === 'grupos') return c.grupo;
+      return true;
+    });
+
+    const termoPreenchido = !!(termoBusca && termoBusca.trim());
+    const idsComConversaIndividual = new Set(
+      conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
+    );
+    const adminsFixos = filtroConversaAtual === 'tudo'
+      ? contatosCache.filter((p) => p.tipo_acesso === 'admin' && !idsComConversaIndividual.has(p.id))
+      : [];
+
+    vaziaEl.classList.add('hidden');
+
+    if (conversasFiltradas.length && !termoPreenchido) {
+      conversasFiltradas.forEach((c) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-slate-50 border-b border-slate-100';
+        item.innerHTML = `
+          ${avatarHtml(c.foto, c.nome, 'h-14 w-14')}
+          <span class="min-w-0 flex-1">
+            <span class="flex items-center justify-between">
+              <span class="truncate text-lg font-bold text-slate-900">${escapeHtml(c.nome)}${c.grupo ? ' (grupo)' : ''}</span>
+              <span class="ml-2 shrink-0 text-sm font-semibold text-slate-500">${tempoCurto(c.ultima_mensagem_em)}</span>
+            </span>
+            <span class="block truncate text-base text-slate-500">${c.ultima_mensagem ? escapeHtml(c.ultima_mensagem) : 'Sem mensagens ainda'}</span>
+          </span>
+          ${c.nao_lidas > 0 ? `<span class="ml-1 inline-flex h-7 min-w-[1.75rem] shrink-0 items-center justify-center rounded-full bg-agro-600 px-2 text-sm font-bold text-white">${c.nao_lidas}</span>` : ''}
+        `;
+        item.addEventListener('click', () => abrirChat(c.id, c.nome, c.foto, c.grupo));
+        anexarMenuContexto(item, (e, ponto) => abrirMenuConversaContexto(ponto, c));
+        listaEl.appendChild(item);
+      });
+    }
+
+    if (adminsFixos.length) {
+      listaEl.appendChild(renderContatosAdminFixos(adminsFixos));
+    }
+
+    if (contatosCache.length && filtroConversaAtual === 'tudo' && termoPreenchido) {
+      listaEl.appendChild(renderContatosFiltrados(termoBusca));
+    }
+
+    if (!conversasFiltradas.length && !adminsFixos.length && !(contatosCache.length && filtroConversaAtual === 'tudo' && termoPreenchido)) {
+      vaziaEl.classList.remove('hidden');
+    }
+  }
+
+    function ativarFiltroConversa(filtro) {
+    filtroConversaAtual = filtro;
+    estavaEmArquivadas = false;
+    document.querySelectorAll('.filtro-conv-btn').forEach((b) => {
+      const ativo = b.dataset.filtro === filtro;
+      b.classList.toggle('bg-agro-600', ativo);
+      b.classList.toggle('text-white', ativo);
+      b.classList.toggle('bg-slate-100', !ativo);
+      b.classList.toggle('text-slate-600', !ativo);
+    });
+    renderListaConversas(document.getElementById('buscarContatoInput').value);
+  }
+  let estavaEmArquivadas = false;
+
+  document.querySelectorAll('.filtro-conv-btn').forEach((btn) => {
+    btn.addEventListener('click', () => ativarFiltroConversa(btn.dataset.filtro));
+  });
+  document.getElementById('btnAbaArquivadas').addEventListener('click', () => abrirTelaArquivadas());
+  document.getElementById('btnVoltarArquivadas').addEventListener('click', () => fecharTelaArquivadas());
+  ativarFiltroConversa('tudo');
+
+  function abrirTelaArquivadas() {
+    estavaEmArquivadas = true;
+    document.getElementById('topoConversas').classList.add('hidden');
+    document.getElementById('cabecalhoArquivadas').classList.remove('hidden');
+    document.getElementById('cabecalhoArquivadas').classList.add('flex');
+    filtroConversaAtual = 'arquivadas';
+    renderListaConversas('');
+  }
+
+  function fecharTelaArquivadas() {
+    document.getElementById('cabecalhoArquivadas').classList.add('hidden');
+    document.getElementById('cabecalhoArquivadas').classList.remove('flex');
+    document.getElementById('topoConversas').classList.remove('hidden');
+    ativarFiltroConversa('tudo');
+  }
+
+  const menuConversaContexto = document.getElementById('menuConversaContexto');
+  const btnMenuFixarConversa = document.getElementById('btnMenuFixarConversa');
+  const txtMenuFixarConversa = document.getElementById('txtMenuFixarConversa');
+  const btnMenuArquivarConversa = document.getElementById('btnMenuArquivarConversa');
+  const txtMenuArquivarConversa = document.getElementById('txtMenuArquivarConversa');
+  const btnMenuExcluirConversa = document.getElementById('btnMenuExcluirConversa');
+
+  function abrirMenuConversaContexto(ponto, conversa) {
+    alvoMenuConversa = conversa;
+   txtMenuFixarConversa.textContent = conversa.fixada ? 'Desafixar' : 'Fixar';
+    txtMenuArquivarConversa.textContent = conversa.arquivada ? 'Desarquivar' : 'Arquivar';
+
+    const outroParticipante = conversa.participantes && conversa.participantes[0];
+    const conversaComAdmin = !conversa.grupo && outroParticipante && contatosCache.some((p) => p.id === outroParticipante.id && p.tipo_acesso === 'admin');
+    btnMenuExcluirConversa.classList.toggle('hidden', conversaComAdmin && !souAdmin);
+
+    const iconFixar = document.getElementById('iconMenuFixar');
+    if (iconFixar) {
+      iconFixar.setAttribute('fill', conversa.fixada ? 'currentColor' : 'none');
+      iconFixar.classList.toggle('text-agro-600', conversa.fixada);
+      iconFixar.classList.toggle('text-slate-500', !conversa.fixada);
+    }
+
+    const menuLargura = 192;
+    const menuAltura = 150;
+    let left = ponto.x - menuLargura / 2;
+    let top = ponto.y - menuAltura / 2;
+    if (left + menuLargura > window.innerWidth - 12) left = window.innerWidth - menuLargura - 12;
+    if (left < 12) left = 12;
+    if (top + menuAltura > window.innerHeight - 12) top = window.innerHeight - menuAltura - 12;
+    if (top < 12) top = 12;
+
+    menuConversaContexto.style.left = left + 'px';
+    menuConversaContexto.style.top = top + 'px';
+    menuConversaContexto.classList.remove('hidden');
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!menuConversaContexto.classList.contains('hidden') && !menuConversaContexto.contains(e.target)) {
+      menuConversaContexto.classList.add('hidden');
+      alvoMenuConversa = null;
+    }
+  });
+
+  btnMenuFixarConversa.addEventListener('click', async () => {
+    if (!alvoMenuConversa) return;
+    const conversa = alvoMenuConversa;
+    menuConversaContexto.classList.add('hidden');
+    alvoMenuConversa = null;
+    const data = await apiFetch(`/painel/conversas/${conversa.id}/fixar`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fixada: !conversa.fixada })
+    }, 'Não foi possível fixar a conversa.');
+    if (data && data.success) carregarConversas();
+  });
+
+  btnMenuArquivarConversa.addEventListener('click', async () => {
+    if (!alvoMenuConversa) return;
+    const conversa = alvoMenuConversa;
+    menuConversaContexto.classList.add('hidden');
+    alvoMenuConversa = null;
+    const data = await apiFetch(`/painel/conversas/${conversa.id}/arquivar`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ arquivada: !conversa.arquivada })
+    }, 'Não foi possível arquivar a conversa.');
+    if (data && data.success) carregarConversas();
+  });
+
+  btnMenuExcluirConversa.addEventListener('click', async () => {
+    if (!alvoMenuConversa) return;
+    const conversa = alvoMenuConversa;
+    menuConversaContexto.classList.add('hidden');
+    alvoMenuConversa = null;
+    showConfirm('Excluir contato?', 'Essa conversa vai sumir da sua lista. Se conversarem de novo, começa do zero.', async () => {
+      const data = await apiFetch(`/painel/conversas/${conversa.id}/excluir-contato`, { method: 'POST' }, 'Não foi possível excluir esse contato.');
+      if (data && data.success) carregarConversas();
+    });
+  });
+
+  async function carregarConversas() {
+    const data = await apiFetch('/painel/conversas', undefined, 'Não foi possível carregar suas conversas.');
+    if (!data) return;
+    contatosCache = data.contatos || [];
+    conversasCache = data.conversas || [];
+    const busca = document.getElementById('buscarContatoInput');
+    renderListaConversas(busca ? busca.value : '');
+  }
+
+  document.getElementById('buscarContatoInput').addEventListener('input', (e) => {
+    renderListaConversas(e.target.value);
+  });
+
+  // ---- Mural (dentro do modal) ----
+  function renderMensagemMural(m) {
+    const podeEditar = souAdmin;
+    const ehGestora = m.tipo_acesso === 'admin';
+    const article = document.createElement('article');
+    article.className = `relative rounded-2xl border-2 p-4 ${ehGestora ? 'border-agro-200 bg-agro-50' : 'border-slate-200 bg-slate-50'}`;
+    article.dataset.msgId = m.id;
+    article.innerHTML = `
+      <div class="flex items-start gap-3">
+        ${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}
+        <div class="min-w-0 flex-1 ${podeEditar ? 'pr-8' : ''}">
+          <div class="flex items-center justify-between gap-2">
+            <span class="flex min-w-0 items-center gap-1.5">
+              <span class="truncate text-base font-bold text-slate-900">${escapeHtml(m.remetente_nome)}</span>
+              ${ehGestora ? '<svg class="h-4 w-4 shrink-0 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.79-4-4-4-.495 0-.965.084-1.4.238C14.55 2.475 13.18 1.6 11.6 1.6c-1.58 0-2.95.875-3.6 2.148-.435-.154-.905-.238-1.4-.238-2.21 0-4 1.79-4 4 0 .495.084.965.238 1.4C1.575 9.55.7 10.92.7 12.5c0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.79 4 4 4 .495 0 .965-.084 1.4-.238 1.05 1.273 2.42 2.148 4 2.148 1.58 0 2.95-.875 3.6-2.148.435.154.905.238 1.4.238 2.21 0 4-1.79 4-4 0-.495-.084-.965-.238-1.4 1.273-1.05 2.148-2.42 2.148-4zM10.09 16.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z"/></svg>' : ''}
+              ${ehGestora ? '<span class="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">Gestor a</span>' : ''}
+            </span>
+            <span class="shrink-0 text-xs font-semibold text-slate-500" title="${dataHoraCompleta(m.criado_em)}">${dataHoraCompleta(m.criado_em)}</span>
+          </div>
+                    <p class="mt-1 text-lg leading-relaxed text-slate-800 whitespace-pre-wrap break-words" data-msg-texto>${escapeHtml(m.texto)}</p>
+          ${m.editado_em ? '<p class="mt-1 text-xs font-medium text-slate-400">editado</p>' : ''}
+        </div>
+      </div>
+    `;
+    if (podeEditar) {
+      const btnOpcoes = document.createElement('button');
+      btnOpcoes.type = 'button';
+      btnOpcoes.className = 'absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-black/5 hover:text-slate-600';
+      btnOpcoes.title = 'Opções do aviso';
+      btnOpcoes.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+      btnOpcoes.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rect = btnOpcoes.getBoundingClientRect();
+        abrirMenuContexto({ x: rect.right - 20, y: rect.bottom + 65 }, { tipo: 'mural', id: m.id, conversaId: null, textoAtual: m.texto, elArticle: article });
+      });
+      article.appendChild(btnOpcoes);
+
+      const textoEl = article.querySelector('[data-msg-texto]');
+      anexarMenuContexto(textoEl, (e, ponto) => {
+        abrirMenuContexto(ponto, { tipo: 'mural', id: m.id, conversaId: null, textoAtual: m.texto, elArticle: article });
+      });
+    }
+    return article;
+  }
+
+  async function carregarMural() {
+    const data = await apiFetch('/painel/mensagens', undefined, 'Não foi possível carregar o mural.');
+    if (!data) return;
+    listaMuralEl.innerHTML = '';
+    const mensagens = data.mensagens || [];
+    if (!mensagens.length) {
+      muralVazioEl.classList.remove('hidden');
+      return;
+    }
+    muralVazioEl.classList.add('hidden');
+    mensagens.forEach((m) => listaMuralEl.appendChild(renderMensagemMural(m)));
+  }
+
+  // Abre a Central de Mensagens direto na aba do mural e rola/destaca
+  // o aviso específico que veio de uma notificação do sino.
+  async function abrirMuralNoAviso(mensagemId) {
+    modalMensagens.classList.remove('hidden');
+    mostrarTelaLista();
+    ativarAbaMsg('mural');
+    await carregarMural();
+    const el = listaMuralEl.querySelector(`[data-msg-id="${mensagemId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-4', 'ring-agro-400');
+      setTimeout(() => el.classList.remove('ring-4', 'ring-agro-400'), 3000);
+    }
+  }
+
+   if (formPublicarMural) {
+    const muralTextoContador = document.getElementById('muralTextoContador');
+    const muralTextoInputEl = document.getElementById('muralTextoInput');
+    function atualizarContadorTexto(textarea, contadorEl) {
+      if (!textarea || !contadorEl) return;
+      contadorEl.textContent = textarea.value.length + ' / ' + textarea.maxLength;
+    }
+    if (muralTextoInputEl) {
+      atualizarContadorTexto(muralTextoInputEl, muralTextoContador);
+      muralTextoInputEl.addEventListener('input', () => atualizarContadorTexto(muralTextoInputEl, muralTextoContador));
+    }
+
+    formPublicarMural.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('muralTextoInput');
+      const btn = document.getElementById('btnPublicarMural');
+      const texto = input.value.trim();
+      if (texto.length < 3) {
+        showCustomAlert('Aviso muito curto', 'Escreva ao menos 3 caracteres.');
+        return;
+      }
+      if (texto.length > 3000) {
+        showCustomAlert('Aviso muito longo', 'O aviso pode ter no máximo 3000 caracteres.');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Publicando...';
+      try {
+        const data = await apiFetch('/painel/mensagens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ texto })
+        }, 'Não foi possível publicar o aviso.');
+        if (data && data.success) {
+          input.value = '';
+          listaMuralEl.innerHTML = '';
+          muralVazioEl.classList.add('hidden');
+          (data.mensagens || []).forEach((m) => listaMuralEl.appendChild(renderMensagemMural(m)));
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Publicar aviso para todos';
+      }
+    });
+  }
+
+    // Dispara o menu de contexto com o botão direito (desktop) ou toque
+  // prolongado / "segurar o dedo" (celular), como no WhatsApp.
+  function anexarMenuContexto(el, handler) {
+    let pressTimer = null;
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handler(e, { x: e.clientX, y: e.clientY });
+    });
+    el.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      const ponto = touch ? { x: touch.clientX, y: touch.clientY } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        handler(e, ponto);
+      }, 500);
+    }, { passive: true });
+    const cancelarToque = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+    el.addEventListener('touchend', cancelarToque);
+    el.addEventListener('touchmove', cancelarToque);
+  }
+
+  // ---- Menu de contexto (Editar / Excluir), botão direito ou toque longo ----
+  function fecharMenuContexto() {
+    menuContexto.classList.add('hidden');
+    menuContextoAlvo = null;
+  }
+
+  function abrirMenuContexto(ponto, alvo) {
+    menuContextoAlvo = alvo;
+
+    const menuLargura = 176; // w-44
+    const menuAltura = 110;
+    let left = ponto.x - menuLargura / 2;
+    let top = ponto.y - menuAltura / 2;
+    if (left + menuLargura > window.innerWidth - 12) left = window.innerWidth - menuLargura - 12;
+    if (left < 12) left = 12;
+    if (top + menuAltura > window.innerHeight - 12) top = window.innerHeight - menuAltura - 12;
+    if (top < 12) top = 12;
+
+    menuContexto.style.left = left + 'px';
+    menuContexto.style.top = top + 'px';
+    menuContexto.classList.remove('hidden');
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!menuContexto.classList.contains('hidden') && !menuContexto.contains(e.target)) {
+      fecharMenuContexto();
+    }
+  });
+
+  btnMenuEditar.addEventListener('click', () => {
+    const alvo = menuContextoAlvo;
+    fecharMenuContexto();
+    if (!alvo) return;
+    if (alvo.tipo === 'mural') {
+      iniciarEdicaoMural(alvo);
+    } else {
+      iniciarEdicaoChat(alvo);
+    }
+  });
+
+  btnMenuExcluir.addEventListener('click', () => {
+    const alvo = menuContextoAlvo;
+    fecharMenuContexto();
+    if (!alvo) return;
+    showConfirm('Excluir mensagem?', 'Essa ação não pode ser desfeita.', async () => {
+      if (alvo.tipo === 'mural') {
+        const data = await apiFetch(`/painel/mensagens/${alvo.id}/excluir`, { method: 'POST' }, 'Não foi possível excluir o aviso.');
+        if (data && data.success) {
+          listaMuralEl.innerHTML = '';
+          const mensagens = data.mensagens || [];
+          if (!mensagens.length) muralVazioEl.classList.remove('hidden');
+          else { muralVazioEl.classList.add('hidden'); mensagens.forEach((m) => listaMuralEl.appendChild(renderMensagemMural(m))); }
+        }
+      } else {
+        const data = await apiFetch(`/painel/conversas/${alvo.conversaId}/mensagens/${alvo.id}/excluir`, { method: 'POST' }, 'Não foi possível excluir a mensagem.');
+        if (data && data.success) renderChatMensagens(data.mensagens || []);
+      }
+    });
+  });
+
+  function iniciarEdicaoMural(alvo) {
+    const article = alvo.elArticle;
+    const textoEl = article.querySelector('[data-msg-texto]');
+    const original = alvo.textoAtual;
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'mt-2 w-full resize-none overflow-y-auto rounded-2xl border-2 border-agro-400 bg-white px-3 py-2 text-lg outline-none break-words';
+    textarea.rows = 1;
+    textarea.style.maxHeight = '220px';
+    textarea.maxLength = 3000;
+    textarea.value = original;
+
+    function ajustarAlturaEdicaoMural() {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 220) + 'px';
+    }
+
+    const contadorEdicao = document.createElement('p');
+    contadorEdicao.className = 'mt-1 text-right text-xs font-medium text-slate-400';
+    contadorEdicao.textContent = original.length + ' / 3000';
+
+    const acoes = document.createElement('div');
+    acoes.className = 'mt-2 flex justify-end gap-2';
+    acoes.innerHTML = `
+      <button type="button" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button>
+      <button type="button" class="rounded-xl bg-agro-600 px-3 py-2 text-sm font-semibold text-white hover:bg-agro-700">Salvar</button>
+    `;
+
+    textoEl.replaceWith(textarea);
+    textarea.after(contadorEdicao);
+    contadorEdicao.after(acoes);
+
+    ajustarAlturaEdicaoMural();
+    textarea.addEventListener('input', () => {
+      contadorEdicao.textContent = textarea.value.length + ' / 3000';
+      ajustarAlturaEdicaoMural();
+    });
+    textarea.focus();
+
+    acoes.children[0].addEventListener('click', () => carregarMural());
+    acoes.children[1].addEventListener('click', async () => {
+      const novoTexto = textarea.value.trim();
+      if (novoTexto.length < 3) {
+        showCustomAlert('Aviso muito curto', 'Escreva ao menos 3 caracteres.');
+        return;
+      }
+      const data = await apiFetch(`/painel/mensagens/${alvo.id}/editar`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: novoTexto })
+      }, 'Não foi possível salvar a edição.');
+      if (data && data.success) {
+        listaMuralEl.innerHTML = '';
+        (data.mensagens || []).forEach((m) => listaMuralEl.appendChild(renderMensagemMural(m)));
+      }
+    });
+  }
+
+  function iniciarEdicaoChat(alvo) {
+    const bolha = chatMensagens.querySelector(`[data-msg-id="${alvo.id}"] [data-msg-texto]`);
+    if (!bolha) return;
+    const original = alvo.textoAtual;
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'w-full rounded-xl border-2 border-white/60 bg-white/10 px-3 py-2 text-lg text-inherit outline-none';
+    textarea.rows = 2;
+    textarea.maxLength = 1000;
+    textarea.value = original;
+
+    const acoes = document.createElement('div');
+    acoes.className = 'mt-2 flex justify-end gap-2';
+    acoes.innerHTML = `
+      <button type="button" class="rounded-xl bg-white/20 px-3 py-1.5 text-xs font-semibold hover:bg-white/30">Cancelar</button>
+      <button type="button" class="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-agro-700 hover:bg-slate-100">Salvar</button>
+    `;
+
+    bolha.replaceWith(textarea);
+    textarea.after(acoes);
+    textarea.focus();
+
+    acoes.children[0].addEventListener('click', () => abrirChat(conversaAtual.id, conversaAtual.nome, conversaAtual.foto, conversaAtual.grupo));
+    acoes.children[1].addEventListener('click', async () => {
+      const novoTexto = textarea.value.trim();
+      if (!novoTexto) return;
+      const data = await apiFetch(`/painel/conversas/${alvo.conversaId}/mensagens/${alvo.id}/editar`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: novoTexto })
+      }, 'Não foi possível salvar a edição.');
+      if (data && data.success) renderChatMensagens(data.mensagens || []);
+    });
+  }
+
+  function ativarAbaMsg(aba) {
+    document.querySelectorAll('.aba-msg-btn').forEach((b) => {
+      const ativo = b.dataset.abaMsg === aba;
+      b.classList.toggle('bg-white', ativo);
+      b.classList.toggle('text-agro-700', ativo);
+      b.classList.toggle('shadow-sm', ativo);
+      b.classList.toggle('text-slate-600', !ativo);
+    });
+    document.getElementById('abaMural').classList.toggle('hidden', aba !== 'mural');
+    document.getElementById('abaPrivado').classList.toggle('hidden', aba !== 'privado');
+    document.getElementById('abaPrivado').classList.toggle('flex', aba === 'privado');
+    abaAntesDoChat = aba;
+    if (aba === 'mural') carregarMural();
+    if (aba === 'privado') carregarConversas();
+  }
+  document.querySelectorAll('.aba-msg-btn').forEach((btn) => {
+    btn.addEventListener('click', () => ativarAbaMsg(btn.dataset.abaMsg));
+  });
+
+  btnAbrir.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modalMensagens.classList.remove('hidden');
+    mostrarTelaLista();
+    ativarAbaMsg('mural');
+  });
+  btnFecharMensagens.addEventListener('click', fecharCentralMensagens);
+  modalMensagens.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) fecharCentralMensagens();
+  });
+  function fecharCentralMensagens() {
+    modalMensagens.classList.add('hidden');
+    fecharMenuContexto();
+  }
+
+  // ---- Alternar entre tela de lista e tela de chat, no mesmo modal ----
+   function mostrarTelaLista() {
+    painelChat.classList.add('hidden');
+    cabecalhoChat.classList.add('hidden');
+    cabecalhoChat.classList.remove('flex');
+    cabecalhoPadrao.classList.remove('hidden');
+    abasMensagens.classList.remove('hidden');
+    conversaAtual = null;
+    if (estavaEmArquivadas) {
+      abrirTelaArquivadas();
+    } else {
+      document.getElementById('cabecalhoArquivadas').classList.add('hidden');
+      document.getElementById('cabecalhoArquivadas').classList.remove('flex');
+      document.getElementById('topoConversas').classList.remove('hidden');
+    }
+    ativarAbaMsg(abaAntesDoChat);
+  }
+
+  function mostrarTelaChat() {
+    cabecalhoPadrao.classList.add('hidden');
+    abasMensagens.classList.add('hidden');
+    document.getElementById('abaMural').classList.add('hidden');
+    document.getElementById('abaPrivado').classList.add('hidden');
+    cabecalhoChat.classList.remove('hidden');
+    cabecalhoChat.classList.add('flex');
+    painelChat.classList.remove('hidden');
+    painelChat.classList.add('flex');
+  }
+
+  btnVoltarChat.addEventListener('click', () => {
+    mostrarTelaLista();
+  });
+
+  // ---- Criar grupo ----
+  function renderContatos() {
+    listaContatosEl.innerHTML = '';
+    contatosCache.forEach((p) => {
+      const linha = document.createElement('label');
+      linha.className = 'flex cursor-pointer items-center gap-3 rounded-2xl px-2 py-2 hover:bg-slate-50';
+      linha.innerHTML = `
+        <input type="checkbox" name="contatoEscolhido" value="${p.id}" class="h-4 w-4 text-agro-600" />
+        ${avatarHtml(p.foto, p.nome, 'h-8 w-8')}
+        <span class="text-sm font-medium text-slate-800">${escapeHtml(p.nome)}</span>
+      `;
+      listaContatosEl.appendChild(linha);
+    });
+  }
+
+  document.getElementById('btnNovaConversa').addEventListener('click', () => {
+    modalMensagens.classList.add('hidden');
+    nomeGrupoInput.value = '';
+    renderContatos();
+    modalNova.classList.remove('hidden');
+  });
+
+  function fecharModalNova() {
+    modalNova.classList.add('hidden');
+    modalMensagens.classList.remove('hidden');
+  }
+  document.getElementById('btnFecharNovaConversa').addEventListener('click', fecharModalNova);
+  modalNova.addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalNova(); });
+
+  btnConfirmarGrupo.addEventListener('click', async () => {
+    const ids = Array.from(listaContatosEl.querySelectorAll('input:checked')).map((i) => i.value);
+    const nome = nomeGrupoInput.value.trim();
+    if (!nome || ids.length < 2) {
+      showCustomAlert('Faltam informações', 'Dê um nome ao grupo e escolha ao menos 2 pessoas.');
+      return;
+    }
+    btnConfirmarGrupo.disabled = true;
+    btnConfirmarGrupo.textContent = 'Criando...';
+    try {
+      const data = await apiFetch('/painel/conversas/grupo', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, participantes: ids })
+      }, 'Não foi possível criar o grupo.');
+      if (data && data.success) {
+        modalNova.classList.add('hidden');
+        modalMensagens.classList.remove('hidden');
+        abrirChat(data.conversa_id, nome, null, true);
+      }
+    } finally {
+      btnConfirmarGrupo.disabled = false;
+      btnConfirmarGrupo.textContent = 'Criar grupo';
+    }
+  });
+
+  // ---- Participantes do grupo ----
+  function fecharModalParticipantes() {
+    modalParticipantes.classList.add('hidden');
+    modalMensagens.classList.remove('hidden');
+  }
+  document.getElementById('btnFecharParticipantes').addEventListener('click', fecharModalParticipantes);
+  modalParticipantes.addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalParticipantes(); });
+
+  async function abrirParticipantes() {
+    if (!conversaAtual || !conversaAtual.grupo) return;
+     const data = await apiFetch(`/painel/conversas/${conversaAtual.id}/participantes`, undefined, 'Não foi possível carregar os participantes.');
+    if (!data) return;
+    const participantes = data.participantes || [];
+    document.querySelector('#modalParticipantes h3').textContent = `Participantes do grupo (${participantes.length})`;
+    listaParticipantesEl.innerHTML = '';
+    participantes.forEach((p) => {
+      const linha = document.createElement('div');
+      linha.className = 'flex items-center gap-3 rounded-2xl px-2 py-2';
+      linha.innerHTML = `
+        ${avatarHtml(p.foto, p.nome, 'h-11 w-11')}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-semibold text-slate-800">${escapeHtml(p.nome)}${p.id === meuId ? ' (você)' : ''}</span>
+          <span class="block text-xs uppercase tracking-wide text-slate-400">${p.tipo_acesso === 'admin' ? 'Gestor a' : 'Produtor a'}</span>
+        </span>
+      `;
+      listaParticipantesEl.appendChild(linha);
+    });
+    modalMensagens.classList.add('hidden');
+    modalParticipantes.classList.remove('hidden');
+  }
+
+  chatInfoArea.addEventListener('click', () => {
+    if (conversaAtual && conversaAtual.grupo) abrirParticipantes();
+  });
+
+  // ---- Foto do grupo ----
+  function fecharModalFotoGrupo() {
+    modalFotoGrupo.classList.add('hidden');
+    modalMensagens.classList.remove('hidden');
+  }
+  document.getElementById('btnFecharFotoGrupo').addEventListener('click', fecharModalFotoGrupo);
+  modalFotoGrupo.addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalFotoGrupo(); });
+
+   chatAvatarButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const ehGrupo = !!(conversaAtual && conversaAtual.grupo);
+    btnChatTirarFoto.classList.toggle('hidden', !ehGrupo);
+    btnChatCarregarFoto.classList.toggle('hidden', !ehGrupo);
+    chatAvatarMenu.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!chatAvatarMenu.classList.contains('hidden') && !chatAvatarMenu.contains(e.target) && !chatAvatarButton.contains(e.target)) {
+      chatAvatarMenu.classList.add('hidden');
+    }
+  });
+
+  btnChatVerFoto.addEventListener('click', () => {
+    chatAvatarMenu.classList.add('hidden');
+    const fotoAtual = document.querySelector('#chatAvatarWrap img');
+    document.getElementById('fullPhotoView').src = fotoAtual ? fotoAtual.src : '';
+    document.getElementById('viewPhotoModal').classList.remove('hidden');
+  });
+
+  btnChatTirarFoto.addEventListener('click', () => {
+    chatAvatarMenu.classList.add('hidden');
+    if (!conversaAtual || !conversaAtual.grupo) return;
+    capturaFotoAlvo = 'grupo';
+    openCameraModal();
+  });
+
+  btnChatCarregarFoto.addEventListener('click', () => {
+    chatAvatarMenu.classList.add('hidden');
+    if (!conversaAtual || !conversaAtual.grupo) return;
+    capturaFotoAlvo = 'grupo';
+    chatFotoFileInput.click();
+  });
+
+  chatFotoFileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showCustomAlert('Arquivo Inválido', 'Por favor, selecione uma imagem válida.');
+      return;
+    }
+    redimensionarImagemBase64(file, (base64Image) => salvarFotoGrupoCapturada(base64Image));
+    event.target.value = '';
+  });
+
+  async function salvarFotoGrupoCapturada(base64Foto) {
+    if (!conversaAtual || !conversaAtual.grupo) return;
+    const data = await apiFetch(`/painel/conversas/${conversaAtual.id}/foto`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto: base64Foto })
+    }, 'Não foi possível salvar a foto do grupo.');
+    if (data && data.success) {
+      conversaAtual.foto = base64Foto;
+      chatAvatarWrap.innerHTML = avatarHtml(base64Foto, conversaAtual.nome, 'h-9 w-9');
+    }
+  }
+
+  btnSalvarFotoGrupo.addEventListener('click', async () => {
+    const foto = inputFotoGrupo.value.trim();
+    if (!foto) {
+      showCustomAlert('Informe uma foto', 'Cole a URL de uma imagem para o grupo.');
+      return;
+    }
+    btnSalvarFotoGrupo.disabled = true;
+    btnSalvarFotoGrupo.textContent = 'Salvando...';
+    try {
+      const data = await apiFetch(`/painel/conversas/${conversaAtual.id}/foto`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foto })
+      }, 'Não foi possível salvar a foto do grupo.');
+      if (data && data.success) {
+        conversaAtual.foto = foto;
+        chatAvatarWrap.innerHTML = avatarHtml(foto, conversaAtual.nome, 'h-9 w-9');
+        fecharModalFotoGrupo();
+      }
+    } finally {
+      btnSalvarFotoGrupo.disabled = false;
+      btnSalvarFotoGrupo.textContent = 'Salvar foto';
+    }
+  });
+
+  // ---- Chat (mesma tela do modal) ----
+  const chatMensagens = document.getElementById('chatMensagens');
+  const formEnviar = document.getElementById('formEnviarMensagem');
+  const chatInput = document.getElementById('chatInputTexto');
+
+  function renderChatMensagens(mensagens) {
+    chatMensagens.innerHTML = mensagens.map((m) => {
+      const minha = m.remetente_id === meuId;
+      return `
+        <div class="flex ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
+              <div class="max-w-[75%] rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-600 text-white' : 'bg-slate-100 text-slate-800'}">
+            ${!minha ? `<p class="mb-1 text-sm font-bold text-agro-700">${escapeHtml(m.remetente_nome)}</p>` : ''}
+            <p class="whitespace-pre-wrap" data-msg-texto>${escapeHtml(m.texto)}</p>
+            <p class="mt-1 text-right text-xs font-medium ${minha ? 'text-white/70' : 'text-slate-400'}">${horaMinuto(m.criado_em)}${m.editado_em ? ' · editado' : ''}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Só o autor pode editar/excluir sua própria mensagem privada.
+    chatMensagens.querySelectorAll('[data-msg-id]').forEach((wrap) => {
+      const id = Number(wrap.dataset.msgId);
+      const msg = mensagens.find((m) => m.id === id);
+      if (msg && msg.remetente_id === meuId) {
+        const bolha = wrap.querySelector('div');
+        bolha.title = 'Clique com o botão direito (ou segure) para editar ou excluir';
+        anexarMenuContexto(bolha, (e, ponto) => {
+          abrirMenuContexto(ponto, { tipo: 'privado', id: msg.id, conversaId: conversaAtual.id, textoAtual: msg.texto });
+        });
+      }
+    });
+
+    // Sempre mostra a mensagem mais recente (parte de baixo) ao carregar ou enviar.
+    chatMensagens.scrollTop = chatMensagens.scrollHeight;
+  }
+
+  async function abrirChat(id, titulo, foto, grupo) {
+    conversaAtual = { id, nome: titulo, foto: foto || null, grupo: !!grupo };
+    document.getElementById('chatTitulo').textContent = titulo;
+    chatAvatarWrap.innerHTML = avatarHtml(foto, titulo, 'h-9 w-9');
+    chatSubtitulo.classList.toggle('hidden', !grupo);
+    chatInfoArea.classList.toggle('cursor-pointer', !!grupo);
+    mostrarTelaChat();
+    const data = await apiFetch('/painel/conversas/' + id + '/mensagens', undefined, 'Não foi possível abrir essa conversa.');
+    if (data) renderChatMensagens(data.mensagens || []);
+    carregarConversas();
+  }
+
+   formEnviar.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const texto = chatInput.value.trim();
+    if (!texto || !conversaAtual) return;
+    chatInput.value = '';
+    const data = await apiFetch('/painel/conversas/' + conversaAtual.id + '/mensagens', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto })
+    }, 'Não foi possível enviar a mensagem.');
+    if (data && data.success) renderChatMensagens(data.mensagens);
+  });
+
+  // ---- Sininho de notificações (novos produtos + mensagens não lidas) ----
+ async function carregarNotificacoes() {
+    const data = await apiFetch('/painel/notificacoes', undefined, 'Não foi possível carregar as notificações.');
+    if (!data) return;
+    const produtos = data.produtos || [];
+    const avisos = data.avisos || [];
+    const mensagens = data.mensagens || [];
+    const total = produtos.length + avisos.length + mensagens.reduce((s, m) => s + m.nao_lidas, 0);
+
+    badgeNotif.classList.toggle('hidden', total === 0);
+    badgeNotif.textContent = total;
+
+    listaNotifEl.innerHTML = '';
+    if (!produtos.length && !avisos.length && !mensagens.length) {
+      notifVazioEl.classList.remove('hidden');
+      return;
+    }
+    notifVazioEl.classList.add('hidden');
+
+    avisos.forEach((a) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50';
+      item.innerHTML = `
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-agro-100 text-agro-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H7l-3 3z"/></svg>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-semibold text-slate-800">Novo aviso da gestora</span>
+          <span class="block truncate text-xs text-slate-500">${escapeHtml(a.texto)}</span>
+        </span>
+      `;
+       item.addEventListener('click', () => {
+        apiFetch('/painel/notificacoes/mural/' + a.id + '/ler', { method: 'POST' });
+        painelNotif.classList.add('hidden');
+        abrirMuralNoAviso(a.id);
+      });
+      listaNotifEl.appendChild(item);
+    });
+
+    produtos.forEach((p) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50';
+      item.innerHTML = `
+        ${avatarHtml(p.produtor_foto, p.produtor_nome, 'h-10 w-10')}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-semibold text-slate-800">${escapeHtml(p.produtor_nome)} cadastrou um produto</span>
+          <span class="block truncate text-xs text-slate-500">${escapeHtml(p.produto_nome)}</span>
+        </span>
+      `;
+      item.addEventListener('click', () => {
+        window.location.href = '/painel/produtores?destaque=' + p.produtor_id;
+      });
+      listaNotifEl.appendChild(item);
+    });
+
+    mensagens.forEach((c) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50';
+      item.innerHTML = `
+        ${avatarHtml(c.foto, c.nome, 'h-10 w-10')}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-semibold text-slate-800">${escapeHtml(c.nome)}</span>
+          <span class="block truncate text-xs text-slate-500">${c.ultima_mensagem ? escapeHtml(c.ultima_mensagem) : 'Nova mensagem'}</span>
+        </span>
+        <span class="inline-flex h-6 min-w-[1.5rem] shrink-0 items-center justify-center rounded-full bg-agro-600 px-1.5 text-xs font-bold text-white">${c.nao_lidas}</span>
+      `;
+      item.addEventListener('click', () => {
+        painelNotif.classList.add('hidden');
+        modalMensagens.classList.remove('hidden');
+        abrirChat(c.id, c.nome, c.foto, c.grupo);
+      });
+      listaNotifEl.appendChild(item);
+    });
+  }
+
+  if (btnNotif) {
+    btnNotif.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const abrindo = painelNotif.classList.contains('hidden');
+      painelNotif.classList.toggle('hidden');
+      if (abrindo) {
+        await carregarNotificacoes();
+        apiFetch('/painel/notificacoes/produtos/ler', { method: 'POST' });
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!painelNotif.classList.contains('hidden') && !painelNotif.contains(e.target) && !btnNotif.contains(e.target)) {
+        painelNotif.classList.add('hidden');
+      }
+    });
+    carregarNotificacoes();
+  }
+})();
+</script>

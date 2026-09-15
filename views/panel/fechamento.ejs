@@ -1,0 +1,190 @@
+<%- include('../partials/head', { pageTitle }) %>
+<%- include('../partials/panel-header') %>
+
+<% if (typeof produtos !== 'undefined') { %>
+  <div class="space-y-6">
+    <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Fim de feira</p>
+      <h2 class="mt-1 text-2xl font-bold text-slate-900">Fechamento da minha feira</h2>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Para cada produto, informe se vendeu tudo ou quanto sobrou. É só isso — o resto o sistema calcula sozinho.</p>
+      <div class="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700" id="progressoFechamento"></div>
+    </div>
+
+    <section class="space-y-3">
+      <% const comMeta = produtos.filter(p => p.quantidade_valor !== null && p.quantidade_valor !== undefined); %>
+      <% if (!comMeta.length) { %>
+        <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">Nenhum produto com quantidade cadastrada essa semana.</div>
+      <% } %>
+      <% comMeta.forEach((produto) => { %>
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft" data-baixa-produto="<%= produto.id %>">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900"><%= produto.nome %></h3>
+              <p class="text-sm text-slate-500"><%= produto.quantidade_valor %> <%= produto.unidade || '' %> trazido</p>
+            </div>
+          </div>
+          <div data-baixa-status class="mt-3 flex flex-wrap items-center gap-3 <%= produto.baixa_em ? '' : 'hidden' %>">
+            <span class="rounded-2xl bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+              <strong><%= (produto.quantidade_valor || 0) - (produto.quantidade_sobra || 0) %> <%= produto.unidade || '' %> vendido(s)</strong>
+              <% if (produto.quantidade_sobra > 0) { %> · <%= produto.quantidade_sobra %> <%= produto.unidade || '' %> de sobra<% } %>
+            </span>
+           <button type="button" data-action="refazer" class="btn-refazer-fechamento text-xs font-semibold text-agro-700 underline">Alterar fechamento</button>
+          </div>
+          <div data-baixa-form class="mt-3 flex flex-wrap items-center gap-3 <%= produto.baixa_em ? 'hidden' : '' %>">
+              <button type="button" data-action="vendi-tudo" class="btn-vendeu-tudo rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">✅ Vendi tudo</button>
+            <div class="flex items-center gap-2">
+              <input type="number" min="0" step="0.01" placeholder="Sobrou quanto?" class="input-sobra w-36 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-agro-500" />
+               <button type="button" data-action="confirmar-sobra" class="btn-confirmar-sobra rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">Confirmar sobra</button>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </section>
+  </div>
+
+  <script>
+    function atualizarProgresso() {
+      const boxes = document.querySelectorAll('[data-baixa-produto]');
+      const total = boxes.length;
+      let feitos = 0;
+      boxes.forEach((box) => { if (!box.querySelector('[data-baixa-status]').classList.contains('hidden')) feitos++; });
+      const el = document.getElementById('progressoFechamento');
+      if (!total) { el.textContent = 'Nenhum produto para fechar.'; return; }
+      el.textContent = feitos === total
+        ? '🟢 Feira encerrada — todos os produtos fechados.'
+        : `🟡 ${feitos} de ${total} produtos fechados.`;
+    }
+
+    document.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('[data-baixa-produto] [data-action]');
+      if (!btn) return;
+
+      const box = btn.closest('[data-baixa-produto]');
+      if (!box) return;
+
+      const produtoId = String(box.dataset.baixaProduto || '').trim();
+      if (!produtoId || produtoId === 'undefined' || produtoId === 'null') return;
+
+      const statusBox = box.querySelector('[data-baixa-status]');
+      const formBox = box.querySelector('[data-baixa-form]');
+      const inputSobra = formBox && formBox.querySelector('.input-sobra');
+      const acao = btn.dataset.action;
+
+      if (acao === 'refazer' && statusBox && formBox) {
+        statusBox.classList.add('hidden');
+        formBox.classList.remove('hidden');
+        return;
+      }
+
+      let modo = '', sobra;
+      if (acao === 'vendi-tudo') {
+        modo = 'vendeu_tudo';
+      } else if (acao === 'confirmar-sobra') {
+        const valor = (inputSobra && inputSobra.value || '').trim();
+        if (!valor) { showCustomAlert('Aviso', 'Informe a quantidade que sobrou.'); return; }
+        modo = 'sobra'; sobra = valor;
+      } else {
+        return;
+      }
+
+      btn.disabled = true;
+      try {
+        const params = new URLSearchParams({ modo });
+        if (sobra !== undefined) params.set('sobra', sobra);
+        const resp = await fetch('/painel/produtos/' + produtoId + '/baixa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.success) {
+          showCustomAlert('Aviso', data.message || 'Não foi possível registrar o fechamento.');
+          btn.disabled = false;
+          return;
+        }
+        window.location.reload();
+      } catch (e) {
+        showCustomAlert('Erro de conexão', 'Não foi possível registrar o fechamento.');
+        btn.disabled = false;
+      }
+    });
+
+    atualizarProgresso();
+  </script>
+<% } else { %>
+  <div class="space-y-6">
+    <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Acompanhamento</p>
+      <h2 class="mt-1 text-2xl font-bold text-slate-900">Fechamento da feira — produtores</h2>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">🟡 Pendente = ainda não fechou. 🟢 Concluído = já fechou todos os produtos com quantidade cadastrada.</p>
+    </div>
+
+    <section class="space-y-3">
+      <% produtores.forEach((produtor) => { %>
+        <div class="flex items-center justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
+          <div class="flex items-center gap-4">
+            <img src="<%= produtor.foto %>" alt="<%= produtor.nome %>" class="h-12 w-12 rounded-full object-cover" />
+            <div>
+              <h3 class="font-bold text-slate-900"><%= produtor.nome %></h3>
+              <p class="text-sm text-slate-500"><%= produtor.comunidade %></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <% if (produtor.status_fechamento === 'concluido') { %>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">🟢 Concluído</span>
+            <% } else if (produtor.status_fechamento === 'pendente') { %>
+              <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">🟡 Pendente</span>
+            <% } else { %>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">Sem produtos</span>
+            <% } %>
+            <button type="button" class="btn-ver-fechamento rounded-full border border-agro-300 px-3 py-1.5 text-xs font-semibold text-agro-700 hover:bg-agro-50" data-produtor-id="<%= produtor.id %>">Ver fechamento</button>
+          </div>
+        </div>
+      <% }) %>
+    </section>
+  </div>
+
+  <div id="modalFechamentoProdutor" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-lg font-bold text-slate-900" id="fechamentoModalNome">Fechamento</h3>
+        <button type="button" id="btnFecharModalFechamento" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+      </div>
+      <div id="fechamentoModalConteudo" class="mt-4 space-y-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const produtoresFechamento = <%- JSON.stringify(produtores.map(p => ({ id: p.id, nome: p.nome, produtos: p.produtos }))) %>;
+    document.querySelectorAll('.btn-ver-fechamento').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.produtorId);
+        const p = produtoresFechamento.find((x) => x.id === id);
+        if (!p) return;
+        document.getElementById('fechamentoModalNome').textContent = 'Fechamento — ' + p.nome;
+        const comMeta = p.produtos.filter((pr) => pr.quantidade_valor !== null && pr.quantidade_valor !== undefined);
+        const conteudo = document.getElementById('fechamentoModalConteudo');
+        conteudo.innerHTML = !comMeta.length
+          ? '<p class="text-sm text-slate-400">Nenhum produto com quantidade cadastrada.</p>'
+          : comMeta.map((pr) => {
+              const vendido = pr.baixa_em ? (pr.quantidade_valor - (pr.quantidade_sobra || 0)) : null;
+              return `
+                <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <span class="font-semibold text-slate-800">${pr.nome}</span>
+                  <span class="text-sm text-slate-600">
+                    ${pr.quantidade_valor} ${pr.unidade || ''} trazido
+                    ${pr.baixa_em ? ` · <strong class="text-emerald-700">${vendido} vendido</strong> · ${pr.quantidade_sobra || 0} sobra` : ' · <span class="text-amber-700 font-semibold">pendente</span>'}
+                  </span>
+                </div>
+              `;
+            }).join('');
+        document.getElementById('modalFechamentoProdutor').classList.remove('hidden');
+      });
+    });
+    document.getElementById('btnFecharModalFechamento').addEventListener('click', () => {
+      document.getElementById('modalFechamentoProdutor').classList.add('hidden');
+    });
+  </script>
+<% } %>
+
+<%- include('../partials/panel-footer') %>

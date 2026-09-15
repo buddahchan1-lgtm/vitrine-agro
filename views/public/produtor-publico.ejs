@@ -1,0 +1,463 @@
+<%- include('../partials/head', { pageTitle }) %>
+
+<div class="min-h-screen bg-slate-50">
+  <header class="border-b border-emerald-100 bg-white">
+    <div class="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
+      <a href="/" class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-agro-500 hover:text-agro-700">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </a>
+      <p class="text-sm font-semibold text-slate-600">Voltar para a vitrine</p>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-3xl px-4 py-8">
+
+    <div class="flex flex-col items-center text-center gap-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+     <div class="h-28 w-28 overflow-hidden rounded-full border-4 border-emerald-100 shadow-sm sm:h-32 sm:w-32">
+        <img src="<%= produtor.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>" alt="Foto de <%= produtor.nome %>" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E'" />
+      </div>
+      <h1 class="text-lg font-bold text-slate-900 sm:text-xl"><%= produtor.nome %></h1>
+      <p class="text-sm text-slate-500"><%= produtor.comunidade %></p>
+    </div>
+
+    <div class="mt-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <p><strong>Atenção:</strong> as encomendas são combinadas direto com o produtor pelo WhatsApp, mas a retirada é sempre na feira. Não há entrega em casa.</p>
+    </div>
+
+         <h2 class="mt-8 text-lg font-bold text-slate-900">Produtos</h2>
+    <% if (produtor.produtos.length) { %>
+      <p class="mt-1 text-xs text-slate-400">Toque em um produto para ver e deixar um comentário.</p>
+      <div id="produtosGrid" class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <% produtor.produtos.forEach((produto) => { %>
+          <% if (produto.imagem) { %>
+            <button type="button" class="produto-comentar-btn group relative h-48 overflow-hidden rounded-2xl border border-emerald-100 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" data-produto-id="<%= produto.id %>" data-produto-nome="<%= produto.nome %>" data-produto-imagem="<%= produto.imagem %>" data-interesses="<%= produto.total_interesses || 0 %>">
+              <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="h-48 w-full object-cover transition duration-300 group-hover:scale-105" />
+
+              <span class="produto-destaque-badge absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-lg ring-2 ring-white/70 <%= produto.mais_cobicado ? '' : 'hidden' %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Destaque
+              </span>
+
+              <span class="produto-interesse-badge absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg <%= (produto.total_interesses || 0) > 0 ? '' : 'hidden' %>" data-produto-interesse="<%= produto.id %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>
+                <span class="produto-interesse-count absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white"><%= produto.total_interesses || 0 %></span>
+              </span>
+
+              <div class="absolute inset-x-0 bottom-0 rounded-b-2xl bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-6">
+                <span class="block truncate text-sm font-bold leading-tight text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)] sm:text-base"><%= produto.nome %></span>
+              </div>
+            </button>
+          <% } else { %>
+
+            <button type="button" class="produto-comentar-btn relative flex h-48 flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/60 p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" data-produto-id="<%= produto.id %>" data-produto-nome="<%= produto.nome %>" data-interesses="<%= produto.total_interesses || 0 %>">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-2 text-emerald-500"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+              <span class="produto-destaque-badge mb-1 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-lg ring-2 ring-white/70 <%= produto.mais_cobicado ? '' : 'hidden' %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Destaque
+              </span>
+              <span class="truncate text-base font-bold text-slate-900"><%= produto.nome %></span>
+              <span class="mt-3 rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-emerald-800 shadow-xs"><%= produto.categoria %></span>
+              <span class="produto-interesse-badge mt-2 inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-1 <%= (produto.total_interesses || 0) > 0 ? '' : 'hidden' %>" data-produto-interesse="<%= produto.id %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>
+                <span class="produto-interesse-count text-[10px] font-bold text-rose-600"><%= produto.total_interesses || 0 %></span>
+              </span>
+            </button>
+          <% } %>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="mt-3 text-sm text-slate-500">Este produtor ainda não cadastrou produtos.</p>
+    <% } %>
+
+    <%
+      const numeroLimpo = (produtor.whatsapp || '').replace(/\D/g, '');
+      const mensagem = `Olá ${produtor.nome}! Vi seus produtos na Vitrine Agro e quero fazer uma encomenda.`;
+      const linkWhats = numeroLimpo ? `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(mensagem)}` : null;
+    %>
+    <div class="mt-8">
+      <% if (linkWhats) { %>
+        <a href="<%= linkWhats %>" target="_blank" rel="noopener" class="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-4 text-base font-bold text-white shadow-sm transition hover:bg-emerald-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.4 0-.5C10 9 9.5 7.7 9.3 7.2c-.2-.5-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.8c.1.2 2 3 4.8 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.3.2-.6.2-1.1.2-1.2-.1-.2-.3-.2-.6-.4z"/><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>
+          Encomendar no WhatsApp
+        </a>
+      <% } else { %>
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-center text-sm text-slate-500">
+          Este produtor ainda não cadastrou um WhatsApp para receber encomendas.
+        </div>
+      <% } %>
+    </div>
+
+   </main>
+
+ <!-- Modal estilo Instagram: imagem quadrada cheia + painel de comentários do lado -->
+  <div id="comentariosOverlay" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/85 p-4" onclick="fecharComentarios()">
+    <div class="relative flex h-[85vh] w-full items-stretch justify-center gap-3 sm:h-[min(82vh,600px)] sm:w-auto" onclick="event.stopPropagation()">
+
+      <!-- Bloco da imagem, com cantos arredondados e margem da tela -->
+      <div id="comentariosCard" class="relative h-full w-full overflow-hidden rounded-2xl bg-black shadow-2xl sm:aspect-square sm:w-auto sm:max-w-[92vw]">
+        <img id="comentariosImagemProduto" src="" alt="" class="h-full w-full object-cover" onerror="this.style.opacity='0'" />
+
+        <button type="button" onclick="fecharComentarios()" class="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70">&times;</button>
+
+        <!-- Botões de ação, agrupados com respiro entre eles -->
+        <div class="absolute right-3 top-3 z-20 flex items-center gap-3">
+          <button type="button" id="btnInteresseProduto" onclick="toggleInteresse()" class="flex items-center gap-1 rounded-full bg-white p-2.5 text-rose-300 shadow-lg transition hover:scale-105 hover:bg-slate-50" title="Marcar interesse">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>
+            <span id="contadorInteresse" class="hidden h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">0</span>
+          </button>
+
+          <button type="button" id="btnAbrirComentarios" onclick="toggleListaComentarios()" class="flex items-center gap-1 rounded-full bg-white p-2.5 text-slate-800 shadow-lg transition hover:scale-105 hover:bg-slate-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span id="contadorComentarios" class="hidden h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">0</span>
+          </button>
+        </div>
+
+        <div class="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4">
+          <h3 id="comentariosProdutoNome" class="inline-block text-base font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-lg"></h3>
+        </div>
+      </div>
+
+      <!-- Painel de comentários: no celular vira bottom sheet sobre a imagem; no desktop fica ao lado -->
+      <div id="comentariosPanel" class="hidden absolute inset-x-0 bottom-0 z-30 max-h-[75%] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:static sm:h-full sm:max-h-none sm:w-[300px] sm:max-w-[85vw] sm:rounded-2xl">
+        <div class="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-300 sm:hidden"></div>
+        <div class="flex items-center justify-between border-b border-slate-100 p-3">
+          <span class="text-sm font-bold text-slate-900">Comentários</span>
+          <button type="button" onclick="fecharPainelComentarios()" class="text-lg leading-none text-slate-400 hover:text-slate-600">&times;</button>
+        </div>
+        <div id="comentariosLista" class="flex-1 space-y-3 overflow-y-auto p-3"></div>
+         <form id="formNovoComentario" class="space-y-2 border-t border-slate-100 p-3">
+          <div id="googleSignInDiv" class="flex justify-center"></div>
+          <div id="usuarioGoogleLogado" class="hidden items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2">
+            <img id="avatarGoogleImg" src="" alt="" class="h-7 w-7 rounded-full object-cover" />
+            <span id="nomeGoogleSpan" class="text-sm font-semibold text-emerald-800"></span>
+            <button type="button" onclick="sairGoogle()" class="ml-auto text-xs font-semibold text-emerald-700 hover:underline">Sair</button>
+          </div>
+          <input type="text" id="comentarioNomeInput" maxlength="60" placeholder="Seu nome (opcional)" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+          <div class="flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 px-3 py-1.5 transition focus-within:border-agro-500 focus-within:bg-white">
+          <textarea id="comentarioTextoInput" required maxlength="500" rows="1" placeholder="Adicione um comentário..." class="max-h-24 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-sm leading-5 outline-none"></textarea>
+          <button type="submit" id="btnEnviarComentario" disabled class="shrink-0 pb-1.5 text-sm font-bold text-agro-600 transition hover:text-agro-700 disabled:text-slate-300 disabled:hover:text-slate-300">Postar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="confirmModalOverlay" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/50 p-4">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
+    <h3 class="text-base font-bold text-slate-900">Confirmar ação</h3>
+    <p id="confirmModalMensagem" class="mt-2 text-sm text-slate-600"></p>
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button" id="confirmModalCancelar" class="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100">Cancelar</button>
+      <button type="button" id="confirmModalConfirmar" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+   const podeExcluirComentarios = <%= (currentUser && (currentUser.id === produtor.id || currentUser.tipo_acesso === 'admin')) ? 'true' : 'false' %>;
+  let produtoAtualComentarios = null;
+  let avatarGoogleAtual = null;
+  let googleIdAtual = null;
+
+  function obterVisitanteId() {
+    let id = localStorage.getItem('vitrineagro_visitante_id');
+    if (!id) {
+      id = 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      localStorage.setItem('vitrineagro_visitante_id', id);
+    }
+    return id;
+  }
+  const visitanteIdAtual = obterVisitanteId();
+
+  const comentarioTextoInput = document.getElementById('comentarioTextoInput');
+const btnEnviarComentario = document.getElementById('btnEnviarComentario');
+
+function ajustarAlturaComentario() {
+  comentarioTextoInput.style.height = 'auto';
+  comentarioTextoInput.style.height = comentarioTextoInput.scrollHeight + 'px';
+}
+
+comentarioTextoInput.addEventListener('input', () => {
+  ajustarAlturaComentario();
+  btnEnviarComentario.disabled = !comentarioTextoInput.value.trim();
+});
+
+comentarioTextoInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (comentarioTextoInput.value.trim()) {
+      document.getElementById('formNovoComentario').requestSubmit();
+    }
+  }
+});
+
+  function initGoogleSignIn() {
+    if (!window.google || !google.accounts || !google.accounts.id) return;
+    google.accounts.id.initialize({
+      client_id: 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com', // troque pelo seu Client ID
+      callback: handleGoogleLogin
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('googleSignInDiv'),
+      { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', width: 220 }
+    );
+  }
+
+  function handleGoogleLogin(response) {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    avatarGoogleAtual = payload.picture;
+    googleIdAtual = payload.sub;
+    document.getElementById('comentarioNomeInput').value = payload.name;
+    document.getElementById('comentarioNomeInput').classList.add('hidden');
+    document.getElementById('googleSignInDiv').classList.add('hidden');
+    document.getElementById('avatarGoogleImg').src = payload.picture;
+    document.getElementById('nomeGoogleSpan').textContent = payload.name;
+    document.getElementById('usuarioGoogleLogado').classList.remove('hidden');
+    document.getElementById('usuarioGoogleLogado').classList.add('flex');
+  }
+
+  function sairGoogle() {
+    avatarGoogleAtual = null;
+    googleIdAtual = null;
+    document.getElementById('comentarioNomeInput').value = '';
+    document.getElementById('comentarioNomeInput').classList.remove('hidden');
+    document.getElementById('googleSignInDiv').classList.remove('hidden');
+    document.getElementById('usuarioGoogleLogado').classList.add('hidden');
+    document.getElementById('usuarioGoogleLogado').classList.remove('flex');
+  }
+
+  document.addEventListener('DOMContentLoaded', initGoogleSignIn);
+
+  function confirmarAcao(mensagem) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('confirmModalOverlay');
+      document.getElementById('confirmModalMensagem').textContent = mensagem;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      const btnConfirmar = document.getElementById('confirmModalConfirmar');
+      const btnCancelar = document.getElementById('confirmModalCancelar');
+
+      function limpar(resultado) {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        btnConfirmar.removeEventListener('click', onConfirmar);
+        btnCancelar.removeEventListener('click', onCancelar);
+        resolve(resultado);
+      }
+      function onConfirmar() { limpar(true); }
+      function onCancelar() { limpar(false); }
+
+      btnConfirmar.addEventListener('click', onConfirmar);
+      btnCancelar.addEventListener('click', onCancelar);
+    });
+  }
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  async function abrirComentarios(produtoId, nomeProduto, imagemProduto) {
+    produtoAtualComentarios = produtoId;
+    document.getElementById('comentariosProdutoNome').textContent = nomeProduto;
+    document.getElementById('comentariosImagemProduto').src = imagemProduto || '';
+    document.getElementById('comentariosImagemProduto').style.opacity = '1';
+    // sempre começa com o ícone visível e o painel fechado
+    document.getElementById('comentariosPanel').classList.add('hidden');
+    document.getElementById('comentariosPanel').classList.remove('flex');
+    document.getElementById('btnAbrirComentarios').classList.remove('hidden');
+    const overlay = document.getElementById('comentariosOverlay');
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    await carregarComentarios();
+    await carregarInteresse(produtoId);
+  }
+
+  function renderInteresse(dados) {
+    const total = dados.total || 0;
+    const interessado = !!dados.interessado_por_mim;
+    const btn = document.getElementById('btnInteresseProduto');
+    const svgCoracao = btn.querySelector('svg');
+    const contador = document.getElementById('contadorInteresse');
+    btn.classList.toggle('text-rose-500', interessado);
+    btn.classList.toggle('text-rose-300', !interessado);
+    svgCoracao.setAttribute('fill', interessado ? 'currentColor' : 'none');
+    if (total > 0) {
+      contador.textContent = total;
+      contador.classList.remove('hidden');
+      contador.classList.add('flex');
+    } else {
+      contador.classList.add('hidden');
+      contador.classList.remove('flex');
+    }
+    document.querySelectorAll(`[data-produto-interesse="${produtoAtualComentarios}"]`).forEach((badge) => {
+      badge.classList.toggle('hidden', total <= 0);
+      const contadorEl = badge.querySelector('.produto-interesse-count');
+      if (contadorEl) contadorEl.textContent = total;
+    });
+
+    const cardProduto = document.querySelector(`.produto-comentar-btn[data-produto-id="${produtoAtualComentarios}"]`);
+    if (cardProduto) {
+      cardProduto.dataset.interesses = total;
+      reordenarProdutosPorInteresse();
+    }
+  }
+
+  function reordenarProdutosPorInteresse() {
+    const grid = document.getElementById('produtosGrid');
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll('.produto-comentar-btn'));
+    cards.sort((a, b) => Number(b.dataset.interesses || 0) - Number(a.dataset.interesses || 0));
+    cards.forEach((card) => grid.appendChild(card));
+    const maiorInteresse = Number(cards[0]?.dataset.interesses || 0);
+    cards.forEach((card, indice) => {
+      const badge = card.querySelector('.produto-destaque-badge');
+      if (badge) badge.classList.toggle('hidden', !(indice === 0 && maiorInteresse > 0));
+    });
+  }
+
+  async function carregarInteresse(produtoId) {
+    try {
+      const resp = await fetch(`/produtor/<%= produtor.id %>/produtos/${produtoId}/interesse?visitante_id=${encodeURIComponent(visitanteIdAtual)}`, { headers: { Accept: 'application/json' } });
+      const data = await resp.json();
+      renderInteresse(data);
+    } catch (e) {
+      // mantém o botão neutro se der erro, sem travar o modal
+    }
+  }
+
+  async function toggleInteresse() {
+    const btn = document.getElementById('btnInteresseProduto');
+    btn.disabled = true;
+    try {
+      const resp = await fetch(`/produtor/<%= produtor.id %>/produtos/${produtoAtualComentarios}/interesse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitante_id: visitanteIdAtual })
+      });
+      const data = await resp.json();
+      if (data.success) renderInteresse(data);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function fecharComentarios() {
+    document.getElementById('comentariosOverlay').classList.add('hidden');
+    document.getElementById('comentariosOverlay').classList.remove('flex');
+  }
+
+  function toggleListaComentarios() {
+    document.getElementById('comentariosPanel').classList.remove('hidden');
+    document.getElementById('comentariosPanel').classList.add('flex');
+    document.getElementById('btnAbrirComentarios').classList.add('hidden');
+  }
+
+  function fecharPainelComentarios() {
+    document.getElementById('comentariosPanel').classList.add('hidden');
+    document.getElementById('comentariosPanel').classList.remove('flex');
+    document.getElementById('btnAbrirComentarios').classList.remove('hidden');
+  }
+
+  function corAvatar(nome) {
+    const cores = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
+    let soma = 0;
+    for (const letra of nome) soma += letra.charCodeAt(0);
+    return cores[soma % cores.length];
+  }
+
+  function renderComentarios(comentarios) {
+  const lista = document.getElementById('comentariosLista');
+  const contador = document.getElementById('contadorComentarios');
+  if (comentarios.length > 0) {
+    contador.textContent = comentarios.length;
+    contador.classList.remove('hidden');
+    contador.classList.add('flex');
+  } else {
+    contador.classList.add('hidden');
+    contador.classList.remove('flex');
+  }
+    if (!comentarios.length) {
+      lista.innerHTML = '<p class="text-sm text-slate-400">Nenhum comentário ainda. Seja o primeiro!</p>';
+      return;
+    }
+    lista.innerHTML = comentarios.map((c) => {
+      const nome = c.nome_visitante || 'Visitante';
+      const inicial = nome.trim().charAt(0).toUpperCase() || 'V';
+      const avatarHtml = c.avatar_url
+        ? `<img src="${escapeHtml(c.avatar_url)}" alt="${escapeHtml(nome)}" class="h-8 w-8 shrink-0 rounded-full object-cover" />`
+        : `<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style="background:${corAvatar(nome)}">${inicial}</span>`;
+       return `
+      <div class="flex items-start gap-2.5">
+        ${avatarHtml}
+        <div class="min-w-0 flex-1">
+          <p class="text-sm leading-snug text-slate-800">
+            <span class="font-semibold">${escapeHtml(nome)}</span> <span class="text-slate-700">${escapeHtml(c.texto)}</span>
+          </p>
+          ${podeExcluirComentarios ? `<button type="button" class="btn-excluir-comentario mt-0.5 text-xs font-semibold text-rose-500 hover:underline" data-comentario-id="${c.id}">Excluir</button>` : ''}
+        </div>
+      </div>
+    `;
+    }).join('');
+  }
+
+  async function carregarComentarios() {
+    const lista = document.getElementById('comentariosLista');
+    lista.innerHTML = '<p class="text-sm text-slate-400">Carregando...</p>';
+    try {
+      const resp = await fetch(`/produtor/<%= produtor.id %>/produtos/${produtoAtualComentarios}/comentarios?google_id=${encodeURIComponent(googleIdAtual || '')}`, { headers: { Accept: 'application/json' } });
+      const data = await resp.json();
+      renderComentarios(data.comentarios || []);
+    } catch (e) {
+      lista.innerHTML = '<p class="text-sm text-rose-500">Não foi possível carregar os comentários.</p>';
+    }
+  }
+
+  document.querySelectorAll('.produto-comentar-btn').forEach((btn) => {
+    btn.addEventListener('click', () => abrirComentarios(btn.dataset.produtoId, btn.dataset.produtoNome, btn.dataset.produtoImagem));
+  });
+
+  document.getElementById('formNovoComentario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = document.getElementById('comentarioNomeInput').value.trim();
+    const texto = document.getElementById('comentarioTextoInput').value.trim();
+    if (!texto || !produtoAtualComentarios) return;
+    const btn = document.getElementById('btnEnviarComentario');
+    btn.disabled = true;
+    try {
+      const resp = await fetch(`/produtor/<%= produtor.id %>/produtos/${produtoAtualComentarios}/comentarios`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ nome, texto, avatar_url: avatarGoogleAtual, google_id: googleIdAtual })
+      });
+      const data = await resp.json();
+      if (data.success) {
+      comentarioTextoInput.value = '';
+      ajustarAlturaComentario();
+      btnEnviarComentario.disabled = true;
+      renderComentarios(data.comentarios || []);
+}
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('comentariosLista').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.btn-excluir-comentario');
+    if (!btn) return;
+    if (!(await confirmarAcao('Excluir este comentário?'))) return;
+    try {
+      await fetch(`/painel/comentarios/${btn.dataset.comentarioId}/excluir`, { method: 'POST' });
+      await carregarComentarios();
+    } catch (e2) {
+      alert('Não foi possível excluir o comentário.');
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

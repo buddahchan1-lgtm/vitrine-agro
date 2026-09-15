@@ -1,0 +1,564 @@
+<%- include('../partials/head', { pageTitle }) %>
+<%- include('../partials/panel-header') %>
+
+     <div class="space-y-6" data-sou-admin="<%= currentUser.tipo_acesso === 'admin' ? 'true' : 'false' %>">
+        <!-- Cabeçalho enxuto -->
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Olá, <%= currentUser.nome.split(' ')[0] %>! 👋</h2>
+              <p class="mt-1 text-sm text-slate-600">Confira os avisos e as datas da semana.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <a href="<%= currentUser.tipo_acesso === 'admin' ? '/painel/produtores' : '/painel/produtos' %>" class="inline-flex items-center rounded-2xl bg-agro-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">
+                <%= currentUser.tipo_acesso === 'admin' ? 'Gerenciar produtores' : 'Gerenciar produtos' %>
+              </a>
+              <a href="/" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-agro-500 hover:text-agro-700">Ver vitrine pública</a>
+            </div>
+          </div>
+        </div>
+
+         <!-- Calendário do mês em destaque -->
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900" id="calendarioMesAno">Calendário</h3>
+              <p class="mt-1 text-sm text-slate-500">Avisos da gestora, organizados por dia.</p>
+              <p class="mt-1 text-xs font-semibold text-agro-700">💡 Clique em um dia para ver os avisos daquele dia.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="calMesAnterior" class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-agro-500 hover:text-agro-700">‹</button>
+
+              <div class="relative">
+                <button type="button" id="calMesBuscarBtn" class="flex h-9 items-center gap-2 rounded-xl border border-slate-200 px-3 text-slate-600 transition hover:border-agro-500 hover:text-agro-700" title="Ir para um mês específico">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <span class="text-xs font-semibold">Ir para</span>
+                </button>
+
+                <div id="calMesBuscarPainel" class="hidden absolute left-1/2 top-full z-20 mt-2 w-80 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-96">
+                  <div class="flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Ir para um mês</p>
+                    <button type="button" id="calMesBuscarHoje" class="text-xs font-semibold text-agro-700 hover:underline">Ir para hoje</button>
+                  </div>
+                  <div class="mt-3 flex gap-3">
+                    <select id="calMesBuscarMes" class="w-1/2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-agro-500"></select>
+                    <select id="calMesBuscarAno" class="w-1/2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-agro-500"></select>
+                  </div>
+                  <button type="button" id="calMesBuscarAplicar" class="mt-4 w-full rounded-xl bg-agro-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-agro-700">Ir para este mês</button>
+                </div>
+              </div>
+
+              <button type="button" id="calMesProximo" class="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-agro-500 hover:text-agro-700">›</button>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 sm:gap-2 sm:text-xs">
+              <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+            </div>
+            <div id="calendarioGrade" class="mt-2 grid grid-cols-7 gap-1 sm:gap-2"></div>
+          </div>
+        </section>
+
+        <!-- Modal: avisos do dia -->
+        <div id="modalDiaCalendario" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm p-0 sm:items-center sm:p-4">
+          <div class="my-0 flex max-h-screen w-full flex-col rounded-none bg-white shadow-2xl sm:my-8 sm:max-h-[85vh] sm:max-w-lg sm:rounded-3xl md:max-w-2xl lg:max-w-3xl">
+            <div class="flex shrink-0 items-start justify-between gap-4 bg-agro-600 px-5 py-4 sm:rounded-t-3xl md:px-8 md:py-6">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-[0.14em] text-agro-100 md:text-sm">Avisos do dia</p>
+                <h4 class="mt-0.5 text-xl font-extrabold text-white md:text-3xl" id="modalDiaTitulo">—</h4>
+              </div>
+              <button type="button" id="modalDiaFechar" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-2xl leading-none text-white transition hover:bg-white/20 md:h-10 md:w-10">&times;</button>
+            </div>
+            <div id="modalDiaConteudo" class="flex-1 space-y-3 overflow-y-auto px-5 py-4 md:space-y-4 md:px-8 md:py-6"></div>
+          </div>
+        </div>
+
+        <!-- Mural de avisos enxuto -->
+        <section id="mural" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-bold text-slate-900">Mural de avisos</h3>
+              <% if (unreadCount > 0) { %>
+                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">Não lidos: <%= unreadCount %></span>
+              <% } %>
+            </div>
+            <span class="text-xs uppercase tracking-[0.16em] text-slate-400"><%= mensagens.length %> registros</span>
+          </div>
+
+          <% if (currentUser.tipo_acesso === 'admin') { %>
+            <form action="/painel/mensagens" method="POST" class="mt-4 space-y-2">
+              <textarea id="composeMuralTexto" name="texto" required rows="4" maxlength="3000" placeholder="Escreva um aviso para a equipe da feira..." class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-agro-500 focus:bg-white"></textarea>
+              <div class="flex items-center justify-between">
+                <span id="composeMuralContador" class="text-xs font-medium text-slate-400">0 / 3000</span>
+                <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-agro-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-agro-700">Publicar aviso</button>
+              </div>
+            </form>
+          <% } %>
+
+          <% if (currentUser.tipo_acesso === 'admin') { %>
+          <p class="mt-2 flex items-center gap-1.5 text-xs font-semibold text-agro-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            Toque no ícone de opções de cada aviso (ou clique com o botão direito) para editar ou excluir.
+          </p>
+          <% } %>
+          <div class="mt-5 space-y-3" id="listaMural"></div>
+          <div id="listaMuralVazia" class="hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">Nenhum aviso publicado ainda.</div>
+        </section>
+        <div id="menuContextoMural" class="fixed z-50 hidden w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1.5 shadow-xl">
+  <button type="button" id="btnMuralEditar" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50">Editar</button>
+  <button type="button" id="btnMuralExcluir" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50">Excluir</button>
+</div>
+
+<div id="modalEditarMural" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900">Editar aviso</h3>
+    <form id="formEditarMural" method="POST" class="mt-4 space-y-2">
+      <textarea name="texto" id="editarMuralTexto" rows="6" maxlength="3000" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white"></textarea>
+      <span id="editarMuralContador" class="block text-xs font-medium text-slate-400">0 / 3000</span>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" id="btnCancelarEditarMural" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button type="submit" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+      </div>
+
+     <script type="application/json" id="mensagensMuralData">
+      <%- JSON.stringify(mensagens.map(m => ({
+          id: m.id,
+          nome: m.remetente_nome,
+          foto: m.foto,
+          papel: m.tipo_acesso === 'admin' ? 'Gestora' : 'Produtor',
+          texto: m.texto,
+          criado_em: m.criado_em,
+          editado: !!m.editado_em
+        }))) %>
+     </script>
+
+     <script>
+      (function () {
+       const mensagensMural = JSON.parse(document.getElementById('mensagensMuralData').textContent);
+
+        const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const TOTAL_CELULAS = 42; // 6 linhas x 7 colunas — fixo, nenhum mês fica maior que o outro
+
+        const avisosPorDia = {};
+        mensagensMural.forEach((msg) => {
+          const dataMsg = new Date(msg.criado_em.replace(' ', 'T') + 'Z');
+          const chave = dataMsg.getFullYear() + '-' + String(dataMsg.getMonth() + 1).padStart(2, '0') + '-' + String(dataMsg.getDate()).padStart(2, '0');
+          if (!avisosPorDia[chave]) avisosPorDia[chave] = [];
+          avisosPorDia[chave].push({
+            titulo: msg.nome,
+            foto: msg.foto,
+            papel: msg.papel,
+            hora: dataMsg.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            texto: msg.texto,
+            editado: msg.editado
+
+            
+          });
+        });
+
+        
+
+        function chaveData(ano, mes, dia) {
+          return ano + '-' + String(mes + 1).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+        }
+
+        let dataAtual = new Date();
+        const hoje = new Date();
+        let celulasAtuais = []; // guarda {dia, mes, ano, podeClicar} de cada posição da grade renderizada
+
+        const tituloEl = document.getElementById('calendarioMesAno');
+        const gradeEl = document.getElementById('calendarioGrade');
+        const modal = document.getElementById('modalDiaCalendario');
+        const modalTitulo = document.getElementById('modalDiaTitulo');
+        const modalConteudo = document.getElementById('modalDiaConteudo');
+
+        function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+        }
+        
+        function abrirModalDia(dia, mes, ano) {
+          modalTitulo.textContent = String(dia).padStart(2, '0') + ' de ' + nomesMeses[mes] + ' de ' + ano;
+          const avisos = avisosPorDia[chaveData(ano, mes, dia)] || [];
+
+          if (!avisos.length) {
+            modalConteudo.innerHTML = `
+              <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
+                <p class="text-base font-semibold text-slate-600">Nenhum aviso publicado neste dia.</p>
+              </div>
+            `;
+          } else {
+          modalConteudo.innerHTML = avisos.map((a) => `
+              <div class="rounded-2xl border-2 border-agro-200 bg-white p-4 shadow-sm md:rounded-3xl md:p-6">
+                <div class="flex items-start gap-3 md:gap-5">
+                  <img src="${a.foto}" alt="${a.titulo}" class="h-12 w-12 shrink-0 rounded-full border-2 border-agro-200 object-cover md:h-16 md:w-16" />
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                      <p class="text-base font-extrabold text-slate-900 md:text-xl">
+                        ${a.titulo}
+                        <span class="ml-1 block text-xs font-bold uppercase tracking-[0.08em] text-agro-700 sm:inline md:text-sm">${a.papel}</span>
+                      </p>
+                      <time class="text-sm font-bold text-slate-600 md:text-base">${a.hora}</time>
+                    </div>
+                    <p class="mt-2 whitespace-pre-line text-base leading-7 text-slate-900 md:mt-3 md:text-xl md:leading-9">${escapeHtml(a.texto)}${a.editado ? ' <span class="text-sm italic text-slate-500 md:text-base">(editado)</span>' : ''}</p>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+          }
+
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+
+        function fecharModalDia() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+
+        document.getElementById('modalDiaFechar').addEventListener('click', fecharModalDia);
+        modal.addEventListener('click', (e) => { if (e.target === modal) fecharModalDia(); });
+
+        function renderizarCalendario() {
+          const ano = dataAtual.getFullYear();
+          const mes = dataAtual.getMonth();
+          tituloEl.textContent = nomesMeses[mes] + ' de ' + ano;
+
+          const primeiroDia = new Date(ano, mes, 1);
+          const offset = (primeiroDia.getDay() + 6) % 7;
+          const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+          const diasMesAnterior = new Date(ano, mes, 0).getDate();
+
+          gradeEl.innerHTML = '';
+          celulasAtuais = [];
+
+          for (let i = 0; i < TOTAL_CELULAS; i++) {
+            let dia, mesCel, anoCel, ehDoMesAtual;
+
+            if (i < offset) {
+              dia = diasMesAnterior - offset + 1 + i;
+              mesCel = mes === 0 ? 11 : mes - 1;
+              anoCel = mes === 0 ? ano - 1 : ano;
+              ehDoMesAtual = false;
+            } else if (i < offset + diasNoMes) {
+              dia = i - offset + 1;
+              mesCel = mes;
+              anoCel = ano;
+              ehDoMesAtual = true;
+            } else {
+              dia = i - offset - diasNoMes + 1;
+              mesCel = mes === 11 ? 0 : mes + 1;
+              anoCel = mes === 11 ? ano + 1 : ano;
+              ehDoMesAtual = false;
+            }
+
+           const ehHoje = hoje.getFullYear() === anoCel && hoje.getMonth() === mesCel && hoje.getDate() === dia;
+            const avisosDoDia = avisosPorDia[chaveData(anoCel, mesCel, dia)] || [];
+            const temAviso = avisosDoDia.length > 0;
+            const podeClicar = true;
+
+            celulasAtuais.push({ dia, mes: mesCel, ano: anoCel, podeClicar });
+
+            const celula = document.createElement('div');
+
+            if (ehDoMesAtual) {
+              celula.className = 'relative flex min-h-[60px] flex-col rounded-xl border p-1 text-left transition sm:min-h-[92px] sm:p-2 ' +
+                (ehHoje ? 'border-agro-500 bg-agro-50' : 'border-slate-200 bg-white hover:border-agro-400 hover:bg-agro-50/40');
+             } else if (temAviso) {
+              celula.className = 'relative flex min-h-[60px] flex-col rounded-xl border border-dashed border-slate-200 bg-slate-50 p-1 text-left transition hover:border-agro-300 sm:min-h-[92px] sm:p-2';
+            } else {
+              celula.className = 'flex min-h-[60px] flex-col rounded-xl border border-slate-100 bg-slate-50/60 p-1 text-left transition hover:border-agro-200 hover:bg-slate-100 sm:min-h-[92px] sm:p-2';
+            }
+
+            const numero = document.createElement('span');
+            numero.className = 'text-[11px] font-bold leading-none sm:text-sm ' +
+              (ehDoMesAtual ? (ehHoje ? 'text-agro-700' : 'text-slate-700') : 'text-slate-300');
+            numero.textContent = dia;
+            celula.appendChild(numero);
+
+           if (temAviso) {
+              const badge = document.createElement('span');
+              badge.className = 'absolute right-1 top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-agro-600 px-1 text-[11px] font-bold text-white shadow-sm';
+              badge.textContent = avisosDoDia.length > 9 ? '9+' : avisosDoDia.length;
+              celula.appendChild(badge);
+
+              const labelAviso = document.createElement('span');
+              labelAviso.className = 'mt-1 hidden pr-4 text-[11px] font-semibold leading-snug sm:block ' +
+              (ehDoMesAtual ? 'text-agro-700' : 'text-slate-400');
+              labelAviso.style.cssText = 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;';
+              labelAviso.textContent = avisosDoDia.length > 1 ? avisosDoDia.length + ' avisos' : avisosDoDia[0].titulo;
+              celula.appendChild(labelAviso);
+            }
+
+            gradeEl.appendChild(celula);
+          }
+        }
+        
+
+        // Um único listener no container inteiro — calcula por posição (linha/coluna)
+        // qual dia foi tocado. Isso elimina os "pontos mortos" nos espaços (gaps)
+        // entre os quadrados: clicar em qualquer lugar da grade sempre acerta um dia.
+        gradeEl.addEventListener('click', (ev) => {
+          const rect = gradeEl.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          const col = Math.min(6, Math.max(0, Math.floor((x / rect.width) * 7)));
+          const row = Math.min(5, Math.max(0, Math.floor((y / rect.height) * 6)));
+          const indice = row * 7 + col;
+          const info = celulasAtuais[indice];
+          if (info && info.podeClicar) abrirModalDia(info.dia, info.mes, info.ano);
+        });
+
+       document.getElementById('calMesAnterior').addEventListener('click', () => {
+          dataAtual = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - 1, 1);
+          renderizarCalendario();
+        });
+        document.getElementById('calMesProximo').addEventListener('click', () => {
+          dataAtual = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 1);
+          renderizarCalendario();
+        });
+
+        // Painel "ir para um mês" — agora também guarda o atalho "Ir para hoje"
+        const painelBtn = document.getElementById('calMesBuscarBtn');
+        const painel = document.getElementById('calMesBuscarPainel');
+        const selectMes = document.getElementById('calMesBuscarMes');
+        const selectAno = document.getElementById('calMesBuscarAno');
+
+        nomesMeses.forEach((nome, idx) => {
+          const opt = document.createElement('option');
+          opt.value = idx;
+          opt.textContent = nome;
+          selectMes.appendChild(opt);
+        });
+
+        const anoBase = hoje.getFullYear();
+        for (let a = anoBase - 2; a <= anoBase + 2; a++) {
+          const opt = document.createElement('option');
+          opt.value = a;
+          opt.textContent = a;
+          selectAno.appendChild(opt);
+        }
+
+        painelBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectMes.value = dataAtual.getMonth();
+          selectAno.value = dataAtual.getFullYear();
+          painel.classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+          if (!painel.contains(e.target) && e.target !== painelBtn) painel.classList.add('hidden');
+        });
+        document.getElementById('calMesBuscarAplicar').addEventListener('click', () => {
+          dataAtual = new Date(Number(selectAno.value), Number(selectMes.value), 1);
+          renderizarCalendario();
+          painel.classList.add('hidden');
+        });
+        document.getElementById('calMesBuscarHoje').addEventListener('click', () => {
+          dataAtual = new Date();
+          renderizarCalendario();
+          painel.classList.add('hidden');
+        });
+
+        renderizarCalendario();
+
+        /* --- INÍCIO DO CÓDIGO DO MURAL --- */
+        const listaMuralEl = document.getElementById('listaMural');
+        const listaMuralVaziaEl = document.getElementById('listaMuralVazia');
+        const souAdmin = document.querySelector('.space-y-6').dataset.souAdmin === 'true';
+        let muralSelecionado = null;
+
+        function renderMural() {
+          if (!listaMuralEl) return;
+          listaMuralEl.innerHTML = '';
+          if (!mensagensMural.length) {
+            listaMuralVaziaEl.classList.remove('hidden');
+            return;
+          }
+          listaMuralVaziaEl.classList.add('hidden');
+          mensagensMural.slice(0, 3).forEach((m) => {
+            const dataMsg = new Date(m.criado_em.replace(' ', 'T') + 'Z');
+            const dataTexto = dataMsg.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            const row = document.createElement('article');
+            row.className = 'mural-row relative flex items-start gap-3 rounded-2xl border border-transparent bg-slate-50 p-4 pr-11 transition ' +
+              (souAdmin ? 'cursor-pointer hover:border-agro-200 hover:bg-white hover:shadow-sm' : '');
+            row.dataset.id = m.id;
+            row.innerHTML = `
+              <img src="${m.foto}" alt="${escapeHtml(m.nome)}" class="h-10 w-10 shrink-0 rounded-full object-cover" />
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p class="text-sm font-semibold text-slate-900">
+                    ${escapeHtml(m.nome)}
+                    <span class="ml-1 text-xs font-normal uppercase tracking-[0.12em] text-slate-400">${m.papel}</span>
+                  </p>
+                  <time class="text-xs font-medium text-slate-500">${dataTexto}</time>
+                </div>
+                <p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">${escapeHtml(m.texto)}${m.editado ? ' <span class="text-xs italic text-slate-400">(editado)</span>' : ''}</p>
+              </div>
+              ${souAdmin ? `<button type="button" class="mural-row-opcoes absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700" title="Editar ou excluir este aviso" aria-label="Editar ou excluir este aviso"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></button>` : ''}
+            `;
+            listaMuralEl.appendChild(row);
+          });
+        }
+
+       if (souAdmin && listaMuralEl) {
+          const menuMural = document.getElementById('menuContextoMural');
+          const btnMuralEditar = document.getElementById('btnMuralEditar');
+          const btnMuralExcluir = document.getElementById('btnMuralExcluir');
+          const modalEditarMural = document.getElementById('modalEditarMural');
+          const formEditarMural = document.getElementById('formEditarMural');
+          const editarMuralTexto = document.getElementById('editarMuralTexto');
+          const btnCancelarEditarMural = document.getElementById('btnCancelarEditarMural');
+
+          const composeMuralTexto = document.getElementById('composeMuralTexto');
+          const composeMuralContador = document.getElementById('composeMuralContador');
+          const editarMuralContador = document.getElementById('editarMuralContador');
+
+          function atualizarContadorMural(textarea, contadorEl) {
+            if (!textarea || !contadorEl) return;
+            contadorEl.textContent = textarea.value.length + ' / ' + textarea.maxLength;
+          }
+
+          if (composeMuralTexto) {
+            atualizarContadorMural(composeMuralTexto, composeMuralContador);
+            composeMuralTexto.addEventListener('input', () => atualizarContadorMural(composeMuralTexto, composeMuralContador));
+          }
+          if (editarMuralTexto) {
+            editarMuralTexto.addEventListener('input', () => atualizarContadorMural(editarMuralTexto, editarMuralContador));
+          }
+
+         function limparSelecaoMural() {
+            muralSelecionado = null;
+            listaMuralEl.querySelectorAll('.mural-row').forEach((r) => {
+              r.classList.remove('bg-agro-100', 'border-agro-400', 'ring-2', 'ring-agro-400');
+              r.classList.add('bg-slate-50', 'border-transparent');
+            });
+          }
+
+          function selecionarMural(row) {
+            limparSelecaoMural();
+            muralSelecionado = row.dataset.id;
+            row.classList.remove('bg-slate-50', 'border-transparent');
+            row.classList.add('bg-agro-100', 'border-agro-400', 'ring-2', 'ring-agro-400');
+          }
+
+         function abrirMenuMural(x, y, row) {
+            selecionarMural(row);
+
+            const menuLargura = 176; // w-44
+            const menuAltura = 100;  // altura aproximada com os 2 botões
+
+            let left = x;
+            let top = y;
+
+            // Se não couber à direita, encosta na borda direita da tela.
+            if (left + menuLargura > window.innerWidth - 12) {
+              left = window.innerWidth - menuLargura - 12;
+            }
+            if (left < 12) left = 12;
+
+            // Se não couber embaixo, abre para cima do ponto de clique.
+            if (top + menuAltura > window.innerHeight - 12) {
+              top = y - menuAltura - 8;
+            }
+            if (top < 12) top = 12;
+
+            menuMural.style.left = left + 'px';
+            menuMural.style.top = top + 'px';
+            menuMural.classList.remove('hidden');
+          }
+
+          let longPressAtivadoMural = false;
+
+          listaMuralEl.addEventListener('click', (e) => {
+            if (longPressAtivadoMural) { longPressAtivadoMural = false; return; }
+            const botaoOpcoes = e.target.closest('.mural-row-opcoes');
+            const row = e.target.closest('.mural-row');
+            if (!row) return;
+            if (botaoOpcoes) {
+              e.stopPropagation(); // impede que o clique feche o menu no mesmo instante em que abre
+              const rect = botaoOpcoes.getBoundingClientRect();
+              abrirMenuMural(rect.left, rect.bottom + 4, row);
+              return;
+            }
+            muralSelecionado === row.dataset.id ? limparSelecaoMural() : selecionarMural(row);
+          });
+
+          listaMuralEl.addEventListener('contextmenu', (e) => {
+            const row = e.target.closest('.mural-row');
+            if (!row) return;
+            e.preventDefault();
+            abrirMenuMural(e.clientX, e.clientY, row);
+          });
+
+          let pressTimerMural = null;
+          listaMuralEl.addEventListener('touchstart', (e) => {
+            const row = e.target.closest('.mural-row');
+            if (!row) return;
+            longPressAtivadoMural = false;
+            pressTimerMural = setTimeout(() => {
+              longPressAtivadoMural = true;
+              const toque = e.touches[0];
+              abrirMenuMural(toque.clientX, toque.clientY, row);
+            }, 500);
+          }, { passive: true });
+
+          ['touchend', 'touchmove'].forEach((ev) => listaMuralEl.addEventListener(ev, () => {
+            if (pressTimerMural) { clearTimeout(pressTimerMural); pressTimerMural = null; }
+          }));
+
+          document.addEventListener('click', (e) => {
+            if (!menuMural.contains(e.target)) menuMural.classList.add('hidden');
+          });
+
+                    btnMuralEditar.addEventListener('click', () => {
+            menuMural.classList.add('hidden');
+            const m = mensagensMural.find((x) => String(x.id) === String(muralSelecionado));
+            if (!m) return;
+            editarMuralTexto.value = m.texto;
+            atualizarContadorMural(editarMuralTexto, editarMuralContador);
+            formEditarMural.action = '/painel/mensagens/' + muralSelecionado + '/editar';
+            modalEditarMural.classList.remove('hidden');
+            modalEditarMural.classList.add('flex');
+          });
+
+          btnCancelarEditarMural.addEventListener('click', () => {
+            modalEditarMural.classList.add('hidden');
+            modalEditarMural.classList.remove('flex');
+          });
+
+           btnMuralExcluir.addEventListener('click', () => {
+            menuMural.classList.add('hidden');
+            if (!muralSelecionado) return;
+            const idParaExcluir = muralSelecionado;
+            showConfirm('Excluir aviso?', 'Essa ação não pode ser desfeita.', async () => {
+              try {
+                const resp = await fetch('/painel/mensagens/' + idParaExcluir + '/excluir', { method: 'POST' });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || data.success === false) {
+                  showCustomAlert('Não foi possível excluir', (data && data.message) || 'Tente novamente em instantes.');
+                  return;
+                }
+                window.location.reload();
+              } catch (e) {
+                showCustomAlert('Erro de conexão', 'Não foi possível excluir o aviso.');
+              }
+            });
+          });
+        }
+
+        renderMural();
+        /* --- FIM DO CÓDIGO DO MURAL --- */
+
+      })();
+      </script>
+  </main>
+</div>
+
+<%- include('../partials/panel-footer') %>
+

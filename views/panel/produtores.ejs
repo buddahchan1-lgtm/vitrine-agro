@@ -1,0 +1,618 @@
+<%- include('../partials/head', { pageTitle }) %>
+<%- include('../partials/panel-header') %>
+
+      <div class="space-y-6">
+        <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Gestão completa</p>
+          <h2 class="mt-1 text-2xl font-bold text-slate-900">Produtores cadastrados</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Clique em um produtor para ver e gerenciar os produtos da semana. Botão direito (ou segure no celular) sobre o nome para editar os dados ou excluir.</p>
+
+          <div class="relative mt-4 max-w-md">
+            <input
+              type="text"
+              id="buscarProdutorInput"
+              placeholder="Buscar produtor pelo nome..."
+              autocomplete="off"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-agro-500 focus:bg-white"
+            />
+            <div id="sugestoesProdutor" class="hidden absolute left-0 right-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl text-left"></div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center justify-start gap-3 text-xs font-semibold text-slate-400">
+          <button type="button" id="btnAbrirTodos" class="rounded-full border border-slate-200 px-3 py-1.5 transition hover:border-agro-500 hover:text-agro-700">Abrir todos</button>
+            <button type="button" id="btnFecharTodos" class="rounded-full border border-slate-200 px-3 py-1.5 transition hover:border-agro-500 hover:text-agro-700">Fechar todos</button>
+
+            <div class="relative" id="dropdownFiltroStatus">
+              <button type="button" id="btnFiltroStatus" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:border-agro-500 hover:text-agro-700">
+                <span>Filtro</span>
+                <span id="txtFiltroStatusAtual" class="text-agro-700">Todos (0)</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="menuFiltroStatus" class="hidden absolute left-1/2 top-full z-20 mt-2 w-56 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-1.5 text-left shadow-xl" id="filtrosStatusProdutor">
+                <button type="button" data-filtro-status="todos" class="filtro-status-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Todos <span class="filtro-status-count"></span></button>
+                <button type="button" data-filtro-status="concluido" class="filtro-status-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Concluídos <span class="filtro-status-count"></span></button>
+                <button type="button" data-filtro-status="em_andamento" class="filtro-status-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Em andamento <span class="filtro-status-count"></span></button>
+                <button type="button" data-filtro-status="pendente" class="filtro-status-btn flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Pendentes <span class="filtro-status-count"></span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+       <% produtores.forEach((produtor) => { %>
+           <article id="produtor-<%= produtor.id %>" class="produtor-card overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-soft transition-shadow" data-produtor-nome="<%= produtor.nome %>" data-status-fechamento="<%= produtor.status_fechamento %>">
+            <div class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div
+                class="flex min-w-0 flex-1 cursor-pointer items-center gap-4 rounded-2xl p-1 -m-1 transition hover:bg-slate-50"
+                data-produtor-trigger="<%= produtor.id %>"
+                role="button"
+                tabindex="0"
+                oncontextmenu="return abrirModalProdutor(event, <%= produtor.id %>)"
+                title="Clique para ver os produtos · botão direito (ou segure) para editar os dados"
+              >
+                <img src="<%= produtor.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>" alt="<%= produtor.nome %>" class="h-14 w-14 shrink-0 rounded-full border-4 border-emerald-100 object-cover" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E'" />
+                <div class="min-w-0 flex-1">
+                  <h3 class="truncate text-lg font-bold text-slate-900"><%= produtor.nome %></h3>
+                  <p class="truncate text-sm text-slate-500"><%= produtor.comunidade %> · <%= produtor.email %></p>
+                </div>
+                <span class="hidden shrink-0 rounded-full bg-agro-50 px-3 py-1 text-xs font-semibold text-agro-700 sm:inline-flex">
+                  <%= produtor.produtos.length %> produto<%= produtor.produtos.length === 1 ? '' : 's' %>
+                </span>
+               <% if (produtor.status_fechamento === 'concluido') { %>
+                  <span class="hidden shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 sm:inline-flex">Concluído</span>
+                <% } else if (produtor.status_fechamento === 'em_andamento') { %>
+                  <span class="hidden shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 sm:inline-flex">Em andamento (<%= produtor.total_com_baixa %>/<%= produtor.total_com_meta %>)</span>
+                <% } else if (produtor.status_fechamento === 'pendente') { %>
+                  <span class="hidden shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 sm:inline-flex">Pendente</span>
+                <% } %>
+                
+                <svg class="produtor-chevron h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+
+              <form action="/painel/status" method="POST" class="flex shrink-0 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <input type="hidden" name="usuario_id" value="<%= produtor.id %>" />
+                <input type="hidden" name="status" value="<%= produtor.status === 'ativo' ? 'invisivel' : 'ativo' %>" />
+                <input type="hidden" name="voltar_para" value="/painel/produtores" />
+                <span class="text-sm font-medium text-slate-600">Status na Vitrine</span>
+                <button type="submit" class="toggle-pill <%= produtor.status === 'ativo' ? 'on' : 'off' %>">
+                  <span class="toggle-label"><%= produtor.status === 'ativo' ? 'Ativo' : 'Invisível' %></span>
+                  <span class="toggle-dot"></span>
+                </button>
+              </form>
+            </div>
+
+            <div class="produtor-painel-produtos hidden space-y-4 border-t border-slate-100 bg-slate-50 p-4 sm:p-6">
+
+              <div class="flex gap-2 rounded-2xl bg-slate-100 p-1.5">
+              <button type="button" data-subtab-cadastro="<%= produtor.id %>" class="subtab-produtor-btn flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition hover:ring-1 hover:ring-agro-700/40">Cadastro da Semana</button>
+                <button type="button" data-subtab-volume="<%= produtor.id %>" class="subtab-produtor-btn flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition hover:ring-1 hover:ring-agro-700/40">Controle de Volume</button>
+              </div>
+
+              <div id="subtabCadastro<%= produtor.id %>" class="space-y-4">
+                <form action="/painel/produtos" method="POST" class="grid gap-3 md:grid-cols-[1fr_140px_120px_auto]">
+                  <input type="hidden" name="produtor_id" value="<%= produtor.id %>" />
+                  <input name="nome" required placeholder="Adicionar produto" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-agro-500" />
+                    <div class="categoria-dropdown relative">
+                    <input type="hidden" name="categoria" class="categoria-dropdown-valor" value="" />
+                    <button type="button" class="categoria-dropdown-btn flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-slate-400 outline-none transition hover:border-agro-500 focus:border-agro-500">
+                      <span class="categoria-dropdown-label truncate">Classe...</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                     <div class="categoria-tooltip-erro hidden absolute left-0 top-full z-30 mt-2 flex items-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
+                      <span class="absolute -top-1.5 left-4 h-3 w-3 rotate-45 border-l border-t border-slate-300 bg-white"></span>
+                      <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-600 text-[10px] font-bold text-white">!</span>
+                      Escolha uma Classe.
+                    </div>
+                    <div class="categoria-dropdown-menu hidden absolute left-0 top-full z-20 mt-2 w-56 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                      <% categorias.forEach((categoria) => { %>
+                        <button type="button" data-categoria="<%= categoria %>" class="categoria-dropdown-opcao flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                          <%= categoria %>
+                        </button>
+                      <% }) %>
+                    </div>
+                  </div>
+                  <input name="quantidade" placeholder="Ex: 20kg" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-agro-500" />
+                  <button type="submit" class="rounded-2xl bg-agro-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Adicionar</button>
+                </form>
+
+                <div class="space-y-3">
+                  <% if (produtor.produtos.length) { %>
+                    <% produtor.produtos.forEach((produto) => { %>
+                      <div class="rounded-2xl border border-slate-200 bg-white p-3">
+                        <form action="/painel/produtos/<%= produto.id %>/editar" method="POST" class="grid gap-3 lg:grid-cols-[1fr_140px_110px_auto_auto] lg:items-center">
+                          <input name="nome" value="<%= produto.nome %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-agro-500" />
+                           <div class="categoria-dropdown relative">
+                            <input type="hidden" name="categoria" class="categoria-dropdown-valor" value="<%= produto.categoria %>" />
+                            <button type="button" class="categoria-dropdown-btn flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500 focus:border-agro-500">
+                              <span class="categoria-dropdown-label truncate"><%= produto.categoria %></span>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <div class="categoria-dropdown-menu hidden absolute left-0 top-full z-20 mt-2 w-56 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                              <% categorias.forEach((categoria) => { %>
+                                <button type="button" data-categoria="<%= categoria %>" class="categoria-dropdown-opcao flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50 <%= produto.categoria === categoria ? 'bg-agro-50 text-agro-700' : '' %>">
+                                  <%= categoria %>
+                                </button>
+                              <% }) %>
+                            </div>
+                          </div>
+                          <input name="quantidade" value="<%= produto.quantidade || '' %>" placeholder="Ex: 20kg" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-agro-500" />
+                          <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Editar</button>
+                          <button formaction="/painel/produtos/<%= produto.id %>/excluir" formmethod="POST" type="submit" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">Apagar</button>
+                        </form>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm text-slate-500">Este produtor ainda não cadastrou produtos nesta semana.</div>
+                  <% } %>
+                </div>
+              </div>
+
+              <div id="subtabVolume<%= produtor.id %>" class="hidden space-y-3">
+                <% const comMetaProdutor = produtor.produtos.filter(p => p.quantidade_valor !== null && p.quantidade_valor !== undefined); %>
+                <% if (comMetaProdutor.length) { %>
+                  <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    <table class="w-full text-sm">
+                      <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase text-slate-400">
+                          <th class="px-4 py-3">Produto</th>
+                          <th class="px-4 py-3 text-right">Levado</th>
+                          <th class="px-4 py-3 text-right">Vendido</th>
+                          <th class="px-4 py-3 text-right">Sobra</th>
+                          <th class="px-4 py-3 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% comMetaProdutor.forEach((produto) => { %>
+                          <tr class="border-b border-slate-100 last:border-b-0">
+                            <td class="px-4 py-3 font-semibold text-slate-800"><%= produto.nome %></td>
+                            <td class="px-4 py-3 text-right text-slate-600"><%= produto.quantidade_valor %> <%= produto.unidade || '' %></td>
+                            <% if (produto.baixa_em) { %>
+                              <td class="px-4 py-3 text-right font-semibold text-emerald-700"><%= produto.quantidade_valor - (produto.quantidade_sobra || 0) %> <%= produto.unidade || '' %></td>
+                              <td class="px-4 py-3 text-right font-semibold text-amber-700"><%= produto.quantidade_sobra || 0 %> <%= produto.unidade || '' %></td>
+                              <td class="px-4 py-3 text-right"><span class="rounded bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">OK</span></td>
+                            <% } else { %>
+                              <td class="px-4 py-3 text-right text-slate-400">—</td>
+                              <td class="px-4 py-3 text-right text-slate-400">—</td>
+                              <td class="px-4 py-3 text-right"><span class="rounded bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">Pendente</span></td>
+                            <% } %>
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% } else { %>
+                  <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">Nenhum produto com quantidade cadastrada essa semana.</div>
+                <% } %>
+              </div>
+            </div>
+
+          </article>
+
+          <div id="modalEditarProdutor<%= produtor.id %>" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onclick="closeOnBackdrop(event, () => fecharModalProdutor(<%= produtor.id %>))">
+            <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Editar produtor</h3>
+                <button type="button" onclick="fecharModalProdutor(<%= produtor.id %>)" class="text-2xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+              </div>
+              <form action="/painel/produtores/<%= produtor.id %>/editar" method="POST" class="mt-4 space-y-3">
+                <input name="nome" value="<%= produtor.nome %>" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+                <input name="email" type="email" value="<%= produtor.email %>" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+                <input name="comunidade" value="<%= produtor.comunidade %>" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+                <input name="nova_senha" type="password" placeholder="Nova senha (deixe em branco para não alterar)" autocomplete="new-password" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+                <div class="flex justify-end gap-3 pt-2">
+                  <button type="button" onclick="fecharModalProdutor(<%= produtor.id %>)" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+                  <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Salvar dados</button>
+                </div>
+              </form>
+              <form action="/painel/produtores/<%= produtor.id %>/excluir" method="POST" class="mt-3 border-t border-slate-100 pt-3 form-confirmar-exclusao" data-confirmar-mensagem="Deseja excluir este produtor e todos os seus produtos?">
+                <button type="submit" class="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100">Excluir produtor</button>
+              </form>
+            </div>
+          </div>
+         <% }) %>
+      </div>
+
+      <%- include('../partials/panel-footer') %>
+
+<div id="confirmModalOverlay" class="fixed inset-0 z-[80] hidden items-center justify-center bg-black/50 p-4">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
+    <h3 class="text-base font-bold text-slate-900">Confirmar ação</h3>
+    <p id="confirmModalMensagem" class="mt-2 text-sm text-slate-600"></p>
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button" id="confirmModalCancelar" class="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100">Cancelar</button>
+      <button type="button" id="confirmModalConfirmar" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Accordion: abrir/fechar o painel de produtos de cada produtor ----
+  function abrirProdutorCard(id) {
+    const article = document.getElementById('produtor-' + id);
+    if (!article) return;
+    const painel = article.querySelector('.produtor-painel-produtos');
+    const chevron = article.querySelector('.produtor-chevron');
+    if (painel) painel.classList.remove('hidden');
+    if (chevron) chevron.classList.add('rotate-180');
+  }
+  function fecharProdutorCard(id) {
+    const article = document.getElementById('produtor-' + id);
+    if (!article) return;
+    const painel = article.querySelector('.produtor-painel-produtos');
+    const chevron = article.querySelector('.produtor-chevron');
+    if (painel) painel.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+  function toggleProdutorCard(id) {
+    const article = document.getElementById('produtor-' + id);
+    if (!article) return;
+    const painel = article.querySelector('.produtor-painel-produtos');
+    if (!painel) return;
+    if (painel.classList.contains('hidden')) abrirProdutorCard(id);
+    else fecharProdutorCard(id);
+  }
+
+    // ---- Sub-abas por produtor: Cadastro da Semana / Controle de Volume ----
+  function ativarSubTabProdutor(id, modo) {
+    const cadastroBox = document.getElementById('subtabCadastro' + id);
+    const volumeBox = document.getElementById('subtabVolume' + id);
+    const btnCadastro = document.querySelector('[data-subtab-cadastro="' + id + '"]');
+    const btnVolume = document.querySelector('[data-subtab-volume="' + id + '"]');
+    const ehVolume = modo === 'volume';
+    if (cadastroBox) cadastroBox.classList.toggle('hidden', ehVolume);
+    if (volumeBox) volumeBox.classList.toggle('hidden', !ehVolume);
+    [btnCadastro, btnVolume].forEach((b) => {
+      if (!b) return;
+      const ativo = (b === btnVolume) === ehVolume;
+      b.classList.toggle('bg-white', ativo);
+      b.classList.toggle('shadow-sm', ativo);
+      b.classList.toggle('text-agro-700', ativo);
+      b.classList.toggle('text-slate-500', !ativo);
+    });
+  }
+  document.querySelectorAll('[data-subtab-cadastro]').forEach((btn) => {
+    btn.addEventListener('click', () => ativarSubTabProdutor(btn.dataset.subtabCadastro, 'cadastro'));
+    ativarSubTabProdutor(btn.dataset.subtabCadastro, 'cadastro');
+  });
+  document.querySelectorAll('[data-subtab-volume]').forEach((btn) => {
+    btn.addEventListener('click', () => ativarSubTabProdutor(btn.dataset.subtabVolume, 'volume'));
+  });
+
+// ---- Filtro por status de fechamento (dropdown único) ----
+  (function () {
+    const botoes = Array.from(document.querySelectorAll('.filtro-status-btn'));
+    if (!botoes.length) return;
+    const cards = Array.from(document.querySelectorAll('.produtor-card'));
+
+    const btnFiltroStatus = document.getElementById('btnFiltroStatus');
+    const menuFiltroStatus = document.getElementById('menuFiltroStatus');
+    const txtFiltroStatusAtual = document.getElementById('txtFiltroStatusAtual');
+
+    const rotulos = {
+      todos: 'Todos',
+      concluido: 'Concluídos',
+      em_andamento: 'Em andamento',
+      pendente: 'Pendentes'
+    };
+
+    function contarPorStatus(status) {
+      if (status === 'todos') return cards.length;
+      return cards.filter((c) => c.dataset.statusFechamento === status).length;
+    }
+
+    botoes.forEach((btn) => {
+      const countEl = btn.querySelector('.filtro-status-count');
+      if (countEl) countEl.textContent = '(' + contarPorStatus(btn.dataset.filtroStatus) + ')';
+    });
+
+    function ativarFiltroStatus(status) {
+      botoes.forEach((b) => {
+        const ativo = b.dataset.filtroStatus === status;
+        b.classList.toggle('bg-agro-50', ativo);
+        b.classList.toggle('text-agro-700', ativo);
+        b.classList.toggle('text-slate-600', !ativo);
+      });
+      cards.forEach((card) => {
+        const mostrar = status === 'todos' || card.dataset.statusFechamento === status;
+        card.classList.toggle('hidden', !mostrar);
+      });
+      if (txtFiltroStatusAtual) {
+        txtFiltroStatusAtual.textContent = rotulos[status] + ' (' + contarPorStatus(status) + ')';
+      }
+    }
+
+    botoes.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        ativarFiltroStatus(btn.dataset.filtroStatus);
+        menuFiltroStatus.classList.add('hidden');
+      });
+    });
+
+    if (btnFiltroStatus && menuFiltroStatus) {
+      btnFiltroStatus.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuFiltroStatus.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!menuFiltroStatus.contains(e.target) && !btnFiltroStatus.contains(e.target)) {
+          menuFiltroStatus.classList.add('hidden');
+        }
+      });
+    }
+
+    ativarFiltroStatus('todos');
+  })();
+
+  const btnAbrirTodos = document.getElementById('btnAbrirTodos');
+
+  const btnFecharTodos = document.getElementById('btnFecharTodos');
+  if (btnAbrirTodos) {
+    btnAbrirTodos.addEventListener('click', () => {
+      document.querySelectorAll('[data-produtor-trigger]').forEach((el) => abrirProdutorCard(el.dataset.produtorTrigger));
+    });
+  }
+  if (btnFecharTodos) {
+    btnFecharTodos.addEventListener('click', () => {
+      document.querySelectorAll('[data-produtor-trigger]').forEach((el) => fecharProdutorCard(el.dataset.produtorTrigger));
+    });
+  }
+
+  // Veio de uma notificação do sininho ("novo produto cadastrado")?
+  // Abre o card, rola até o produtor certo e destaca ele por alguns segundos.
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const destaque = params.get('destaque');
+    if (!destaque) return;
+    const el = document.getElementById('produtor-' + destaque);
+    if (!el) return;
+    abrirProdutorCard(destaque);
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-4', 'ring-agro-400');
+      setTimeout(() => el.classList.remove('ring-4', 'ring-agro-400'), 3000);
+    }, 200);
+  })();
+
+  function confirmarAcao(mensagem) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('confirmModalOverlay');
+      document.getElementById('confirmModalMensagem').textContent = mensagem;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      const btnConfirmar = document.getElementById('confirmModalConfirmar');
+      const btnCancelar = document.getElementById('confirmModalCancelar');
+
+      function limpar(resultado) {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        btnConfirmar.removeEventListener('click', onConfirmar);
+        btnCancelar.removeEventListener('click', onCancelar);
+        resolve(resultado);
+      }
+      function onConfirmar() { limpar(true); }
+      function onCancelar() { limpar(false); }
+
+      btnConfirmar.addEventListener('click', onConfirmar);
+      btnCancelar.addEventListener('click', onCancelar);
+    });
+  }
+
+  document.querySelectorAll('.form-confirmar-exclusao').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      if (form.dataset.confirmado === 'true') return;
+      e.preventDefault();
+      const ok = await confirmarAcao(form.dataset.confirmarMensagem);
+      if (ok) {
+        form.dataset.confirmado = 'true';
+        form.requestSubmit();
+      }
+    });
+  });
+
+  function abrirModalProdutor(e, id) {
+    if (e && e.preventDefault) e.preventDefault();
+    document.getElementById('modalEditarProdutor' + id).classList.remove('hidden');
+    return false;
+  }
+  function fecharModalProdutor(id) {
+    document.getElementById('modalEditarProdutor' + id).classList.add('hidden');
+  }
+
+  document.querySelectorAll('[data-produtor-trigger]').forEach((el) => {
+    let pressTimer = null;
+    let longPressAtivado = false;
+
+    el.addEventListener('touchstart', () => {
+      longPressAtivado = false;
+      pressTimer = setTimeout(() => {
+        longPressAtivado = true;
+        abrirModalProdutor(null, el.dataset.produtorTrigger);
+      }, 500);
+    }, { passive: true });
+
+    ['touchend', 'touchmove'].forEach((ev) => el.addEventListener(ev, () => {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    }));
+
+    el.addEventListener('click', () => {
+      if (longPressAtivado) { longPressAtivado = false; return; }
+      toggleProdutorCard(el.dataset.produtorTrigger);
+    });
+
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleProdutorCard(el.dataset.produtorTrigger);
+      }
+    });
+  });
+
+  // ---- Busca de produtor com sugestões ----
+  (function () {
+    const input = document.getElementById('buscarProdutorInput');
+    const sugestoesBox = document.getElementById('sugestoesProdutor');
+    if (!input) return;
+
+    const produtoresLista = Array.from(document.querySelectorAll('[data-produtor-trigger]')).map((el) => {
+      const id = el.dataset.produtorTrigger;
+      const article = el.closest('.produtor-card');
+      return { id, nome: article ? article.dataset.produtorNome : '' };
+    });
+
+    function esconderSugestoes() {
+      sugestoesBox.classList.add('hidden');
+      sugestoesBox.innerHTML = '';
+    }
+
+    function irParaProdutor(id) {
+      abrirProdutorCard(id);
+      const el = document.getElementById('produtor-' + id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-4', 'ring-agro-400');
+      setTimeout(() => el.classList.remove('ring-4', 'ring-agro-400'), 3000);
+      esconderSugestoes();
+      input.value = '';
+    }
+
+    function mostrarSugestoes(termo) {
+      const termoLower = termo.trim().toLowerCase();
+      if (!termoLower) { esconderSugestoes(); return; }
+
+      const filtrados = produtoresLista.filter((p) => p.nome.toLowerCase().includes(termoLower));
+      if (!filtrados.length) {
+        sugestoesBox.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">Nenhum produtor encontrado.</div>';
+        sugestoesBox.classList.remove('hidden');
+        return;
+      }
+
+      sugestoesBox.innerHTML = '';
+      filtrados.forEach((p) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'block w-full px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 border-b border-slate-50 last:border-b-0';
+        item.textContent = p.nome;
+        item.addEventListener('mousedown', (e) => e.preventDefault());
+        item.addEventListener('click', () => irParaProdutor(p.id));
+        sugestoesBox.appendChild(item);
+      });
+      sugestoesBox.classList.remove('hidden');
+    }
+
+    input.addEventListener('input', (e) => mostrarSugestoes(e.target.value));
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const termoLower = input.value.trim().toLowerCase();
+        if (!termoLower) return;
+        const exato = produtoresLista.find((p) => p.nome.toLowerCase() === termoLower);
+        const encontrado = exato || produtoresLista.find((p) => p.nome.toLowerCase().includes(termoLower));
+        if (encontrado) irParaProdutor(encontrado.id);
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!sugestoesBox.contains(e.target) && e.target !== input) esconderSugestoes();
+    });
+  })();
+
+  document.querySelectorAll('[data-baixa-produto]').forEach((box) => {
+    const produtoId = box.dataset.baixaProduto;
+    const statusBox = box.querySelector('[data-baixa-status]');
+    const formBox = box.querySelector('[data-baixa-form]');
+
+    async function enviarBaixa(modo, sobra) {
+      try {
+        const params = new URLSearchParams({ modo });
+        if (sobra !== undefined) params.set('sobra', sobra);
+        const resp = await fetch('/painel/produtos/' + produtoId + '/baixa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString()
+        });
+        const data = await resp.json();
+        if (!data.success) {
+          showCustomAlert('Aviso', data.message || 'Não foi possível registrar o fechamento.');
+          return;
+        }
+        window.location.reload();
+      } catch (e) {
+        showCustomAlert('Erro de conexão', 'Não foi possível registrar o fechamento.');
+      }
+    }
+
+    const btnTudo = formBox && formBox.querySelector('.btn-vendeu-tudo');
+    if (btnTudo) btnTudo.addEventListener('click', () => enviarBaixa('vendeu_tudo'));
+
+    const btnSobra = formBox && formBox.querySelector('.btn-confirmar-sobra');
+    const inputSobra = formBox && formBox.querySelector('.input-sobra');
+    if (btnSobra && inputSobra) {
+      btnSobra.addEventListener('click', () => {
+        const valor = inputSobra.value.trim();
+        if (valor === '') { showCustomAlert('Aviso', 'Informe a quantidade que sobrou.'); return; }
+        enviarBaixa('sobra', valor);
+      });
+    }
+
+    const btnRefazer = statusBox && statusBox.querySelector('.btn-refazer-fechamento');
+    if (btnRefazer && statusBox && formBox) {
+      btnRefazer.addEventListener('click', () => {
+        statusBox.classList.add('hidden');
+        formBox.classList.remove('hidden');
+      });
+    }
+  });
+
+  // ===== DROPDOWN DE CATEGORIA (estilo do painel de notificações) =====
+  (function () {
+    function fecharTodosDropdownsCategoria() {
+      document.querySelectorAll('.categoria-dropdown-menu').forEach((menu) => menu.classList.add('hidden'));
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.categoria-dropdown-btn');
+      if (btn) {
+        const dropdown = btn.closest('.categoria-dropdown');
+        const menu = dropdown.querySelector('.categoria-dropdown-menu');
+        const jaAberto = !menu.classList.contains('hidden');
+        fecharTodosDropdownsCategoria();
+        menu.classList.toggle('hidden', jaAberto);
+        return;
+      }
+
+      const opcao = e.target.closest('.categoria-dropdown-opcao');
+      if (opcao) {
+        const dropdown = opcao.closest('.categoria-dropdown');
+        dropdown.querySelector('.categoria-dropdown-valor').value = opcao.dataset.categoria;
+        dropdown.querySelector('.categoria-dropdown-label').textContent = opcao.dataset.categoria;
+        dropdown.querySelector('.categoria-dropdown-btn').classList.remove('text-slate-400');
+        dropdown.querySelector('.categoria-dropdown-btn').classList.add('text-slate-700');
+        const tooltipErro = dropdown.querySelector('.categoria-tooltip-erro');
+        if (tooltipErro) tooltipErro.classList.add('hidden');
+        dropdown.querySelectorAll('.categoria-dropdown-opcao').forEach((o) => {
+          o.classList.toggle('bg-agro-50', o === opcao);
+          o.classList.toggle('text-agro-700', o === opcao);
+        });
+        dropdown.querySelector('.categoria-dropdown-menu').classList.add('hidden');
+        return;
+      }
+
+      if (!e.target.closest('.categoria-dropdown')) fecharTodosDropdownsCategoria();
+    });
+
+    // Impede salvar sem escolher a categoria (balão discreto, sem vermelho)
+    document.addEventListener('submit', (ev) => {
+      const dropdown = ev.target.querySelector && ev.target.querySelector('.categoria-dropdown-valor');
+      if (!dropdown) return;
+      if (dropdown.value.trim() === '') {
+        ev.preventDefault();
+        const tooltipErro = dropdown.closest('.categoria-dropdown').querySelector('.categoria-tooltip-erro');
+        if (tooltipErro) {
+          tooltipErro.classList.remove('hidden');
+          setTimeout(() => tooltipErro.classList.add('hidden'), 3000);
+        }
+      }
+    });
+  })();
+</script>

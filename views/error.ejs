@@ -1,0 +1,15 @@
+<%- include('./partials/head', { pageTitle }) %>
+
+<main class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+  <div class="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-soft sm:p-10">
+    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-rose-50 text-3xl">⚠️</div>
+    <h1 class="mt-6 text-3xl font-bold text-slate-900"><%= message %></h1>
+    <p class="mt-3 text-sm leading-6 text-slate-600"><%= errorDetail %></p>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+      <a href="/" class="inline-flex items-center justify-center rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Voltar à vitrine</a>
+      <a href="/painel" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-agro-500 hover:text-agro-700">Ir para o painel</a>
+    </div>
+  </div>
+</main>
+
+<%- include('./partials/footer') %>

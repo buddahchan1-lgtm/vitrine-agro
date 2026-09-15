@@ -1,0 +1,70 @@
+<!-- Modal de confirmação genérico -->
+<div id="modalConfirmarAcao" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900" id="confirmarAcaoTitulo">Confirmar ação</h3>
+    <p class="mt-2 text-sm text-slate-600" id="confirmarAcaoTexto"></p>
+    <div class="flex items-center justify-end gap-3 pt-5">
+      <button type="button" id="btnConfirmarAcaoCancelar" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+      <button type="button" id="btnConfirmarAcaoOk" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de aviso genérico (substitui alert()) -->
+<div id="modalAviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900" id="avisoTitulo">Aviso</h3>
+    <p class="mt-2 text-sm text-slate-600" id="avisoTexto"></p>
+    <div class="flex items-center justify-end pt-5">
+      <button type="button" id="btnAvisoOk" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+ function confirmarAcao(mensagem, aoConfirmar) {
+    const modal = document.getElementById('modalConfirmarAcao');
+    const texto = document.getElementById('confirmarAcaoTexto');
+    if (!modal) { if (confirm(mensagem)) aoConfirmar(); return; }
+
+    // Clona os botões pra zerar QUALQUER listener antigo grudado neles
+    // (é isso que causava precisar clicar 2x — listeners iam se empilhando)
+    let btnOk = document.getElementById('btnConfirmarAcaoOk');
+    let btnCancelar = document.getElementById('btnConfirmarAcaoCancelar');
+    const novoOk = btnOk.cloneNode(true);
+    btnOk.replaceWith(novoOk);
+    btnOk = novoOk;
+    const novoCancelar = btnCancelar.cloneNode(true);
+    btnCancelar.replaceWith(novoCancelar);
+    btnCancelar = novoCancelar;
+
+    texto.textContent = mensagem;
+    modal.classList.remove('hidden');
+
+    function limpar() {
+      modal.classList.add('hidden');
+    }
+
+    // {once:true} = o listener se autodestrói depois de disparar 1 vez
+    btnOk.addEventListener('click', () => { limpar(); aoConfirmar(); }, { once: true });
+    btnCancelar.addEventListener('click', limpar, { once: true });
+}
+
+  function avisar(mensagem, titulo) {
+    const modal = document.getElementById('modalAviso');
+    const texto = document.getElementById('avisoTexto');
+    const tituloEl = document.getElementById('avisoTitulo');
+    const btnOk = document.getElementById('btnAvisoOk');
+    if (!modal) { alert(mensagem); return; }
+
+    if (tituloEl) tituloEl.textContent = titulo || 'Aviso';
+    texto.textContent = mensagem;
+    modal.classList.remove('hidden');
+
+    function onOk() {
+      modal.classList.add('hidden');
+      btnOk.removeEventListener('click', onOk);
+    }
+    btnOk.addEventListener('click', onOk);
+  }
+</script>

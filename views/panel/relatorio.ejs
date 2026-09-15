@@ -1,0 +1,1904 @@
+<%- include('../partials/head', { pageTitle }) %>
+<%- include('../partials/panel-header') %>
+
+    <% if (visao === 'global') { %>
+
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Visão geral da feira</p>
+        <h2 class="mt-1 text-2xl font-bold text-slate-900">Resumo de tickets</h2>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-3">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Total de tickets</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900"><%= resumo.total_tickets %></p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Valor total</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900">R$ <%= resumo.total_valor.toFixed(2) %></p>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Produtores com tickets</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900"><%= resumo.produtores_ativos %></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Oferta vs. Demanda</p>
+        <h2 class="mt-1 text-2xl font-bold text-slate-900">Aproveitamento da feira</h2>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-3">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Total trazido</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900"><%= ofertaDemanda.total_trazido.toFixed(1) %> kg</p>
+          </div>
+          <div class="rounded-2xl bg-emerald-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-emerald-700">Total comercializado</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-700"><%= ofertaDemanda.total_vendido.toFixed(1) %> kg</p>
+          </div>
+          <div class="rounded-2xl bg-agro-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-agro-700">Taxa de absorção</p>
+            <p class="mt-1 text-2xl font-bold text-agro-700"><%= taxaAbsorcao.toFixed(0) %>%</p>
+          </div>
+        </div>
+
+        <% if (sobrasPorCategoria.length) { %>
+          <h4 class="mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Sobras por categoria</h4>
+          <div class="mt-3 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 text-left text-xs font-semibold uppercase text-slate-400">
+                  <th class="py-2">Categoria</th>
+                  <th class="py-2 text-right">Trazido</th>
+                  <th class="py-2 text-right">Vendido</th>
+                  <th class="py-2 text-right">Sobra</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% sobrasPorCategoria.forEach((c) => { %>
+                  <tr class="border-b border-slate-100">
+                    <td class="py-2 font-semibold text-slate-800"><%= c.categoria %></td>
+                    <td class="py-2 text-right text-slate-600"><%= c.total_trazido.toFixed(1) %> kg</td>
+                    <td class="py-2 text-right text-emerald-700 font-semibold"><%= c.total_vendido.toFixed(1) %> kg</td>
+                    <td class="py-2 text-right text-amber-700 font-semibold"><%= c.total_sobra.toFixed(1) %> kg</td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <p class="mt-4 text-sm text-slate-400">Nenhum fechamento registrado ainda para calcular sobras.</p>
+        <% } %>
+      </section>
+
+      <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Pós-feira</p>
+        <h3 class="text-xl font-bold text-slate-900">Lançar tickets</h3>
+        <p class="mt-2 text-sm text-slate-600">Registre a quantidade de tickets recebidos por cada produtor ao final da feira.</p>
+
+        <form action="/painel/tickets" method="POST" id="formLancarTicket" class="mt-5 grid gap-3 md:grid-cols-[1.2fr_140px_120px_140px_auto]">
+          <div class="relative">
+            <input type="text" id="produtorNomeInput" placeholder="Digite ou selecione o produtor" required autocomplete="off"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+            <input type="hidden" name="produtor_id" id="produtorIdHidden" />
+            <div id="produtorSugestoes" class="absolute left-0 right-0 top-full z-20 mt-1 hidden max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
+          </div>
+          <input type="date" name="data_feira" required class="rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-3 pr-5 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+          <input type="number" name="quantidade" min="1" required placeholder="Qtd. tickets" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+          <input type="number" name="valor_unitario" min="0.01" step="0.01" required placeholder="Valor/ticket" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+          <button type="submit" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Lançar</button>
+        </form>
+      </section>
+
+      <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 class="text-xl font-bold text-slate-900">Últimos lançamentos</h3>
+          <a href="/painel/relatorio/lixeira" class="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-400 hover:text-rose-700">
+            Lixeira
+          </a>
+        </div>
+
+        <!-- Filtro simplificado e unificado na ordem desejada -->
+<div class="mt-4 flex flex-wrap items-center gap-3" id="seletorPeriodo">
+
+   <!-- 1. Produtor -->
+  <div class="relative">
+    <input type="text" id="filtroProdutorInput" placeholder="Todos os produtores" autocomplete="off"
+      class="w-56 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-agro-500 focus:bg-white" />
+    <input type="hidden" id="filtroProdutor" value="" />
+    <button type="button" id="btnLimparFiltroProdutorInput" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 hover:text-rose-600">&times;</button>
+    <div id="filtroProdutorSugestoes" class="hidden absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
+  </div>
+   <!-- 2. Data / Calendário -->
+  <div class="relative">
+    <button type="button" id="btnAbrirData" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500">
+      📅 Escolher datas
+    </button>
+    <div id="popoverData" class="hidden absolute left-1/2 top-full z-30 mt-2 w-[min(20rem,92vw)] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80">
+      <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Período</p>
+
+      <button type="button" id="btnAbrirListaDias"
+        class="mt-3 flex w-full items-center justify-between rounded-xl border border-agro-200 bg-agro-50 px-3 py-2.5 text-sm font-semibold text-agro-700 transition hover:border-agro-400 hover:bg-agro-100">
+        <span>📋 Escolher um dia já lançado</span>
+        <span>›</span>
+      </button>
+
+      <div class="my-4 flex items-center gap-2">
+        <span class="h-px flex-1 bg-slate-100"></span>
+        <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">ou manualmente</span>
+        <span class="h-px flex-1 bg-slate-100"></span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-500">De</label>
+          <input type="date" id="periodoValorDataInicio" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500">Até</label>
+          <input type="date" id="periodoValorDataFim" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+        </div>
+      </div>
+      <p class="mt-1 text-[11px] text-slate-400">Deixe "Até" vazio pra filtrar só 1 dia.</p>
+
+      <div class="mt-4 flex items-center gap-2">
+        <button type="button" id="btnLimparDataPopover" class="rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-500 transition hover:border-rose-300 hover:text-rose-600">Limpar</button>
+        <button type="button" id="btnConfirmarData" class="flex-1 rounded-xl bg-agro-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-agro-700">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: lista de dias já lançados (seleção múltipla) -->
+  <div id="modalListaDias" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4">
+    <div class="flex w-full max-w-md max-h-[80vh] flex-col rounded-3xl bg-white p-6 shadow-2xl sm:max-w-lg">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-slate-900">Dias com lançamento</h3>
+        <button type="button" id="btnFecharListaDias" class="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">✕</button>
+      </div>
+
+      <input type="text" id="buscaListaDias" placeholder="Buscar dia (ex: 03/08/2026)" autocomplete="off"
+        class="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+
+      <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-500 select-none cursor-pointer">
+        <input type="checkbox" id="marcarTodosDias" class="h-4 w-4 rounded border-slate-300 text-agro-600" />
+        Selecionar todos os dias visíveis
+      </label>
+
+      <div id="listaDiasCadastrados" class="mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1 scroll-fino"></div>
+      <p id="listaDiasVazia" class="hidden mt-2 text-center text-sm text-slate-400">Nenhum dia encontrado.</p>
+
+      <div class="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+        <p class="text-xs font-semibold text-agro-700" id="contadorDiasSelecionados"></p>
+        <div class="flex items-center gap-3">
+          <button type="button" id="btnCancelarListaDias" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+          <button type="button" id="btnConfirmarListaDias" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumo da seleção ativa -->
+  <span id="periodoResumoTexto" class="text-xs font-semibold text-agro-700">Mostrando tudo</span>
+
+   <!-- 3. Gerar PDF/Relatório (abre direto o modal usando o filtro atual) -->
+   <button type="button" id="btnAbrirRelatorio" class="rounded-2xl bg-agro-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-agro-700">
+    📄 Gerar Relatório
+  </button>
+
+  <span class="mx-1 h-5 w-px bg-slate-200"></span>
+
+     <!-- 4. Limpar Filtro -->
+  <button type="button" id="btnLimparPeriodo" class="text-xs font-semibold text-slate-500 underline hover:text-rose-600">Limpar Filtro</button>
+
+  </div>
+
+        <form action="/painel/tickets/excluir-lote" method="POST" id="formExcluirLote" class="select-none">
+          <div id="inputsSelecionados"></div>
+
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 select-none cursor-pointer">
+              <input type="checkbox" id="marcarTodos" class="h-4 w-4 rounded border-slate-300 text-agro-600" />
+              Selecionar todos
+            </label>
+            <p class="text-xs text-slate-400">Clique para selecionar · botão direito abre o menu · Delete exclui</p>
+            <button type="submit" id="btnExcluirLote" style="display: none;"
+              class="inline-flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100">
+              Excluir selecionados (<span id="contadorSelecionados">0</span>)
+            </button>
+          </div>
+
+          <div class="mt-3 max-h-[420px] space-y-1 overflow-y-auto pr-1 select-none scroll-fino" id="listaLancamentos"></div>
+          <div id="listaLancamentosVazia" class="mt-5 hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">Nenhum lançamento encontrado para esse período.</div>
+        </form>
+      </section>
+
+      <!-- PAGAMENTOS + COMPARATIVO -->
+      <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <h3 class="text-xl font-bold text-slate-900">Pagamentos e comparativo por produtor</h3>
+
+        <div class="mt-6 grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:divide-x lg:divide-slate-100">
+          <div class="lg:pr-8">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h4 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Pagamentos aos produtores</h4>
+              <div class="flex gap-2 rounded-2xl bg-slate-100 p-1">
+                <button type="button" id="tabPagAPagar" class="pag-tab-btn rounded-xl px-4 py-2 text-sm font-semibold transition">A pagar</button>
+                <button type="button" id="tabPagPagos" class="pag-tab-btn rounded-xl px-4 py-2 text-sm font-semibold transition">Pagos</button>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <label class="flex items-center gap-2 text-sm font-semibold text-slate-600 select-none cursor-pointer">
+                <input type="checkbox" id="marcarTodosPag" class="h-4 w-4 rounded border-slate-300 text-agro-600" />
+                Selecionar todos
+              </label>
+              <p class="text-xs text-slate-400">Clique para selecionar · botão direito abre o menu</p>
+              <button type="button" id="btnAcaoLotePag" style="display: none;"
+                class="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+                Marcar como pago (<span id="contadorSelecionadosPag">0</span>)
+              </button>
+            </div>
+
+            <div class="mt-3 max-h-[300px] space-y-2 overflow-y-auto pr-1 scroll-fino" id="listaPagamentos"></div>
+            <div id="listaPagamentosVazia" class="mt-5 hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">Nada por aqui para esse período.</div>
+
+            <form id="formMarcarPago" action="/painel/tickets/marcar-pago" method="POST" class="hidden"></form>
+            <form id="formDesmarcarPago" action="/painel/tickets/desmarcar-pago" method="POST" class="hidden"></form>
+          </div>
+
+          <div class="lg:pl-8 self-start" id="colunaGrafico">
+            <h4 class="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Comparativo por produtor</h4>
+            <p class="mt-1 text-xs text-slate-400" id="comparativoSubtitulo">Mostrando "a pagar", no período selecionado ao lado.</p>
+            <div class="mt-4 overflow-x-auto pb-2 grafico-scroll" id="graficoScrollBox">
+              <div id="graficoComparativoWrapper">
+                <canvas id="graficoComparativo" height="300"></canvas>
+              </div>
+            </div>
+            <div id="semDadosGrafico" class="mt-4 hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              Nenhum ticket lançado nesse período ainda.
+            </div>
+          </div>
+        </div>
+      </section>
+
+    <% } else { %>
+
+      <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-agro-700">Meu relatório</p>
+        <h2 class="mt-1 text-2xl font-bold text-slate-900">Tickets recebidos</h2>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-3">
+          <div class="rounded-2xl bg-slate-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-slate-500">Total de tickets</p>
+            <p class="mt-1 text-2xl font-bold text-slate-900"><%= resumo.total_tickets %></p>
+          </div>
+          <div class="rounded-2xl bg-amber-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-amber-700">Valor a receber</p>
+            <p class="mt-1 text-2xl font-bold text-amber-700">R$ <%= resumo.valor_pendente.toFixed(2) %></p>
+          </div>
+          <div class="rounded-2xl bg-emerald-50 p-4">
+            <p class="text-xs uppercase tracking-[0.14em] text-emerald-700">Já recebido</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-700">R$ <%= resumo.total_pago.toFixed(2) %></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <h3 class="text-xl font-bold text-slate-900">Meus lançamentos</h3>
+        <p class="mt-1 text-sm text-slate-500">Aqui aparecem todos os tickets que a gestora lançou no seu nome. Filtre por período para achar um dia específico.</p>
+
+        <div class="mt-4 flex flex-wrap items-center gap-3" id="meuSeletorPeriodo">
+          <div class="relative">
+            <button type="button" id="meuBtnAbrirData" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500">
+              📅 Escolher datas
+            </button>
+            <div id="meuPopoverData" class="hidden absolute left-0 top-full z-30 mt-2 w-[min(20rem,92vw)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80">
+              <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Período</p>
+
+              <button type="button" id="meuBtnAbrirListaDias"
+                class="mt-3 flex w-full items-center justify-between rounded-xl border border-agro-200 bg-agro-50 px-3 py-2.5 text-sm font-semibold text-agro-700 transition hover:border-agro-400 hover:bg-agro-100">
+                <span>📋 Escolher um dia já lançado</span>
+                <span>›</span>
+              </button>
+
+              <div class="my-4 flex items-center gap-2">
+                <span class="h-px flex-1 bg-slate-100"></span>
+                <span class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">ou manualmente</span>
+                <span class="h-px flex-1 bg-slate-100"></span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-500">De</label>
+                  <input type="date" id="meuFiltroDataInicio" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500">Até</label>
+                  <input type="date" id="meuFiltroDataFim" class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+                </div>
+              </div>
+              <p class="mt-1 text-[11px] text-slate-400">Deixe "Até" vazio pra filtrar só 1 dia.</p>
+
+              <div class="mt-4 flex items-center gap-2">
+                <button type="button" id="meuBtnLimparDataPopover" class="rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-500 transition hover:border-rose-300 hover:text-rose-600">Limpar</button>
+                <button type="button" id="meuBtnConfirmarData" class="flex-1 rounded-xl bg-agro-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-agro-700">Confirmar</button>
+              </div>
+            </div>
+          </div>
+
+          <span id="meuPeriodoResumoTexto" class="text-xs font-semibold text-agro-700">Mostrando tudo</span>
+
+          <button type="button" id="btnMeuLimparFiltro" class="text-xs font-semibold text-slate-500 underline hover:text-rose-600">Limpar Filtro</button>
+        </div>
+
+        <!-- Modal: lista de dias já lançados (produtor) -->
+        <div id="modalMeuListaDias" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 p-4">
+          <div class="flex w-full max-w-md max-h-[80vh] flex-col rounded-3xl bg-white p-6 shadow-2xl sm:max-w-lg">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-slate-900">Dias com lançamento</h3>
+              <button type="button" id="meuBtnFecharListaDias" class="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">✕</button>
+            </div>
+
+            <input type="text" id="meuBuscaListaDias" placeholder="Buscar dia (ex: 03/08/2026)" autocomplete="off"
+              class="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-agro-500 focus:bg-white" />
+
+            <label class="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-500 select-none cursor-pointer">
+              <input type="checkbox" id="meuMarcarTodosDias" class="h-4 w-4 rounded border-slate-300 text-agro-600" />
+              Selecionar todos os dias visíveis
+            </label>
+
+            <div id="meuListaDiasCadastrados" class="mt-3 flex-1 space-y-1.5 overflow-y-auto pr-1 scroll-fino"></div>
+            <p id="meuListaDiasVazia" class="hidden mt-2 text-center text-sm text-slate-400">Nenhum dia encontrado.</p>
+
+            <div class="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+              <p class="text-xs font-semibold text-agro-700" id="meuContadorDiasSelecionados"></p>
+              <div class="flex items-center gap-3">
+                <button type="button" id="meuBtnCancelarListaDias" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <button type="button" id="meuBtnConfirmarListaDias" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Confirmar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 max-h-[420px] space-y-2 overflow-y-auto pr-1 scroll-fino" id="listaMeusLancamentos"></div>
+        <div id="listaMeusLancamentosVazia" class="mt-5 hidden rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">Nenhum ticket encontrado para esse período.</div>
+      </section>
+
+    <% } %>
+
+<%- include('../partials/panel-footer') %>
+
+<!-- Modal do Relatório do dia -->
+<div id="modalRelatorioDia" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl scroll-fino">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div class="flex gap-2 rounded-2xl bg-slate-100 p-1.5">
+        <button type="button" id="tabRelatorioTickets" class="relatorio-tab-btn rounded-xl px-4 py-2 text-sm font-bold transition">Tickets</button>
+        <button type="button" id="tabRelatorioVolume" class="relatorio-tab-btn rounded-xl px-4 py-2 text-sm font-bold transition">Controle de Volume</button>
+      </div>
+      <button type="button" id="btnFecharRelatorioDia" class="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">✕</button>
+    </div>
+
+    <div class="flex justify-end pt-3">
+      <button type="button" id="btnBaixarPdfDia" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-agro-500 hover:text-agro-700">📄 Gerar PDF</button>
+    </div>
+
+    <div id="relatorioTicketsWrap">
+      <div id="relatorioDiaDocumento" class="bg-white p-6 w-full max-w-[700px] mx-auto text-slate-900">
+        <!-- Cabeçalho -->
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Vitrine Agro</p>
+            <h4 class="text-xl font-bold text-slate-900">Relatório de tickets</h4>
+          </div>
+          <p class="text-sm font-semibold text-slate-600" id="relatorioDiaDataTexto"></p>
+        </div>
+
+        <!-- Cabeçalho da Tabela -->
+        <div class="flex items-center border-b border-slate-300 pb-2 mb-2 px-2 text-xs font-semibold uppercase text-slate-400">
+          <span class="w-[50%] text-left">Produtor</span>
+          <span class="w-[20%] text-right">Tickets</span>
+          <span class="w-[30%] text-right">Valor</span>
+        </div>
+
+        <!-- Lista de Itens (Preenchida pelo JS) -->
+        <div id="relatorioDiaLista" class="flex flex-col w-full text-sm font-medium"></div>
+
+        <!-- Linha de Total -->
+        <div class="flex items-center mt-4 rounded-md bg-slate-100 p-3 text-sm font-bold border-t border-slate-200">
+          <span class="w-[50%] text-left text-slate-900">Total</span>
+          <span class="w-[20%] text-right text-slate-900" id="relatorioDiaTotalTickets"></span>
+          <span class="w-[30%] text-right text-emerald-700" id="relatorioDiaTotalValor"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="relatorioVolumeWrap" class="hidden">
+      <div id="relatorioVolumeDocumento" class="bg-white p-6 w-full max-w-[700px] mx-auto text-slate-900">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Vitrine Agro</p>
+            <h4 class="text-xl font-bold text-slate-900">Controle de volume por produtor</h4>
+          </div>
+        </div>
+
+        <div class="flex items-center border-b border-slate-300 pb-2 mb-2 px-2 text-xs font-semibold uppercase text-slate-400">
+          <span class="w-[34%] text-left">Produtor</span>
+          <span class="w-[22%] text-right">Levado</span>
+          <span class="w-[22%] text-right">Vendido</span>
+          <span class="w-[22%] text-right">Sobra</span>
+        </div>
+
+        <div id="relatorioVolumeLista" class="flex flex-col w-full text-sm font-medium"></div>
+
+        <div class="flex items-center mt-4 rounded-md bg-slate-100 p-3 text-sm font-bold border-t border-slate-200">
+          <span class="w-[34%] text-left text-slate-900">Total</span>
+          <span class="w-[22%] text-right text-slate-900" id="relatorioVolumeTotalLevado"></span>
+          <span class="w-[22%] text-right text-emerald-700" id="relatorioVolumeTotalVendido"></span>
+          <span class="w-[22%] text-right text-amber-700" id="relatorioVolumeTotalSobra"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Menu de contexto (botão direito) — Últimos lançamentos -->
+<div id="menuContexto" class="fixed z-50 hidden w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1.5 shadow-xl">
+  <button type="button" id="btnMenuEditar" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50">Editar</button>
+  <button type="button" id="btnMenuExcluir" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50">Excluir</button>
+</div>
+
+<!-- Menu de contexto (botão direito) — Pagamentos -->
+<div id="menuContextoPag" class="fixed z-50 hidden w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1.5 shadow-xl">
+  <button type="button" id="btnPagMarcarPago" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-emerald-700 hover:bg-emerald-50">Marcar como pago</button>
+  <button type="button" id="btnPagVoltarAPagar" class="block w-full px-4 py-2.5 text-left text-sm font-medium text-amber-700 hover:bg-amber-50">Voltar para "a pagar"</button>
+</div>
+
+<!-- Modal de editar lançamento -->
+<div id="modalEditar" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900">Editar lançamento</h3>
+    <form id="formEditarTicket" method="POST" class="mt-4 space-y-3">
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Data da feira</label>
+        <input type="date" name="data_feira" id="editarData" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Quantidade de tickets</label>
+        <input type="number" name="quantidade" id="editarQuantidade" min="1" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Valor por ticket</label>
+        <input type="number" name="valor_unitario" id="editarValor" min="0.01" step="0.01" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-agro-500 focus:bg-white" />
+      </div>
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" id="btnCancelarEditar" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+        <button type="submit" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de confirmação genérico -->
+<div id="modalConfirmarAcao" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900" id="confirmarAcaoTitulo">Confirmar ação</h3>
+    <p class="mt-2 text-sm text-slate-600" id="confirmarAcaoTexto"></p>
+    <div class="flex items-center justify-end gap-3 pt-5">
+      <button type="button" id="btnConfirmarAcaoCancelar" class="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+      <button type="button" id="btnConfirmarAcaoOk" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de aviso genérico (substitui alert()) -->
+<div id="modalAviso" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
+    <h3 class="text-lg font-bold text-slate-900" id="avisoTitulo">Aviso</h3>
+    <p class="mt-2 text-sm text-slate-600" id="avisoTexto"></p>
+    <div class="flex items-center justify-end pt-5">
+      <button type="button" id="btnAvisoOk" class="rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white hover:bg-agro-700">OK</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pag-tab-btn { color: #64748b; }
+  .pag-tab-btn.active { background: #ffffff; color: #166534; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .periodo-modo-btn { color: #64748b; font-weight: 600; border-radius: 0.85rem; transition: all .15s ease; }
+  .periodo-modo-btn.active-periodo { background: #16a34a; color: #ffffff; box-shadow: 0 2px 6px rgba(22,163,74,0.35); }
+
+  .grafico-scroll {
+    cursor: grab;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .grafico-scroll::-webkit-scrollbar { display: none; }
+  .grafico-scroll.arrastando { cursor: grabbing; user-select: none; }
+
+  #colunaGrafico { position: relative; }
+  #colunaGrafico.tem-scroll::after {
+    content: '';
+    position: absolute;
+    top: 40px;
+    right: 0;
+    bottom: 20px;
+    width: 28px;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.95));
+  }
+
+   .scroll-fino { scrollbar-width: auto; scrollbar-color: #4ade80 #ecfdf5; }
+  .scroll-fino::-webkit-scrollbar { width: 10px; }
+  .scroll-fino::-webkit-scrollbar-track { background: #ecfdf5; border-radius: 999px; }
+  .scroll-fino::-webkit-scrollbar-thumb { background-color: #4ade80; border-radius: 999px; border: 2px solid #ecfdf5; }
+  .scroll-fino::-webkit-scrollbar-thumb:hover { background-color: #16a34a; }
+
+  .arrastar-vertical { cursor: grab; }
+  .arrastar-vertical.arrastando-vertical { cursor: grabbing; user-select: none; }
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+  const listaProdutores = <%- JSON.stringify(produtores || []) %>;
+  const ticketsCompletos = <%- JSON.stringify(ticketsCompletos || []) %>;
+  const volumePorProdutor = <%- JSON.stringify(volumePorProdutor || []) %>;
+
+  const NOMES_MESES = {
+    '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+    '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+    '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+  };
+
+   function formatarData(d) {
+    return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
+  }
+
+
+   function confirmarAcao(mensagem, aoConfirmar) {
+    const modal = document.getElementById('modalConfirmarAcao');
+    const texto = document.getElementById('confirmarAcaoTexto');
+    const btnOk = document.getElementById('btnConfirmarAcaoOk');
+    const btnCancelar = document.getElementById('btnConfirmarAcaoCancelar');
+    if (!modal) { aoConfirmar(); return; }
+
+    texto.textContent = mensagem;
+    modal.classList.remove('hidden');
+
+    function limpar() {
+      modal.classList.add('hidden');
+      btnOk.removeEventListener('click', onOk);
+      btnCancelar.removeEventListener('click', onCancelar);
+    }
+    function onOk() { limpar(); aoConfirmar(); }
+    function onCancelar() { limpar(); }
+
+    btnOk.addEventListener('click', onOk);
+    btnCancelar.addEventListener('click', onCancelar);
+  }
+
+ function avisar(mensagem) {
+    const modal = document.getElementById('modalAviso');
+    const texto = document.getElementById('avisoTexto');
+    const btnOk = document.getElementById('btnAvisoOk');
+    if (!modal) { alert(mensagem); return; }
+
+    texto.textContent = mensagem;
+    modal.classList.remove('hidden');
+
+    function onOk() {
+      modal.classList.add('hidden');
+      btnOk.removeEventListener('click', onOk);
+    }
+    btnOk.addEventListener('click', onOk);
+  }
+
+  const formTicket = document.getElementById('formLancarTicket');
+  if (formTicket) {
+    const inputNome = document.getElementById('produtorNomeInput');
+    const inputIdHidden = document.getElementById('produtorIdHidden');
+    const caixaSugestoes = document.getElementById('produtorSugestoes');
+
+    function renderSugestoes(lista) {
+      caixaSugestoes.innerHTML = '';
+      if (!lista.length) {
+        caixaSugestoes.classList.add('hidden');
+        return;
+      }
+      lista.forEach((p) => {
+        const item = document.createElement('div');
+        item.textContent = p.nome;
+        item.className = 'cursor-pointer px-4 py-3 text-sm text-slate-700 hover:bg-agro-50 hover:text-agro-700';
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          inputNome.value = p.nome;
+          inputIdHidden.value = p.id;
+          caixaSugestoes.classList.add('hidden');
+        });
+        caixaSugestoes.appendChild(item);
+      });
+      caixaSugestoes.classList.remove('hidden');
+    }
+
+     inputNome.addEventListener('focus', () => {
+      const termo = inputNome.value.trim().toLowerCase();
+      if (termo) renderSugestoes(listaProdutores.filter((p) => p.nome.toLowerCase().includes(termo)));
+    });
+
+    inputNome.addEventListener('input', () => {
+      inputIdHidden.value = '';
+      const termo = inputNome.value.trim().toLowerCase();
+      if (!termo) {
+        caixaSugestoes.classList.add('hidden');
+        return;
+      }
+      renderSugestoes(listaProdutores.filter((p) => p.nome.toLowerCase().includes(termo)));
+    });
+
+    inputNome.addEventListener('blur', () => {
+      setTimeout(() => caixaSugestoes.classList.add('hidden'), 100);
+    });
+
+    formTicket.addEventListener('submit', function (e) {
+      // Se o produtor já foi escolhido clicando na sugestão, o ID já está
+      // salvo aqui — não precisamos (e não devemos) tentar re-achar pelo
+      // texto digitado, porque pequenas diferenças (espaço, acento,
+      // maiúscula/minúscula) no nome cadastrado quebravam essa comparação
+      // e bloqueavam o envio mesmo com o produtor certo selecionado.
+      if (inputIdHidden.value) {
+        return;
+      }
+
+      const digitado = inputNome.value.trim().toLowerCase();
+      const match = listaProdutores.find(p => p.nome.trim().toLowerCase() === digitado);
+      if (!match) {
+        e.preventDefault();
+        avisar('Selecione um produtor válido da lista de sugestões.');
+        return;
+      }
+      inputIdHidden.value = match.id;
+    });
+  }
+
+  function popularSelectAnos(select, anos, valorSalvo) {
+    select.innerHTML = '<option value="">Todos os anos</option>';
+    anos.forEach((ano) => {
+      const opt = document.createElement('option');
+      opt.value = ano;
+      opt.textContent = ano;
+      select.appendChild(opt);
+    });
+    if (valorSalvo && anos.includes(valorSalvo)) select.value = valorSalvo;
+  }
+
+  function popularSelectMeses(select, meses, valorSalvo) {
+    select.innerHTML = '<option value="">Todos os meses</option>';
+    meses.forEach((mes) => {
+      const opt = document.createElement('option');
+      opt.value = mes;
+      opt.textContent = NOMES_MESES[mes] || mes;
+      select.appendChild(opt);
+    });
+    if (valorSalvo && meses.includes(valorSalvo)) select.value = valorSalvo;
+  }
+
+  function popularSelectSemanas(select, semanas, valorSalvo) {
+    select.innerHTML = '<option value="">Todas as semanas</option>';
+    semanas.forEach((semana) => {
+      const opt = document.createElement('option');
+      opt.value = semana;
+      opt.textContent = 'Semana ' + Number(semana);
+      select.appendChild(opt);
+    });
+    if (valorSalvo && semanas.includes(valorSalvo)) select.value = valorSalvo;
+  }
+
+  function anosDisponiveis(lista) {
+    return [...new Set(lista.map((t) => t.ano))].sort().reverse();
+  }
+  function mesesDisponiveis(lista, ano) {
+    const filtrado = ano ? lista.filter((t) => t.ano === ano) : lista;
+    return [...new Set(filtrado.map((t) => t.mes))].sort();
+  }
+  function semanasDisponiveis(lista, ano, mes) {
+    let filtrado = lista;
+    if (ano) filtrado = filtrado.filter((t) => t.ano === ano);
+    if (mes) filtrado = filtrado.filter((t) => t.mes === mes);
+    return [...new Set(filtrado.map((t) => t.semana))].sort((a, b) => Number(a) - Number(b));
+  }
+
+  function filtrarPorPeriodo(lista, filtro) {
+    return lista.filter((t) => {
+      if (filtro.ano && t.ano !== filtro.ano) return false;
+      if (filtro.mes && t.mes !== filtro.mes) return false;
+      if (filtro.semana && t.semana !== filtro.semana) return false;
+      return true;
+    });
+  }
+
+  const selecaoPainel = { ativo: null, limpar: {} };
+  function ativarPainel(nome) {
+    if (selecaoPainel.ativo && selecaoPainel.ativo !== nome && selecaoPainel.limpar[selecaoPainel.ativo]) {
+      selecaoPainel.limpar[selecaoPainel.ativo]();
+    }
+    selecaoPainel.ativo = nome;
+  }
+
+   const seletorPeriodo = (function () {
+  const inputDataInicio = document.getElementById('periodoValorDataInicio');
+  const inputDataFim = document.getElementById('periodoValorDataFim');
+  const btnLimpar = document.getElementById('btnLimparPeriodo');
+  const resumoTexto = document.getElementById('periodoResumoTexto');
+  const inputFiltroProdutor = document.getElementById('filtroProdutorInput');
+  const hiddenFiltroProdutor = document.getElementById('filtroProdutor');
+  const sugestoesFiltroProdutor = document.getElementById('filtroProdutorSugestoes');
+  const btnLimparFiltroProdutorInput = document.getElementById('btnLimparFiltroProdutorInput');
+
+  let produtorId = '';
+  let diasSelecionados = []; // dias avulsos escolhidos na lista "Dias com lançamento"
+  const listeners = [];
+
+   function renderSugestoesFiltroProdutor(lista) {
+    sugestoesFiltroProdutor.innerHTML = '';
+    if (!lista.length) {
+      sugestoesFiltroProdutor.classList.add('hidden');
+      return;
+    }
+    lista.forEach((p) => {
+      const item = document.createElement('div');
+      item.textContent = p.nome;
+      item.className = 'cursor-pointer px-4 py-2.5 text-sm text-slate-700 hover:bg-agro-50 hover:text-agro-700';
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        inputFiltroProdutor.value = p.nome;
+        hiddenFiltroProdutor.value = p.id;
+        sugestoesFiltroProdutor.classList.add('hidden');
+        btnLimparFiltroProdutorInput.classList.remove('hidden');
+        produtorId = p.id;
+        disparar();
+      });
+      sugestoesFiltroProdutor.appendChild(item);
+    });
+    sugestoesFiltroProdutor.classList.remove('hidden');
+  }
+
+  if (inputFiltroProdutor) {
+    inputFiltroProdutor.addEventListener('input', () => {
+      const termo = inputFiltroProdutor.value.trim().toLowerCase();
+      hiddenFiltroProdutor.value = '';
+      btnLimparFiltroProdutorInput.classList.add('hidden');
+      if (produtorId) { produtorId = ''; disparar(); }
+      if (!termo) {
+        sugestoesFiltroProdutor.classList.add('hidden');
+        return;
+      }
+      renderSugestoesFiltroProdutor(listaProdutores.filter((p) => p.nome.toLowerCase().includes(termo)));
+    });
+
+    inputFiltroProdutor.addEventListener('blur', () => {
+      setTimeout(() => sugestoesFiltroProdutor.classList.add('hidden'), 100);
+    });
+
+    btnLimparFiltroProdutorInput.addEventListener('click', () => {
+      inputFiltroProdutor.value = '';
+      hiddenFiltroProdutor.value = '';
+      btnLimparFiltroProdutorInput.classList.add('hidden');
+      produtorId = '';
+      disparar();
+    });
+  }
+
+  function textoResumoDias(dias) {
+    if (dias.length <= 2) return dias.map(formatarData).join(', ');
+    return `${dias.length} dias selecionados`;
+  }
+
+  function calcularIntervalo() {
+    if (diasSelecionados.length) {
+      const dias = diasSelecionados.slice().sort();
+      return { dias, texto: textoResumoDias(dias) };
+    }
+
+    const de = inputDataInicio.value;
+    const ate = inputDataFim.value;
+    if (!de && !ate) return null;
+
+    // Se só um dos dois estiver preenchido, usa ele pros dois lados (filtra 1 dia só)
+    let inicio = de || ate;
+    let fim = ate || de;
+    if (inicio > fim) [inicio, fim] = [fim, inicio];
+
+    const texto = inicio === fim
+      ? formatarData(inicio)
+      : `${formatarData(inicio)} → ${formatarData(fim)}`;
+
+    return { inicio, fim, texto };
+  }
+
+  function disparar() {
+    const intervalo = calcularIntervalo();
+    const partes = [];
+    if (produtorId) {
+      const p = listaProdutores.find((x) => String(x.id) === String(produtorId));
+      if (p) partes.push(p.nome);
+    }
+    if (intervalo) partes.push(intervalo.texto);
+    resumoTexto.textContent = partes.length ? partes.join(' · ') : 'Mostrando tudo';
+    listeners.forEach((fn) => fn(intervalo, produtorId));
+  }
+
+  // Editar a data manualmente cancela uma seleção de dias avulsos, e vice-versa
+  [inputDataInicio, inputDataFim].forEach((input) => {
+    input.addEventListener('input', () => {
+      diasSelecionados = [];
+    });
+  });
+
+  btnLimpar.addEventListener('click', () => {
+    inputDataInicio.value = '';
+    inputDataFim.value = '';
+    diasSelecionados = [];
+    if (inputFiltroProdutor) inputFiltroProdutor.value = '';
+    if (hiddenFiltroProdutor) hiddenFiltroProdutor.value = '';
+    if (btnLimparFiltroProdutorInput) btnLimparFiltroProdutorInput.classList.add('hidden');
+    produtorId = '';
+    disparar();
+  });
+
+  return {
+    onChange: (fn) => listeners.push(fn),
+    aplicarData: disparar,
+    aplicarDiasSelecionados: (dias) => {
+      diasSelecionados = dias.slice();
+      inputDataInicio.value = '';
+      inputDataFim.value = '';
+      disparar();
+    },
+    diasSelecionadosAtuais: () => diasSelecionados.slice()
+  };
+})();
+
+    // Popover pequeno (De/Até manual) + modal grande centralizado (lista de dias já lançados)
+  (function () {
+    const btnAbrirData = document.getElementById('btnAbrirData');
+    const popoverData = document.getElementById('popoverData');
+    const inputDataInicio = document.getElementById('periodoValorDataInicio');
+    const inputDataFim = document.getElementById('periodoValorDataFim');
+    const btnConfirmar = document.getElementById('btnConfirmarData');
+    const btnLimparPopover = document.getElementById('btnLimparDataPopover');
+    const btnAbrirListaDias = document.getElementById('btnAbrirListaDias');
+    if (!btnAbrirData || !popoverData) return;
+
+    btnAbrirData.addEventListener('click', (e) => {
+      e.stopPropagation();
+      popoverData.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!popoverData.contains(e.target) && e.target !== btnAbrirData) {
+        popoverData.classList.add('hidden');
+      }
+    });
+
+    if (btnConfirmar) {
+      btnConfirmar.addEventListener('click', () => {
+        seletorPeriodo.aplicarData();
+        popoverData.classList.add('hidden');
+      });
+    }
+
+    if (btnLimparPopover) {
+      btnLimparPopover.addEventListener('click', () => {
+        inputDataInicio.value = '';
+        inputDataFim.value = '';
+        seletorPeriodo.aplicarData();
+        popoverData.classList.add('hidden');
+      });
+    }
+
+   const modalListaDias = document.getElementById('modalListaDias');
+    const buscaListaDias = document.getElementById('buscaListaDias');
+    const listaDiasCadastrados = document.getElementById('listaDiasCadastrados');
+    const listaDiasVazia = document.getElementById('listaDiasVazia');
+    const btnFecharListaDias = document.getElementById('btnFecharListaDias');
+    const btnCancelarListaDias = document.getElementById('btnCancelarListaDias');
+    const btnConfirmarListaDias = document.getElementById('btnConfirmarListaDias');
+    const marcarTodosDias = document.getElementById('marcarTodosDias');
+    const contadorDiasSelecionados = document.getElementById('contadorDiasSelecionados');
+    if (!modalListaDias) return;
+
+    const datasUnicas = [...new Set(ticketsCompletos.map((t) => t.data_feira))].sort().reverse();
+    const diasPendentes = new Set();
+    let ultimasFiltradas = [];
+
+    function atualizarContador() {
+      contadorDiasSelecionados.textContent = diasPendentes.size
+        ? `${diasPendentes.size} dia(s) selecionado(s)`
+        : '';
+      if (marcarTodosDias) {
+        marcarTodosDias.checked = ultimasFiltradas.length > 0 && ultimasFiltradas.every((d) => diasPendentes.has(d));
+      }
+    }
+
+    function renderListaDias(termo) {
+      const termoLimpo = (termo || '').trim().toLowerCase();
+      const filtradas = termoLimpo ? datasUnicas.filter((d) => formatarData(d).includes(termoLimpo)) : datasUnicas;
+      ultimasFiltradas = filtradas;
+
+      listaDiasCadastrados.innerHTML = '';
+      listaDiasVazia.classList.toggle('hidden', filtradas.length > 0);
+
+      filtradas.forEach((data) => {
+        const marcado = diasPendentes.has(data);
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ' +
+          (marcado ? 'border-agro-600 bg-agro-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-agro-500 hover:bg-white');
+        item.innerHTML = `
+          <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${marcado ? 'border-white bg-white text-agro-600' : 'border-slate-300 bg-white text-transparent'}">✓</span>
+          <span>📅 ${formatarData(data)}</span>
+        `;
+        item.addEventListener('click', () => {
+          if (diasPendentes.has(data)) diasPendentes.delete(data);
+          else diasPendentes.add(data);
+          renderListaDias(buscaListaDias.value);
+        });
+        listaDiasCadastrados.appendChild(item);
+      });
+
+      atualizarContador();
+    }
+
+    function abrirModalListaDias() {
+      popoverData.classList.add('hidden');
+      diasPendentes.clear();
+      seletorPeriodo.diasSelecionadosAtuais().forEach((d) => diasPendentes.add(d));
+      buscaListaDias.value = '';
+      renderListaDias('');
+      modalListaDias.classList.remove('hidden');
+    }
+
+    function fecharModalListaDias() {
+      modalListaDias.classList.add('hidden');
+    }
+
+    if (btnAbrirListaDias) {
+      if (!datasUnicas.length) {
+        btnAbrirListaDias.disabled = true;
+        btnAbrirListaDias.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        btnAbrirListaDias.addEventListener('click', abrirModalListaDias);
+      }
+    }
+
+    buscaListaDias.addEventListener('input', () => renderListaDias(buscaListaDias.value));
+    btnFecharListaDias.addEventListener('click', fecharModalListaDias);
+    btnCancelarListaDias.addEventListener('click', fecharModalListaDias);
+
+    if (marcarTodosDias) {
+      marcarTodosDias.addEventListener('change', () => {
+        if (marcarTodosDias.checked) ultimasFiltradas.forEach((d) => diasPendentes.add(d));
+        else ultimasFiltradas.forEach((d) => diasPendentes.delete(d));
+        renderListaDias(buscaListaDias.value);
+      });
+    }
+
+    modalListaDias.addEventListener('click', (e) => {
+      if (e.target === modalListaDias) fecharModalListaDias();
+    });
+
+    btnConfirmarListaDias.addEventListener('click', () => {
+      seletorPeriodo.aplicarDiasSelecionados([...diasPendentes]);
+      fecharModalListaDias();
+    });
+  })();
+
+   function filtrarPorIntervalo(lista, intervalo) {
+    if (!intervalo) return lista;
+    if (intervalo.dias) {
+      const conjunto = new Set(intervalo.dias);
+      return lista.filter((t) => conjunto.has(t.data_feira));
+    }
+    return lista.filter((t) => t.data_feira >= intervalo.inicio && t.data_feira <= intervalo.fim);
+  }
+
+  function filtrarPorProdutor(lista, produtorId) {
+    if (!produtorId) return lista;
+    return lista.filter((t) => String(t.produtor_id) === String(produtorId));
+  }
+
+  // Guarda o filtro (produtor + data) selecionado no topo de "Últimos lançamentos",
+  // para o relatório usar sem precisar pedir data de novo.
+  const filtroAtual = { intervalo: null, produtorId: '' };
+  seletorPeriodo.onChange((intervalo, produtorId) => {
+    filtroAtual.intervalo = intervalo;
+    filtroAtual.produtorId = produtorId;
+  });
+
+  (function () {
+      const listaEl = document.getElementById('listaLancamentos');
+    const vaziaEl = document.getElementById('listaLancamentosVazia');
+    if (!listaEl) return;
+
+    const form = document.getElementById('formExcluirLote');
+    const marcarTodos = document.getElementById('marcarTodos');
+    const btnExcluir = document.getElementById('btnExcluirLote');
+    const contador = document.getElementById('contadorSelecionados');
+    const inputsContainer = document.getElementById('inputsSelecionados');
+
+    const menu = document.getElementById('menuContexto');
+    const btnMenuEditar = document.getElementById('btnMenuEditar');
+    const btnMenuExcluir = document.getElementById('btnMenuExcluir');
+
+    const modalEditar = document.getElementById('modalEditar');
+    const formEditarTicket = document.getElementById('formEditarTicket');
+    const btnCancelarEditar = document.getElementById('btnCancelarEditar');
+    const campoData = document.getElementById('editarData');
+    const campoQuantidade = document.getElementById('editarQuantidade');
+    const campoValor = document.getElementById('editarValor');
+
+    const selecionados = new Set();
+    let linhasAtuais = [];
+
+    selecaoPainel.limpar.lancamentos = () => {
+      selecionados.clear();
+      atualizarUI();
+    };
+
+    function renderLista(itens) {
+      selecionados.clear();
+      listaEl.innerHTML = '';
+      if (!itens.length) {
+        vaziaEl.classList.remove('hidden');
+        atualizarUI();
+        return;
+      }
+      vaziaEl.classList.add('hidden');
+
+      itens.forEach((l) => {
+          const row = document.createElement('div');
+        row.className = 'lancamento-row flex items-center gap-3 rounded-2xl border border-transparent bg-slate-50 px-4 py-3 cursor-pointer transition hover:border-agro-200 hover:bg-white hover:shadow-sm';
+        row.dataset.id = l.id;
+        row.dataset.data = l.data_feira;
+        row.dataset.quantidade = l.quantidade;
+        row.dataset.valor = l.valor_unitario;
+        row.innerHTML = `
+          <span class="flex-1 font-semibold text-slate-900">${l.produtor_nome}</span>
+          <span class="text-sm font-medium text-slate-700">${formatarData(l.data_feira)}</span>
+          <span class="text-sm font-medium text-slate-700">${l.quantidade} tickets</span>
+          <span class="font-bold text-agro-700">R$ ${(l.quantidade * l.valor_unitario).toFixed(2)}</span>
+        `;
+        listaEl.appendChild(row);
+      });
+
+      linhasAtuais = Array.from(listaEl.querySelectorAll('.lancamento-row'));
+      atualizarUI();
+    }
+
+    function atualizarUI() {
+      linhasAtuais.forEach((row) => {
+        const sel = selecionados.has(row.dataset.id);
+        row.classList.toggle('bg-agro-100', sel);
+        row.classList.toggle('border-agro-400', sel);
+      });
+      if (contador) contador.textContent = selecionados.size;
+      if (btnExcluir) btnExcluir.style.display = selecionados.size === 0 ? 'none' : 'inline-flex';
+      if (marcarTodos) marcarTodos.checked = linhasAtuais.length > 0 && selecionados.size === linhasAtuais.length;
+    }
+
+    if (marcarTodos) {
+      marcarTodos.addEventListener('change', () => {
+        ativarPainel('lancamentos');
+        if (marcarTodos.checked) linhasAtuais.forEach((row) => selecionados.add(row.dataset.id));
+        else selecionados.clear();
+        atualizarUI();
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const alvoEhCampo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+      if (alvoEhCampo) return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selecionados.size > 0) {
+        e.preventDefault();
+        form.requestSubmit ? form.requestSubmit() : form.submit();
+      }
+      if (e.key === 'Escape') {
+        selecionados.clear();
+        atualizarUI();
+        menu.classList.add('hidden');
+      }
+    });
+
+    form.addEventListener('submit', (e) => {
+      if (!form.dataset.confirmado) {
+        e.preventDefault();
+        confirmarAcao('Mover os lançamentos selecionados para a lixeira?', () => {
+          form.dataset.confirmado = '1';
+          form.requestSubmit ? form.requestSubmit() : form.submit();
+        });
+        return;
+      }
+      delete form.dataset.confirmado;
+      inputsContainer.innerHTML = '';
+      selecionados.forEach((id) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids';
+        input.value = id;
+        inputsContainer.appendChild(input);
+      });
+    });
+
+        listaEl.addEventListener('click', (e) => {
+      const row = e.target.closest('.lancamento-row');
+      if (!row) return;
+      ativarPainel('lancamentos');
+      const id = row.dataset.id;
+      if (selecionados.has(id)) selecionados.delete(id);
+      else selecionados.add(id);
+      atualizarUI();
+    });
+
+    function abrirMenu(x, y) {
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+      menu.classList.remove('hidden');
+      btnMenuEditar.style.display = selecionados.size === 1 ? 'block' : 'none';
+    }
+
+    listaEl.addEventListener('contextmenu', (e) => {
+      const row = e.target.closest('.lancamento-row');
+      if (!row) return;
+      e.preventDefault();
+      const id = row.dataset.id;
+      if (!selecionados.has(id)) {
+        selecionados.clear();
+        selecionados.add(id);
+        atualizarUI();
+      }
+      abrirMenu(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!menu.contains(e.target)) menu.classList.add('hidden');
+    });
+
+    btnMenuExcluir.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      form.requestSubmit ? form.requestSubmit() : form.submit();
+    });
+
+    btnMenuEditar.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      const id = [...selecionados][0];
+      const row = linhasAtuais.find((r) => r.dataset.id === id);
+      if (!row) return;
+      campoData.value = row.dataset.data;
+      campoQuantidade.value = row.dataset.quantidade;
+      campoValor.value = row.dataset.valor;
+      formEditarTicket.action = '/painel/tickets/' + id + '/editar';
+      modalEditar.classList.remove('hidden');
+    });
+
+    btnCancelarEditar.addEventListener('click', () => {
+      modalEditar.classList.add('hidden');
+    });
+
+    seletorPeriodo.onChange((intervalo, produtorId) => {
+      const itens = filtrarPorProdutor(filtrarPorIntervalo(ticketsCompletos, intervalo), produtorId)
+        .slice()
+        .sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+      renderLista(itens);
+    });
+
+    renderLista(
+      ticketsCompletos.slice().sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em))
+    );
+  })();
+
+  (function () {
+    const listaEl = document.getElementById('listaPagamentos');
+    const vaziaEl = document.getElementById('listaPagamentosVazia');
+    if (!listaEl) return;
+
+    const tabAPagar = document.getElementById('tabPagAPagar');
+    const tabPagos = document.getElementById('tabPagPagos');
+    const formMarcar = document.getElementById('formMarcarPago');
+    const formDesmarcar = document.getElementById('formDesmarcarPago');
+    const menu = document.getElementById('menuContextoPag');
+    const btnMarcarPago = document.getElementById('btnPagMarcarPago');
+    const btnVoltarAPagar = document.getElementById('btnPagVoltarAPagar');
+    const marcarTodosPag = document.getElementById('marcarTodosPag');
+    const btnAcaoLotePag = document.getElementById('btnAcaoLotePag');
+    const contadorPag = document.getElementById('contadorSelecionadosPag');
+
+    const ctx = document.getElementById('graficoComparativo');
+    const semDados = document.getElementById('semDadosGrafico');
+    let chart;
+
+    (function configurarArrastarGrafico() {
+      const scrollBox = document.getElementById('graficoScrollBox');
+      if (!scrollBox) return;
+      let arrastando = false;
+      let inicioX = 0;
+      let scrollInicial = 0;
+
+      scrollBox.addEventListener('mousedown', (e) => {
+        arrastando = true;
+        scrollBox.classList.add('arrastando');
+        inicioX = e.pageX - scrollBox.offsetLeft;
+        scrollInicial = scrollBox.scrollLeft;
+      });
+      ['mouseleave', 'mouseup'].forEach((evento) => {
+        scrollBox.addEventListener(evento, () => {
+          arrastando = false;
+          scrollBox.classList.remove('arrastando');
+        });
+      });
+      scrollBox.addEventListener('mousemove', (e) => {
+        if (!arrastando) return;
+        e.preventDefault();
+        const x = e.pageX - scrollBox.offsetLeft;
+        const percorrido = (x - inicioX) * 1.2;
+        scrollBox.scrollLeft = scrollInicial - percorrido;
+      });
+    })();
+
+    let abaAtual = 'a_pagar';
+    let intervaloAtual = null;
+    let produtorAtual = '';
+    let gruposAtuais = [];
+    const selecionados = new Set();
+
+    selecaoPainel.limpar.pagamentos = () => {
+      selecionados.clear();
+      atualizarUISelecao();
+    };
+
+    function agruparPorProdutor(itens) {
+      const mapa = {};
+      itens.forEach((t) => {
+        const chave = t.produtor_id + '_' + t.data_feira;
+        if (!mapa[chave]) {
+          mapa[chave] = { chave, produtor_id: String(t.produtor_id), produtor_nome: t.produtor_nome, data_feira: t.data_feira, total_tickets: 0, total_valor: 0, ids: [] };
+        }
+        mapa[chave].total_tickets += t.quantidade;
+        mapa[chave].total_valor += t.quantidade * t.valor_unitario;
+        mapa[chave].ids.push(t.id);
+      });
+      return Object.values(mapa).sort((a, b) => (a.data_feira < b.data_feira ? -1 : a.data_feira > b.data_feira ? 1 : a.produtor_nome.localeCompare(b.produtor_nome)));
+    }
+
+    function submeterForm(form, ids) {
+      form.innerHTML = '';
+      ids.forEach((id) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids';
+        input.value = id;
+        form.appendChild(input);
+      });
+      form.requestSubmit ? form.requestSubmit() : form.submit();
+    }
+
+    function atualizarAbasVisual() {
+      tabAPagar.classList.toggle('active', abaAtual === 'a_pagar');
+      tabPagos.classList.toggle('active', abaAtual === 'pagos');
+      const subtitulo = document.getElementById('comparativoSubtitulo');
+      if (subtitulo) subtitulo.textContent = `Mostrando "${abaAtual === 'pagos' ? 'pagos' : 'a pagar'}", no período selecionado ao lado.`;
+    }
+
+    function atualizarUISelecao() {
+      listaEl.querySelectorAll('.pagamento-row').forEach((row) => {
+        const sel = selecionados.has(row.dataset.grupoId);
+        row.classList.toggle('bg-agro-100', sel);
+        row.classList.toggle('border-agro-400', sel);
+      });
+      if (contadorPag) contadorPag.textContent = selecionados.size;
+      if (btnAcaoLotePag) {
+        btnAcaoLotePag.style.display = selecionados.size === 0 ? 'none' : 'inline-flex';
+        btnAcaoLotePag.textContent = (abaAtual === 'a_pagar' ? 'Marcar como pago (' : 'Voltar para "a pagar" (') + selecionados.size + ')';
+        const ehVoltar = abaAtual === 'pagos';
+        btnAcaoLotePag.classList.toggle('border-emerald-200', !ehVoltar);
+        btnAcaoLotePag.classList.toggle('bg-emerald-50', !ehVoltar);
+        btnAcaoLotePag.classList.toggle('text-emerald-700', !ehVoltar);
+        btnAcaoLotePag.classList.toggle('hover:bg-emerald-100', !ehVoltar);
+        btnAcaoLotePag.classList.toggle('border-amber-200', ehVoltar);
+        btnAcaoLotePag.classList.toggle('bg-amber-50', ehVoltar);
+        btnAcaoLotePag.classList.toggle('text-amber-700', ehVoltar);
+        btnAcaoLotePag.classList.toggle('hover:bg-amber-100', ehVoltar);
+      }
+      if (marcarTodosPag) marcarTodosPag.checked = gruposAtuais.length > 0 && selecionados.size === gruposAtuais.length;
+    }
+
+    function renderPagamentos() {
+      atualizarAbasVisual();
+      selecionados.clear();
+      const doPeriodo = filtrarPorProdutor(filtrarPorIntervalo(ticketsCompletos, intervaloAtual), produtorAtual);
+      const relevantes = doPeriodo.filter((t) => (abaAtual === 'pagos' ? !!t.pago_em : !t.pago_em));
+      gruposAtuais = agruparPorProdutor(relevantes);
+
+      listaEl.innerHTML = '';
+      if (!gruposAtuais.length) {
+        vaziaEl.classList.remove('hidden');
+      } else {
+        vaziaEl.classList.add('hidden');
+        gruposAtuais.forEach((g) => {
+          const row = document.createElement('div');
+          row.className = 'pagamento-row flex cursor-pointer items-center gap-3 rounded-2xl border border-transparent bg-slate-50 px-4 py-3.5 transition hover:border-agro-200 hover:bg-white hover:shadow-sm';
+          row.dataset.grupoId = g.chave;
+          const iniciais = g.produtor_nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+          row.innerHTML = `
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-agro-100 text-sm font-bold text-agro-700">${iniciais}</span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-semibold text-slate-900">${g.produtor_nome}</span>
+              <span class="block text-xs text-slate-500">${g.total_tickets} tickets · ${formatarData(g.data_feira)}</span>
+            </span>
+            <span class="font-bold text-agro-700">R$ ${g.total_valor.toFixed(2)}</span>
+          `;
+          listaEl.appendChild(row);
+        });
+      }
+      atualizarUISelecao();
+      renderGrafico();
+    }
+
+    listaEl.addEventListener('click', (e) => {
+      const row = e.target.closest('.pagamento-row');
+      if (!row) return;
+      ativarPainel('pagamentos');
+      const id = row.dataset.grupoId;
+      if (selecionados.has(id)) selecionados.delete(id);
+      else selecionados.add(id);
+      atualizarUISelecao();
+    });
+
+    listaEl.addEventListener('contextmenu', (e) => {
+      const row = e.target.closest('.pagamento-row');
+      if (!row) return;
+      e.preventDefault();
+      const id = row.dataset.grupoId;
+      if (!selecionados.has(id)) {
+        selecionados.clear();
+        selecionados.add(id);
+        atualizarUISelecao();
+      }
+      btnMarcarPago.style.display = abaAtual === 'a_pagar' ? 'block' : 'none';
+      btnVoltarAPagar.style.display = abaAtual === 'pagos' ? 'block' : 'none';
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
+      menu.classList.remove('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!menu.contains(e.target)) menu.classList.add('hidden');
+    });
+
+    function idsSelecionados() {
+      return gruposAtuais.filter((g) => selecionados.has(g.chave)).flatMap((g) => g.ids);
+    }
+
+    btnMarcarPago.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      const ids = idsSelecionados();
+      if (!ids.length) return;
+      confirmarAcao(`Marcar ${selecionados.size} produtor(es) como pago?`, () => {
+        submeterForm(formMarcar, ids);
+      });
+    });
+
+    btnVoltarAPagar.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      const ids = idsSelecionados();
+      if (!ids.length) return;
+      confirmarAcao(`Voltar ${selecionados.size} produtor(es) para "a pagar"?`, () => {
+        submeterForm(formDesmarcar, ids);
+      });
+    });
+
+    tabAPagar.addEventListener('click', () => { abaAtual = 'a_pagar'; renderPagamentos(); });
+    tabPagos.addEventListener('click', () => { abaAtual = 'pagos'; renderPagamentos(); });
+
+    if (marcarTodosPag) {
+      marcarTodosPag.addEventListener('change', () => {
+        ativarPainel('pagamentos');
+        if (marcarTodosPag.checked) gruposAtuais.forEach((g) => selecionados.add(g.chave));
+        else selecionados.clear();
+        atualizarUISelecao();
+      });
+    }
+
+    if (btnAcaoLotePag) {
+      btnAcaoLotePag.addEventListener('click', () => {
+        const ids = idsSelecionados();
+        if (!ids.length) return;
+        const mensagem = abaAtual === 'a_pagar'
+          ? `Marcar ${selecionados.size} produtor(es) como pago?`
+          : `Voltar ${selecionados.size} produtor(es) para "a pagar"?`;
+        confirmarAcao(mensagem, () => {
+          submeterForm(abaAtual === 'a_pagar' ? formMarcar : formDesmarcar, ids);
+        });
+      });
+    }
+
+    function renderGrafico() {
+      if (!ctx) return;
+      const grupos = gruposAtuais;
+
+      if (!grupos.length) {
+        ctx.classList.add('hidden');
+        semDados.classList.remove('hidden');
+        if (chart) chart.destroy();
+        return;
+      }
+      ctx.classList.remove('hidden');
+      semDados.classList.add('hidden');
+
+      if (chart) chart.destroy();
+
+      const wrapper = document.getElementById('graficoComparativoWrapper');
+      const scrollBox = document.getElementById('graficoScrollBox') || wrapper.parentElement;
+      const coluna = document.getElementById('colunaGrafico');
+      const larguraDisponivel = Math.floor(coluna.clientWidth - 32);
+
+      const BARRAS_IDEAIS = 5;
+      const LARGURA_MINIMA_BARRA = 90;
+      const larguraPorBarraIdeal = larguraDisponivel / Math.min(grupos.length, BARRAS_IDEAIS);
+      const larguraPorBarra = Math.max(larguraPorBarraIdeal, LARGURA_MINIMA_BARRA);
+
+      const barrasVisiveis = Math.max(1, Math.min(grupos.length, Math.floor(larguraDisponivel / larguraPorBarra)));
+      const larguraJanela = Math.round(barrasVisiveis * larguraPorBarra);
+      const larguraTotal = Math.round(larguraPorBarra * grupos.length);
+      const precisaRolar = grupos.length > barrasVisiveis;
+
+      scrollBox.style.width = larguraJanela + 'px';
+      scrollBox.style.overflowX = 'auto';
+      scrollBox.scrollLeft = 0;
+      coluna.classList.toggle('tem-scroll', precisaRolar);
+      wrapper.style.width = larguraTotal + 'px';
+      wrapper.style.height = '300px';
+      ctx.style.width = '100%';
+      ctx.style.height = '100%';
+
+      const ehPagos = abaAtual === 'pagos';
+      const alturaCanvas = ctx.height || 220;
+      const gradiente = ctx.getContext('2d').createLinearGradient(0, 0, 0, alturaCanvas);
+      if (ehPagos) {
+        gradiente.addColorStop(0, '#fb923c');
+        gradiente.addColorStop(1, '#c2410c');
+      } else {
+        gradiente.addColorStop(0, '#22c55e');
+        gradiente.addColorStop(1, '#15803d');
+      }
+
+      const mesmoProdutorApareceMaisDeUmaVez = new Set(grupos.map((g) => g.produtor_id)).size < grupos.length;
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: grupos.map((g) => mesmoProdutorApareceMaisDeUmaVez ? [g.produtor_nome, formatarData(g.data_feira)] : [g.produtor_nome]),
+          datasets: [{
+            label: 'Valor total (R$)',
+            data: grupos.map((g) => g.total_valor),
+            backgroundColor: gradiente,
+            hoverBackgroundColor: ehPagos ? '#9a3412' : '#166534',
+            borderRadius: 10,
+            maxBarThickness: 64,
+            borderWidth: 0,
+            hoverBorderWidth: 3,
+            hoverBorderColor: ehPagos ? '#7c2d12' : '#052e16'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
+          resizeDelay: 0,
+          interaction: { mode: 'index', intersect: false, axis: 'x' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: '#ffffff',
+              titleColor: ehPagos ? '#9a3412' : '#166534',
+              bodyColor: ehPagos ? '#c2410c' : '#15803d',
+              borderColor: ehPagos ? '#fed7aa' : '#bbf7d0',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: false,
+              titleFont: { weight: 'bold', size: 13 },
+              bodyFont: { weight: 'bold', size: 13 },
+              callbacks: {
+                title: (itens) => {
+                  const g = grupos[itens[0].dataIndex];
+                  return `${g.produtor_nome} · ${formatarData(g.data_feira)}`;
+                },
+                label: (contexto) => {
+                  const g = grupos[contexto.dataIndex];
+                  return [`R$ ${g.total_valor.toFixed(2)}`, `${g.total_tickets} tickets`];
+                }
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, grace: '15%', grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 0, minRotation: 0 } }
+          }
+        }
+      });
+    }
+
+    seletorPeriodo.onChange((intervalo, produtorId) => {
+      intervaloAtual = intervalo;
+      produtorAtual = produtorId;
+      renderPagamentos();
+    });
+
+    renderPagamentos();
+  })();
+
+    // RELATÓRIO — usa o mesmo filtro (produtor + data) já selecionado em "Últimos lançamentos"
+  (function () {
+    const btnAbrir = document.getElementById('btnAbrirRelatorio');
+    const btnPdf = document.getElementById('btnBaixarPdfDia');
+    const btnFechar = document.getElementById('btnFecharRelatorioDia');
+    const modal = document.getElementById('modalRelatorioDia');
+    const documento = document.getElementById('relatorioDiaDocumento');
+    const dataTexto = document.getElementById('relatorioDiaDataTexto');
+    const lista = document.getElementById('relatorioDiaLista');
+    const totalTicketsEl = document.getElementById('relatorioDiaTotalTickets');
+    const totalValorEl = document.getElementById('relatorioDiaTotalValor');
+    if (!documento || !btnAbrir) return;
+
+     const tabTickets = document.getElementById('tabRelatorioTickets');
+    const tabVolume = document.getElementById('tabRelatorioVolume');
+    const wrapTickets = document.getElementById('relatorioTicketsWrap');
+    const wrapVolume = document.getElementById('relatorioVolumeWrap');
+    const volumeDocumento = document.getElementById('relatorioVolumeDocumento');
+
+    function ativarAbaRelatorio(aba) {
+      const ehVolume = aba === 'volume';
+      wrapTickets.classList.toggle('hidden', ehVolume);
+      wrapVolume.classList.toggle('hidden', !ehVolume);
+      [tabTickets, tabVolume].forEach((b) => {
+        const ativo = (b === tabVolume) === ehVolume;
+        b.classList.toggle('bg-white', ativo);
+        b.classList.toggle('shadow-sm', ativo);
+        b.classList.toggle('text-agro-700', ativo);
+        b.classList.toggle('text-slate-500', !ativo);
+      });
+    }
+    tabTickets.addEventListener('click', () => ativarAbaRelatorio('tickets'));
+    tabVolume.addEventListener('click', () => ativarAbaRelatorio('volume'));
+    ativarAbaRelatorio('tickets');
+
+    function gerarTickets() {
+      const intervalo = filtroAtual.intervalo;
+      const produtorId = filtroAtual.produtorId;
+
+      const doPeriodo = filtrarPorProdutor(filtrarPorIntervalo(ticketsCompletos, intervalo), produtorId);
+
+      if (!doPeriodo.length) {
+        dataTexto.textContent = intervalo ? intervalo.texto : 'Todos os períodos';
+        lista.innerHTML = '<p class="py-4 text-center text-sm text-slate-400">Nenhum ticket lançado nesse período/produtor.</p>';
+        totalTicketsEl.textContent = '0';
+        totalValorEl.textContent = 'R$ 0.00';
+        return;
+      }
+
+      const porProdutor = {};
+      doPeriodo.forEach((t) => {
+        if (!porProdutor[t.produtor_id]) {
+          porProdutor[t.produtor_id] = { nome: t.produtor_nome, tickets: 0, valor: 0 };
+        }
+        porProdutor[t.produtor_id].tickets += t.quantidade;
+        porProdutor[t.produtor_id].valor += t.quantidade * t.valor_unitario;
+      });
+
+      const linhas = Object.values(porProdutor).sort((a, b) => a.nome.localeCompare(b.nome));
+      const totalTickets = linhas.reduce((soma, l) => soma + l.tickets, 0);
+      const totalValor = linhas.reduce((soma, l) => soma + l.valor, 0);
+
+      dataTexto.textContent = intervalo ? intervalo.texto : 'Todos os períodos';
+      lista.innerHTML = linhas.map((l) => `
+        <div class="flex items-center w-full py-2 border-b border-slate-100">
+          <span class="w-[50%] text-left font-semibold text-slate-900">${l.nome}</span>
+          <span class="w-[20%] text-right text-slate-600">${l.tickets}</span>
+          <span class="w-[30%] text-right font-semibold text-agro-700">R$ ${l.valor.toFixed(2)}</span>
+        </div>
+      `).join('');
+      totalTicketsEl.textContent = totalTickets;
+      totalValorEl.textContent = 'R$ ' + totalValor.toFixed(2);
+    }
+
+    function gerarVolume() {
+      const linhas = volumePorProdutor || [];
+      const totalLevado = linhas.reduce((s, l) => s + Number(l.total_trazido || 0), 0);
+      const totalVendido = linhas.reduce((s, l) => s + Number(l.total_vendido || 0), 0);
+      const totalSobra = linhas.reduce((s, l) => s + Number(l.total_sobra || 0), 0);
+
+      const listaVolumeEl = document.getElementById('relatorioVolumeLista');
+      if (!linhas.length) {
+        listaVolumeEl.innerHTML = '<p class="py-4 text-center text-sm text-slate-400">Nenhum volume registrado ainda.</p>';
+      } else {
+        listaVolumeEl.innerHTML = linhas.map((l) => `
+          <div class="flex items-center w-full py-2 border-b border-slate-100">
+            <span class="w-[34%] text-left font-semibold text-slate-900">${l.produtor_nome}</span>
+            <span class="w-[22%] text-right text-slate-600">${Number(l.total_trazido).toFixed(1)} kg</span>
+            <span class="w-[22%] text-right text-emerald-700 font-semibold">${Number(l.total_vendido).toFixed(1)} kg</span>
+            <span class="w-[22%] text-right text-amber-700 font-semibold">${Number(l.total_sobra).toFixed(1)} kg</span>
+          </div>
+        `).join('');
+      }
+      document.getElementById('relatorioVolumeTotalLevado').textContent = totalLevado.toFixed(1) + ' kg';
+      document.getElementById('relatorioVolumeTotalVendido').textContent = totalVendido.toFixed(1) + ' kg';
+      document.getElementById('relatorioVolumeTotalSobra').textContent = totalSobra.toFixed(1) + ' kg';
+    }
+
+    btnAbrir.addEventListener('click', () => {
+      gerarTickets();
+      gerarVolume();
+      ativarAbaRelatorio('tickets');
+      modal.classList.remove('hidden');
+    });
+
+    btnFechar.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.classList.add('hidden');
+    });
+
+    btnPdf.addEventListener('click', () => {
+      window.scrollTo(0, 0);
+      const alvo = wrapVolume.classList.contains('hidden') ? documento : volumeDocumento;
+      html2pdf().set({
+  margin: 10,
+  filename: 'relatorio-' + (filtroAtual.intervalo ? filtroAtual.intervalo.inicio : 'geral') + '.pdf',
+  html2canvas: {
+    scale: 2,
+    useCORS: true,
+    scrollY: 0,
+    scrollX: 0
+  },
+  pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+}).from(alvo).save();
+    });
+  })();
+  
+</script>
+
+<!-- Lista de tickets do próprio produtor (visão individual), com filtro por período -->
+<script>
+  (function () {
+    const listaEl = document.getElementById('listaMeusLancamentos');
+    const vaziaEl = document.getElementById('listaMeusLancamentosVazia');
+    if (!listaEl) return; // essa seção só existe na visão do produtor
+
+    const inputInicio = document.getElementById('meuFiltroDataInicio');
+    const inputFim = document.getElementById('meuFiltroDataFim');
+    const btnLimpar = document.getElementById('btnMeuLimparFiltro');
+    const resumoTexto = document.getElementById('meuPeriodoResumoTexto');
+
+    const btnAbrirData = document.getElementById('meuBtnAbrirData');
+    const popoverData = document.getElementById('meuPopoverData');
+    const btnConfirmarData = document.getElementById('meuBtnConfirmarData');
+    const btnLimparPopover = document.getElementById('meuBtnLimparDataPopover');
+    const btnAbrirListaDias = document.getElementById('meuBtnAbrirListaDias');
+
+    const modalListaDias = document.getElementById('modalMeuListaDias');
+    const buscaListaDias = document.getElementById('meuBuscaListaDias');
+    const listaDiasCadastrados = document.getElementById('meuListaDiasCadastrados');
+    const listaDiasVazia = document.getElementById('meuListaDiasVazia');
+    const btnFecharListaDias = document.getElementById('meuBtnFecharListaDias');
+    const btnCancelarListaDias = document.getElementById('meuBtnCancelarListaDias');
+
+    const todosTickets = (typeof ticketsCompletos !== 'undefined' ? ticketsCompletos : [])
+      .slice()
+      .sort((a, b) => new Date(b.criado_em || b.data_feira) - new Date(a.criado_em || a.data_feira));
+
+    function formatarDataLocal(d) {
+      return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
+    }
+
+   function atualizarResumoTexto() {
+      if (diasSelecionadosAtuais.length) {
+        const dias = diasSelecionadosAtuais.slice().sort();
+        resumoTexto.textContent = dias.length <= 2
+          ? dias.map(formatarDataLocal).join(', ')
+          : `${dias.length} dias selecionados`;
+        return;
+      }
+      const de = inputInicio.value;
+      const ate = inputFim.value;
+      if (!de && !ate) {
+        resumoTexto.textContent = 'Mostrando tudo';
+        return;
+      }
+      resumoTexto.textContent = (de === ate || !ate)
+        ? formatarDataLocal(de || ate)
+        : `${formatarDataLocal(de)} → ${formatarDataLocal(ate)}`;
+    }
+
+    function renderLista() {
+      const de = inputInicio.value;
+      const ate = inputFim.value;
+
+      const filtrados = todosTickets.filter((t) => {
+        if (diasSelecionadosAtuais.length) return diasSelecionadosAtuais.includes(t.data_feira);
+        if (de && t.data_feira < de) return false;
+        if (ate && t.data_feira > ate) return false;
+        return true;
+      });
+
+      listaEl.innerHTML = '';
+      if (!filtrados.length) {
+        vaziaEl.classList.remove('hidden');
+        return;
+      }
+      vaziaEl.classList.add('hidden');
+
+      filtrados.forEach((t) => {
+        const row = document.createElement('div');
+        row.className = 'flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3';
+        row.innerHTML = `
+          <span class="flex-1 text-sm font-semibold text-slate-900">${formatarDataLocal(t.data_feira)}</span>
+          <span class="text-sm font-medium text-slate-700">${t.quantidade} tickets</span>
+          <span class="font-bold text-agro-700">R$ ${(t.quantidade * t.valor_unitario).toFixed(2)}</span>
+          ${t.pago_em
+            ? '<span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Pago</span>'
+            : '<span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">A pagar</span>'}
+        `;
+        listaEl.appendChild(row);
+      });
+    }
+
+    function aplicarFiltro() {
+      atualizarResumoTexto();
+      renderLista();
+    }
+
+     btnLimpar.addEventListener('click', () => {
+      inputInicio.value = '';
+      inputFim.value = '';
+      diasSelecionadosAtuais = [];
+      aplicarFiltro();
+    });
+
+    [inputInicio, inputFim].forEach((input) => {
+      input.addEventListener('input', () => {
+        diasSelecionadosAtuais = [];
+      });
+    });
+
+    // ---- Popover "Escolher datas" ----
+    if (btnAbrirData && popoverData) {
+      btnAbrirData.addEventListener('click', (e) => {
+        e.stopPropagation();
+        popoverData.classList.toggle('hidden');
+      });
+      document.addEventListener('click', (e) => {
+        if (!popoverData.contains(e.target) && e.target !== btnAbrirData) {
+          popoverData.classList.add('hidden');
+        }
+      });
+      if (btnConfirmarData) {
+        btnConfirmarData.addEventListener('click', () => {
+          aplicarFiltro();
+          popoverData.classList.add('hidden');
+        });
+      }
+      if (btnLimparPopover) {
+        btnLimparPopover.addEventListener('click', () => {
+          inputInicio.value = '';
+          inputFim.value = '';
+          aplicarFiltro();
+          popoverData.classList.add('hidden');
+        });
+      }
+    }
+
+    // ---- Modal "Escolher um dia já lançado" (seleção múltipla) ----
+    let diasSelecionadosAtuais = [];
+
+    if (modalListaDias) {
+      const datasUnicas = [...new Set(todosTickets.map((t) => t.data_feira))].sort().reverse();
+      const marcarTodosDias = document.getElementById('meuMarcarTodosDias');
+      const contadorDiasSelecionados = document.getElementById('meuContadorDiasSelecionados');
+      const btnConfirmarListaDias = document.getElementById('meuBtnConfirmarListaDias');
+
+      const diasPendentes = new Set();
+      let ultimasFiltradas = [];
+
+      function atualizarContador() {
+        contadorDiasSelecionados.textContent = diasPendentes.size
+          ? `${diasPendentes.size} dia(s) selecionado(s)`
+          : '';
+        if (marcarTodosDias) {
+          marcarTodosDias.checked = ultimasFiltradas.length > 0 && ultimasFiltradas.every((d) => diasPendentes.has(d));
+        }
+      }
+
+      function renderListaDias(termo) {
+        const termoLimpo = (termo || '').trim().toLowerCase();
+        const filtradas = termoLimpo ? datasUnicas.filter((d) => formatarDataLocal(d).includes(termoLimpo)) : datasUnicas;
+        ultimasFiltradas = filtradas;
+
+        listaDiasCadastrados.innerHTML = '';
+        listaDiasVazia.classList.toggle('hidden', filtradas.length > 0);
+
+        filtradas.forEach((data) => {
+          const marcado = diasPendentes.has(data);
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ' +
+            (marcado ? 'border-agro-600 bg-agro-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-agro-500 hover:bg-white');
+          item.innerHTML = `
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${marcado ? 'border-white bg-white text-agro-600' : 'border-slate-300 bg-white text-transparent'}">✓</span>
+            <span>📅 ${formatarDataLocal(data)}</span>
+          `;
+          item.addEventListener('click', () => {
+            if (diasPendentes.has(data)) diasPendentes.delete(data);
+            else diasPendentes.add(data);
+            renderListaDias(buscaListaDias.value);
+          });
+          listaDiasCadastrados.appendChild(item);
+        });
+
+        atualizarContador();
+      }
+
+      function abrirModalListaDias() {
+        if (popoverData) popoverData.classList.add('hidden');
+        diasPendentes.clear();
+        diasSelecionadosAtuais.forEach((d) => diasPendentes.add(d));
+        buscaListaDias.value = '';
+        renderListaDias('');
+        modalListaDias.classList.remove('hidden');
+      }
+      function fecharModalListaDias() {
+        modalListaDias.classList.add('hidden');
+      }
+
+      if (btnAbrirListaDias) {
+        if (!datasUnicas.length) {
+          btnAbrirListaDias.disabled = true;
+          btnAbrirListaDias.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+          btnAbrirListaDias.addEventListener('click', abrirModalListaDias);
+        }
+      }
+
+      buscaListaDias.addEventListener('input', () => renderListaDias(buscaListaDias.value));
+      btnFecharListaDias.addEventListener('click', fecharModalListaDias);
+      btnCancelarListaDias.addEventListener('click', fecharModalListaDias);
+
+      if (marcarTodosDias) {
+        marcarTodosDias.addEventListener('change', () => {
+          if (marcarTodosDias.checked) ultimasFiltradas.forEach((d) => diasPendentes.add(d));
+          else ultimasFiltradas.forEach((d) => diasPendentes.delete(d));
+          renderListaDias(buscaListaDias.value);
+        });
+      }
+
+      modalListaDias.addEventListener('click', (e) => {
+        if (e.target === modalListaDias) fecharModalListaDias();
+      });
+
+      btnConfirmarListaDias.addEventListener('click', () => {
+        diasSelecionadosAtuais = [...diasPendentes];
+        inputInicio.value = '';
+        inputFim.value = '';
+        aplicarFiltro();
+        fecharModalListaDias();
+        if (popoverData) popoverData.classList.add('hidden');
+      });
+    }
+
+    aplicarFiltro();
+  })();
+</script>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              agro: {
+                50: '#f3faf4',
+                100: '#dcf3df',
+                200: '#bee6c5',
+                300: '#92d49f',
+                400: '#5fbc71',
+                500: '#3f9d4f',
+                600: '#2f7f3e',
+                700: '#266534',
+                800: '#224f2d',
+                900: '#1b4126'
+              }
+            },
+            boxShadow: {
+              soft: '0 10px 30px rgba(34, 79, 45, 0.10)'
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="/public/css/styles.css" />
+  </head>
+  <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">

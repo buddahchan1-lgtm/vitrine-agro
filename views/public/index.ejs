@@ -1,0 +1,165 @@
+<%- include('../partials/head', { pageTitle }) %>
+
+<header class="hero-gradient border-b border-emerald-100 relative">
+  <!-- ÍCONE DOS 3 PONTINHOS + MENU DROPDOWN NO CANTO SUPERIOR DIREITO -->
+  <div class="absolute top-4 right-4 z-50">
+    <div class="relative inline-block text-left">
+      <button 
+        id="menuBtn" 
+        type="button" 
+        class="p-2.5 text-slate-600 hover:text-emerald-800 hover:bg-white/80 rounded-full transition-all duration-200 focus:outline-none shadow-sm"
+        aria-label="Opções"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1"/>
+          <circle cx="12" cy="5" r="1"/>
+          <circle cx="12" cy="19" r="1"/>
+        </svg>
+      </button>
+
+      <!-- MENU FLUTUANTE QUE ABRE AO CLICAR -->
+      <div 
+        id="dropdownMenu" 
+        class="hidden absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-white/95 p-2 shadow-xl ring-1 ring-black/5 backdrop-blur-md transition-all duration-200 z-50"
+      >
+        <a 
+          href="/login" 
+          class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Área de Login / Painel
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO CENTRALIZADO -->
+  <div class="mx-auto flex max-w-7xl flex-col items-center text-center gap-6 px-4 py-12 sm:px-6 lg:px-8">
+    <span class="inline-flex items-center rounded-full bg-white/80 px-4 py-1.5 text-sm font-medium text-agro-700 shadow-soft">
+      Agricultura Familiar em destaque
+    </span>
+    
+    <h1 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+      Vitrine Agro - Agricultura Familiar
+    </h1>
+    
+    <p class="max-w-2xl text-base leading-7 text-slate-700 sm:text-lg">
+      Descubra os produtores locais da feira, veja os produtos da semana e fortaleça a economia da sua comunidade com uma experiência simples, rápida e responsiva.
+    </p>
+
+    <!-- BARRA DE BUSCA E FILTROS -->
+    <div class="w-full max-w-4xl rounded-3xl border border-emerald-100 bg-white p-4 shadow-soft sm:p-5 mt-2">
+      <div class="grid gap-4 lg:grid-cols-[1.4fr_auto] lg:items-center">
+        <label class="relative block text-left">
+          <span class="sr-only">Buscar por produtor ou produto</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Buscar por produtor, comunidade ou produto..."
+            class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm outline-none ring-0 transition focus:border-agro-500 focus:bg-white"
+          />
+          <span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+        </label>
+
+        <div class="flex flex-wrap gap-2 justify-center" id="categoryFilters">
+          <% categorias.forEach((categoria) => { %>
+            <button
+              type="button"
+              data-category="<%= categoria %>"
+              class="category-btn rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-agro-500 hover:text-agro-700 <%= categoria === 'Todos' ? 'is-active' : '' %>"
+            >
+              <%= categoria %>
+            </button>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <div id="emptyState" class="hidden rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center shadow-soft">
+    <div class="mx-auto max-w-md">
+      <h2 class="text-xl font-semibold text-slate-900">Nenhum resultado encontrado</h2>
+      <p class="mt-2 text-sm leading-6 text-slate-600">Tente ajustar a busca ou selecionar outra categoria para encontrar produtores e produtos da semana.</p>
+    </div>
+  </div>
+
+  <section id="producerList" class="space-y-4">
+    <% produtores.forEach((produtor) => { %>
+      <article
+        class="producer-card cursor-pointer rounded-3xl border border-slate-200 bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-agro-200 sm:p-5"
+        data-search="<%= `${produtor.nome} ${produtor.comunidade} ${produtor.produtos.map((p) => p.nome).join(' ')}`.toLowerCase() %>"
+        data-categories="<%= produtor.produtos.map((p) => p.categoria).join('|') %>"
+        onclick="window.location.href='/produtor/<%= produtor.id %>'"
+      >
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex min-w-0 items-center gap-4">
+             <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full border-4 border-emerald-100 shadow-sm">
+              <img src="<%= produtor.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>" alt="Foto de <%= produtor.nome %>" class="h-full w-full object-cover" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E'" />
+            </div>
+            <div class="min-w-0 text-left">
+              <p class="truncate text-lg font-bold text-slate-900"><%= produtor.nome %></p>
+              <p class="mt-0.5 inline-flex items-center gap-2 text-sm text-slate-600"><span><%= produtor.comunidade %></span></p>
+              <p class="mt-2 text-xs uppercase tracking-[0.14em] text-agro-700">Produtos da semana</p>
+            </div>
+          </div>
+
+         <div class="flex flex-1 flex-wrap items-start gap-3 lg:justify-end">
+            <% if (produtor.produtos.length) { %>
+              <% produtor.produtos.forEach((produto) => { %>
+                 <% if (produto.imagem) { %>
+                  <div class="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-slate-200 shadow-sm sm:h-28 sm:w-28" data-chip-category="<%= produto.categoria %>" data-chip-name="<%= produto.nome.toLowerCase() %>">
+                    <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="h-full w-full object-cover" />
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1.5 pt-6">
+                      <span class="block truncate text-[11px] font-bold leading-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]"><%= produto.nome %></span>
+                    </div>
+                  </div>
+                <% } else { %>
+                  <div class="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 p-2 text-center sm:h-28 sm:w-28" data-chip-category="<%= produto.categoria %>" data-chip-name="<%= produto.nome.toLowerCase() %>">
+                   <span class="truncate text-xs font-bold text-emerald-950"><%= produto.nome %></span>
+                    <span class="mt-1 text-[9px] font-semibold uppercase tracking-wide text-emerald-700"><%= produto.categoria %></span>
+                  </div>
+                <% } %>
+              <% }) %>
+            <% } else { %>
+              <span class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">Sem produtos cadastrados nesta semana</span>
+            <% } %>
+          </div>
+        </div>
+      </article>
+    <% }) %>
+  </section>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const menuBtn = document.getElementById('menuBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (menuBtn && dropdownMenu) {
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+          dropdownMenu.classList.add('hidden');
+        }
+      });
+    }
+  });
+</script>
+
+<script src="/public/js/public-vitrine.js"></script>
+<%- include('../partials/footer') %>

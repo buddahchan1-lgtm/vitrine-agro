@@ -1,0 +1,78 @@
+<%- include('../partials/head', { pageTitle }) %>
+
+<main class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+  <div class="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-soft lg:grid-cols-[1.05fr_0.95fr]">
+    <section class="hero-gradient hidden p-10 lg:flex lg:flex-col lg:justify-between">
+      <div>
+        <span class="inline-flex rounded-full bg-white/90 px-4 py-1 text-sm font-semibold text-agro-700">🔐 Painel privado</span>
+        <h1 class="mt-6 text-4xl font-bold leading-tight text-slate-900">Gestão simples para produtores e coordenação da feira</h1>
+        <p class="mt-4 max-w-lg text-base leading-7 text-slate-700">
+          Faça login para gerenciar produtos da semana, controlar sua visibilidade na vitrine pública e acompanhar comunicados no mural interno.
+        </p>
+      </div>
+
+      <div class="rounded-3xl border border-white/70 bg-white/80 p-5 text-sm text-slate-700 shadow-sm backdrop-blur">
+        <div class="flex items-start gap-3">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-agro-600/10 text-agro-700">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+          </span>
+          <div>
+            <p class="font-semibold text-slate-900">Acesso restrito</p>
+            <p class="mt-1 leading-6">
+              Esta área é exclusiva para produtores cadastrados e para a coordenação da feira.
+            </p>
+          </div>
+        </div>
+
+        <ul class="mt-4 space-y-2 border-t border-slate-200/70 pt-4">
+          <li class="flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mt-1 shrink-0 text-agro-600"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>O cadastro é feito pela gestora da feira.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mt-1 shrink-0 text-agro-600"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Use o e-mail e a senha que você recebeu da coordenação.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mt-1 shrink-0 text-agro-600"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Esqueceu a senha? Fale com a gestora para redefinir.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="p-6 sm:p-10">
+      <div class="mx-auto max-w-md">
+        <a href="/" class="inline-flex items-center gap-2 text-sm font-medium text-agro-700 hover:text-agro-800">← Voltar para a vitrine</a>
+        <h2 class="mt-5 text-3xl font-bold text-slate-900">Entrar no painel</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Autenticação protegida para produtores e gestora da feira.</p>
+
+        <div class="mt-6">
+          <%- include('../partials/notice') %>
+        </div>
+
+        <form action="/login" method="POST" class="space-y-5">
+          <div>
+            <label for="email" class="mb-2 block text-sm font-medium text-slate-700">E-mail</label>
+            <input id="email" name="email" type="email" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-agro-500 focus:bg-white" placeholder="voce@dominio.com" />
+          </div>
+          <div>
+            <label for="senha" class="mb-2 block text-sm font-medium text-slate-700">Senha</label>
+            <input id="senha" name="senha" type="password" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-agro-500 focus:bg-white" placeholder="••••••••" />
+          </div>
+          <button type="submit" class="inline-flex w-full items-center justify-center rounded-2xl bg-agro-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-agro-700">Acessar ambiente de trabalho</button>
+        </form>
+
+         <div class="mt-8 flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 lg:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0 text-agro-600"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <p class="leading-6">
+            <span class="font-semibold text-slate-900">Acesso restrito.</span>
+            Apenas produtores cadastrados e a coordenação da feira. O login é criado pela gestora — se esqueceu a senha, fale com ela.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
