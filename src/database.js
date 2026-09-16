@@ -828,6 +828,7 @@ async function criarAdministrador({ nome, email, senhaHash }) {
 }
 
 module.exports = {
+  db,
   criarComentarioProduto,
   getComentariosProduto,
   excluirComentarioProduto,
