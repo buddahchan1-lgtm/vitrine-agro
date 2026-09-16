@@ -1,20 +1,21 @@
 const { db } = require('../database');
 
-function attachSessionUser(req, res, next) {
+async function attachSessionUser(req, res, next) {
   const userId = req.session.userId || (req.session.usuario ? req.session.usuario.id : null);
 
   if (!userId) {
     return next();
   }
 
- const query = `
+  const query = `
     SELECT id, nome, email, foto, comunidade, tipo_acesso, status, whatsapp
     FROM usuarios
-    WHERE id = ?
+    WHERE id = $1
   `;
 
-  db.get(query, [userId], (err, user) => {
-    if (err) return next(err);
+  try {
+    const result = await db.query(query, [userId]);
+    const user = result.rows[0];
 
     if (user) {
       req.currentUser = user;
@@ -22,10 +23,12 @@ function attachSessionUser(req, res, next) {
       req.session.destroy(() => {});
     }
     next();
-  });
+  } catch (err) {
+    return next(err);
+  }
 }
 
-function attachViewData(req, res, next) {
+async function attachViewData(req, res, next) {
   res.locals.currentUser = req.currentUser || null;
   res.locals.notice = req.session.notice || null;
   delete req.session.notice;
@@ -39,15 +42,20 @@ function attachViewData(req, res, next) {
     SELECT COUNT(*) AS total
     FROM mensagens m
     WHERE m.criado_em > COALESCE(
-      (SELECT ultima_leitura_em FROM leituras_mural WHERE usuario_id = ?),
+      (SELECT ultima_leitura_em FROM leituras_mural WHERE usuario_id = $1),
       '1970-01-01 00:00:00'
     )
   `;
 
-  db.get(queryUnread, [req.currentUser.id], (err, row) => {
-    res.locals.unreadCount = (row && row.total) ? row.total : 0;
+  try {
+    const result = await db.query(queryUnread, [req.currentUser.id]);
+    const row = result.rows[0];
+    res.locals.unreadCount = (row && row.total) ? parseInt(row.total, 10) : 0;
     next();
-  });
+  } catch (err) {
+    res.locals.unreadCount = 0;
+    next();
+  }
 }
 
 function requireAuth(req, res, next) {
