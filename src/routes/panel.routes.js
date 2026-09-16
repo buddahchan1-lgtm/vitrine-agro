@@ -169,7 +169,7 @@ router.get('/painel/relatorio', requireAuth, async (req, res, next) => {
 });
 
 // Rota para publicar novo aviso no mural (Apenas Admin)
-router.post('/painel/mensagens', requireAuth, (req, res) => {
+router.post('/painel/mensagens', requireAuth, async (req, res) => {
     const usuario = req.currentUser;
     const jsonResposta = querJson(req);
 
@@ -185,25 +185,22 @@ router.post('/painel/mensagens', requireAuth, (req, res) => {
         return res.redirect('/painel');
     }
 
-    const sql = `INSERT INTO mensagens (remetente_id, texto, criado_em) VALUES (?, ?, datetime('now'))`;
+     const sql = `INSERT INTO mensagens (remetente_id, texto, criado_em) VALUES ($1, $2, NOW())`;
 
-    db.run(sql, [usuario.id, texto], async function(err) {
-        if (err) {
-            console.error('Erro ao salvar aviso:', err);
-            if (jsonResposta) return res.status(500).json({ success: false, message: 'Erro ao salvar o aviso.' });
-            req.session.notice = { type: 'error', text: 'Erro ao salvar o aviso.' };
-            return res.redirect('/painel');
-        }
+    try {
+        await db.query(sql, [usuario.id, texto]);
+
         if (jsonResposta) {
-            try {
-                const mensagens = await getMensagensMural();
-                return res.json({ success: true, mensagens });
-            } catch (e2) {
-                return res.status(500).json({ success: false, message: 'Aviso salvo, mas houve erro ao recarregar a lista.' });
-            }
+            const mensagens = await getMensagensMural();
+            return res.json({ success: true, mensagens });
         }
-        res.redirect('/painel');
-    });
+        return res.redirect('/painel');
+    } catch (err) {
+        console.error('Erro ao salvar aviso:', err);
+        if (jsonResposta) return res.status(500).json({ success: false, message: 'Erro ao salvar o aviso.' });
+        req.session.notice = { type: 'error', text: 'Erro ao salvar o aviso.' };
+        return res.redirect('/painel');
+    }
 });
 
 // Rota para excluir aviso do mural (Apenas Admin)
@@ -598,19 +595,19 @@ router.post('/painel/comentarios/:id/excluir', requireAuth, async (req, res) => 
 });
 
 // Perfil e senha
-router.put('/painel/perfil', requireAuth, (req, res) => {
+router.put('/painel/perfil', requireAuth, async (req, res) => {
     const { nome, email, whatsapp, foto } = req.body;
     if (!nome || !email) {
         return res.status(400).json({ success: false, message: 'Nome e e-mail são obrigatórios.' });
     }
-    const sql = `UPDATE usuarios SET nome = ?, email = ?, whatsapp = ?, foto = ? WHERE id = ?`;
-    db.run(sql, [nome, email, whatsapp || null, foto || null, req.currentUser.id], function (err) {
-        if (err) {
-            console.error('Erro ao salvar perfil:', err);
-            return res.status(500).json({ success: false, message: 'Não foi possível atualizar o perfil no momento.' });
-        }
+    const sql = `UPDATE usuarios SET nome = $1, email = $2, whatsapp = $3, foto = $4 WHERE id = $5`;
+    try {
+        await db.query(sql, [nome, email, whatsapp || null, foto || null, req.currentUser.id]);
         res.json({ success: true });
-    });
+    } catch (err) {
+        console.error('Erro ao salvar perfil:', err);
+        res.status(500).json({ success: false, message: 'Não foi possível atualizar o perfil no momento.' });
+    }
 });
 
 router.post('/painel/senha', requireAuth, async (req, res) => {
