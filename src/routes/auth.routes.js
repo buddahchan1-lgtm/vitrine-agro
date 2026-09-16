@@ -30,7 +30,6 @@ router.post(
 
       const { email, senha } = req.body;
 
-      // Consulta adaptada para PostgreSQL usando db.query e parâmetros $1
       const result = await db.query('SELECT * FROM usuarios WHERE LOWER(email) = LOWER($1)', [email]);
       const user = result.rows[0];
 
