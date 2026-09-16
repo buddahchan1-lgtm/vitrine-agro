@@ -91,10 +91,10 @@
         </div>
 
         <!-- Perfil -->
-        <button 
+       <button 
           type="button" 
           onclick="openProfileModal()" 
-          class="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 sm:flex transition hover:border-agro-500 hover:bg-slate-50 text-left focus:outline-none"
+          class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 transition hover:border-agro-500 hover:bg-slate-50 text-left focus:outline-none"
           title="Clique para editar seu perfil"
         >
           <img id="headerUserPhoto" src="<%= currentUser.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>" alt="<%= currentUser.nome %>" class="h-9 w-9 rounded-full object-cover border border-emerald-100" />
