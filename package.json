@@ -1,3 +1,6 @@
+Substitua todo o conteúdo do seu arquivo package.json no GitHub pelo código abaixo. Já incluí o dotenv e o driver do PostgreSQL (pg):
+
+JSON
 {
   "name": "vitrine-agro-agricultura-familiar",
   "version": "1.0.0",
@@ -9,6 +12,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
@@ -16,6 +20,7 @@
     "helmet": "^8.0.0",
     "morgan": "^1.10.0",
     "multer": "^2.2.0",
+    "pg": "^8.11.3",
     "sqlite3": "5.1.7"
   }
 }
