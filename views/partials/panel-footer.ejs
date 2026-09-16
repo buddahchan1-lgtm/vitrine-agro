@@ -255,18 +255,15 @@
     if (cb) cb();
   });
 
-  // Menu de configurações (engrenagem)
+ // Menu de configurações (engrenagem)
   const btnAbrirConfig = document.getElementById('btnAbrirConfig');
   const menuConfig = document.getElementById('menuConfig');
   if (btnAbrirConfig && menuConfig) {
     btnAbrirConfig.addEventListener('click', (e) => {
       e.stopPropagation();
+      const painelNotifAberto = document.getElementById('painelNotificacoes');
+      if (painelNotifAberto) painelNotifAberto.classList.add('hidden');
       menuConfig.classList.toggle('hidden');
-    });
-    document.addEventListener('click', (e) => {
-      if (!menuConfig.classList.contains('hidden') && !menuConfig.contains(e.target) && !btnAbrirConfig.contains(e.target)) {
-        menuConfig.classList.add('hidden');
-      }
     });
   }
 
@@ -1769,6 +1766,8 @@
   if (btnNotif) {
     btnNotif.addEventListener('click', async (e) => {
       e.stopPropagation();
+      const menuConfigAberto = document.getElementById('menuConfig');
+      if (menuConfigAberto) menuConfigAberto.classList.add('hidden');
       const abrindo = painelNotif.classList.contains('hidden');
       painelNotif.classList.toggle('hidden');
       if (abrindo) {
