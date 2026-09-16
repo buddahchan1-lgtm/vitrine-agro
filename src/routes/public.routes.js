@@ -21,7 +21,7 @@ function groupPublicRows(rows) {
       });
     }
     if (row.produto_nome) {
-     map.get(row.produtor_id).produtos.push({
+      map.get(row.produtor_id).produtos.push({
         id: row.produto_id,
         nome: row.produto_nome,
         categoria: row.categoria,
@@ -33,7 +33,7 @@ function groupPublicRows(rows) {
   return Array.from(map.values());
 }
 
-router.get('/', (req, res, next) => {
+router.get('/', async (req, res, next) => {
   const query = `
     SELECT 
       u.id AS produtor_id,
@@ -51,9 +51,9 @@ router.get('/', (req, res, next) => {
     ORDER BY u.nome ASC
   `;
 
-  db.all(query, [], (err, rows) => {
-    if (err) return next(err);
-    const produtores = groupPublicRows(rows);
+  try {
+    const result = await db.query(query);
+    const produtores = groupPublicRows(result.rows);
 
     // Extrai as categorias únicas dos produtos para os botões do filtro
     const categoriasSet = new Set();
@@ -68,7 +68,9 @@ router.get('/', (req, res, next) => {
       produtores,
       categorias: Array.from(categoriasSet)
     });
-  });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/produtor/:id', async (req, res, next) => {
