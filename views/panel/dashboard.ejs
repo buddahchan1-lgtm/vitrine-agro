@@ -292,10 +292,12 @@
               labelAviso.className = 'mt-1 hidden pr-4 text-[11px] font-semibold leading-snug sm:block ' +
               (ehDoMesAtual ? 'text-agro-700' : 'text-slate-400');
               labelAviso.style.cssText = 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;';
-              labelAviso.textContent = avisosDoDia.length > 1 ? avisosDoDia.length + ' avisos' : avisosDoDia[0].titulo;
+               labelAviso.textContent = avisosDoDia.length > 1 ? avisosDoDia.length + ' avisos' : avisosDoDia[0].titulo;
               celula.appendChild(labelAviso);
             }
-        
+
+            gradeEl.appendChild(celula);
+          }
 
         // Um único listener no container inteiro — calcula por posição (linha/coluna)
         // qual dia foi tocado. Isso elimina os "pontos mortos" nos espaços (gaps)
@@ -355,11 +357,12 @@
           renderizarCalendario();
           painel.classList.add('hidden');
         });
-        document.getElementById('calMesBuscarHoje').addEventListener('click', () => {
+         document.getElementById('calMesBuscarHoje').addEventListener('click', () => {
           dataAtual = new Date();
           renderizarCalendario();
           painel.classList.add('hidden');
         });
+        }
 
         renderizarCalendario();
 
