@@ -1,6 +1,18 @@
 <div class="min-h-screen bg-slate-50">
+  <style>
+    @media (max-width: 640px) {
+      .panel-header-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+      }
+      .panel-header-scroll > * {
+        flex-shrink: 0;
+      }
+    }
+  </style>
   <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
-    <div class="flex w-full items-center justify-between gap-4 px-3 py-3 sm:px-4">
+    <div class="panel-header-scroll flex w-full items-center justify-between gap-4 px-3 py-3 sm:px-4">
 
       <!-- ESQUERDA: logo + nome + navegação -->
       <div class="flex items-center gap-6">
