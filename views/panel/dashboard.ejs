@@ -268,16 +268,16 @@
             const celula = document.createElement('div');
 
             if (ehDoMesAtual) {
-              celula.className = 'relative flex min-h-[60px] flex-col rounded-xl border p-1 text-left transition sm:min-h-[92px] sm:p-2 ' +
+              celula.className = 'relative flex min-h-[78px] flex-col rounded-xl border p-1.5 text-left transition sm:min-h-[92px] sm:p-2 ' +
                 (ehHoje ? 'border-agro-500 bg-agro-50' : 'border-slate-200 bg-white hover:border-agro-400 hover:bg-agro-50/40');
              } else if (temAviso) {
-              celula.className = 'relative flex min-h-[60px] flex-col rounded-xl border border-dashed border-slate-200 bg-slate-50 p-1 text-left transition hover:border-agro-300 sm:min-h-[92px] sm:p-2';
+              celula.className = 'relative flex min-h-[78px] flex-col rounded-xl border border-dashed border-slate-200 bg-slate-50 p-1.5 text-left transition hover:border-agro-300 sm:min-h-[92px] sm:p-2';
             } else {
-              celula.className = 'flex min-h-[60px] flex-col rounded-xl border border-slate-100 bg-slate-50/60 p-1 text-left transition hover:border-agro-200 hover:bg-slate-100 sm:min-h-[92px] sm:p-2';
+              celula.className = 'flex min-h-[78px] flex-col rounded-xl border border-slate-100 bg-slate-50/60 p-1.5 text-left transition hover:border-agro-200 hover:bg-slate-100 sm:min-h-[92px] sm:p-2';
             }
 
             const numero = document.createElement('span');
-            numero.className = 'text-[11px] font-bold leading-none sm:text-sm ' +
+            numero.className = 'text-sm font-bold leading-none sm:text-sm ' +
               (ehDoMesAtual ? (ehHoje ? 'text-agro-700' : 'text-slate-700') : 'text-slate-300');
             numero.textContent = dia;
             celula.appendChild(numero);
@@ -289,15 +289,12 @@
               celula.appendChild(badge);
 
               const labelAviso = document.createElement('span');
-              labelAviso.className = 'mt-1 hidden pr-4 text-[11px] font-semibold leading-snug sm:block ' +
+              labelAviso.className = 'mt-1 block pr-5 text-[10px] font-semibold leading-snug sm:block sm:pr-4 sm:text-[11px] ' +
               (ehDoMesAtual ? 'text-agro-700' : 'text-slate-400');
               labelAviso.style.cssText = 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;';
-               labelAviso.textContent = avisosDoDia.length > 1 ? avisosDoDia.length + ' avisos' : avisosDoDia[0].titulo;
+              labelAviso.textContent = avisosDoDia.length > 1 ? avisosDoDia.length + ' avisos' : avisosDoDia[0].titulo;
               celula.appendChild(labelAviso);
             }
-
-            gradeEl.appendChild(celula);
-          }
 
         // Um único listener no container inteiro — calcula por posição (linha/coluna)
         // qual dia foi tocado. Isso elimina os "pontos mortos" nos espaços (gaps)
