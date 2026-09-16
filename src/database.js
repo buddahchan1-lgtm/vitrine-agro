@@ -9,6 +9,11 @@ const pool = new Pool({
   }
 });
 
+// DECLARAÇÃO DO DB QUE FALTAVA:
+const db = {
+  query: (text, params) => pool.query(text, params)
+};
+
 // Funções auxiliares para manter compatibilidade
 async function dbAll(sql, params = []) {
   let paramIndex = 1;
