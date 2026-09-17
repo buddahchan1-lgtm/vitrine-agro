@@ -657,9 +657,9 @@
       </div>
     </div>
     <!-- Abas (somem durante o chat) -->
-    <div id="abasMensagens" class="flex items-center gap-2 border-b border-slate-100 bg-slate-50 p-2">
-      <button type="button" data-aba-msg="mural" class="aba-msg-btn flex-1 rounded-2xl px-4 py-3.5 text-lg font-bold transition">Mural de avisos</button>
-      <button type="button" data-aba-msg="privado" class="aba-msg-btn flex-1 rounded-2xl px-4 py-3.5 text-lg font-bold transition">Conversas privadas</button>
+    <div id="abasMensagens" class="flex items-stretch gap-2 border-b border-slate-100 bg-slate-50 p-2">
+      <button type="button" data-aba-msg="mural" class="aba-msg-btn flex flex-1 items-center justify-center rounded-2xl px-4 py-3.5 text-center text-lg font-bold leading-tight transition">Mural de avisos</button>
+      <button type="button" data-aba-msg="privado" class="aba-msg-btn flex flex-1 items-center justify-center rounded-2xl px-4 py-3.5 text-center text-lg font-bold leading-tight transition">Conversas privadas</button>
     </div>
 
     <!-- ABA MURAL -->
@@ -712,8 +712,8 @@
     <!-- PAINEL DE CHAT (mesma tela, some quando está na lista) -->
     <div id="painelChat" class="hidden flex-1 flex-col overflow-hidden">
       <div class="flex-1 space-y-3 overflow-y-auto px-5 py-4" id="chatMensagens"></div>
-       <form id="formEnviarMensagem" class="flex items-center gap-2 border-t border-slate-100 p-4">
-        <input type="text" id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" class="flex-1 rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3.5 text-lg outline-none focus:border-agro-500 focus:bg-white" />
+      <form id="formEnviarMensagem" class="flex items-center gap-2 border-t border-slate-100 p-4">
+        <input type="text" id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" class="min-w-0 flex-1 rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3.5 text-lg outline-none focus:border-agro-500 focus:bg-white" />
         <button type="submit" class="shrink-0 rounded-2xl bg-agro-600 px-6 py-3.5 text-lg font-bold text-white hover:bg-agro-700">Enviar</button>
       </form>
     </div>
