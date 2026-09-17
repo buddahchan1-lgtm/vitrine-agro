@@ -229,9 +229,15 @@
  let originalPhotoUrl = "<%= currentUser.foto || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cdefs%3E%3ClinearGradient id=%27bg%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%23d1fae5%27/%3E%3Cstop offset=%271%27 stop-color=%27%23a7f3d0%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2750%27 fill=%27url(%23bg)%27/%3E%3Cpath d=%27M50 74V44%27 stroke=%27%23047857%27 stroke-width=%274%27 stroke-linecap=%27round%27/%3E%3Cpath d=%27M50 50c-15-1-24-13-22-27 15 1 24 13 22 27z%27 fill=%27%2310b981%27/%3E%3Cpath d=%27M50 44c15-1 24-13 22-27-15 1-24 13-22 27z%27 fill=%27%2334d399%27/%3E%3Ccircle cx=%2750%27 cy=%2778%27 r=%276%27 fill=%27%23047857%27/%3E%3C/svg%3E' %>";
   let capturaFotoAlvo = 'perfil'; // 'perfil' ou 'grupo' - define para onde vai a foto tirada/carregada
 
-  // Fecha um modal ao clicar apenas no fundo escurecido (não no conteúdo dele).
+ // Guarda onde o clique COMEÇOU (mousedown/touchstart), não só onde terminou.
+  let pontoDeInicioClique = null;
+  document.addEventListener('mousedown', (e) => { pontoDeInicioClique = e.target; }, true);
+  document.addEventListener('touchstart', (e) => { pontoDeInicioClique = e.target; }, true);
+
+  // Fecha um modal só se o clique COMEÇOU e TERMINOU no fundo escurecido.
+  // Assim, selecionar texto e soltar o mouse fora não fecha mais nada.
   function closeOnBackdrop(e, closeFn) {
-    if (e.target === e.currentTarget) closeFn();
+    if (e.target === e.currentTarget && pontoDeInicioClique === e.currentTarget) closeFn();
   }
 
   // Função para exibir alertas sem popup nativo do navegador
@@ -1758,6 +1764,18 @@
     chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
   }
   chatInput.addEventListener('input', ajustarAlturaChatInput);
+
+  // Enter envia a mensagem; Shift+Enter pula linha (igual ao WhatsApp).
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (formEnviar.requestSubmit) {
+        formEnviar.requestSubmit();
+      } else {
+        formEnviar.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    }
+  });
 
   formEnviar.addEventListener('submit', async (e) => {
     e.preventDefault();
