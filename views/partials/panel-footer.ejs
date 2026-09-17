@@ -1545,16 +1545,22 @@
     });
   }
 
-  function iniciarEdicaoChat(alvo) {
+ function iniciarEdicaoChat(alvo) {
     const bolha = chatMensagens.querySelector(`[data-msg-id="${alvo.id}"] [data-msg-texto]`);
     if (!bolha) return;
     const original = alvo.textoAtual;
 
     const textarea = document.createElement('textarea');
-    textarea.className = 'w-full rounded-xl border-2 border-white/60 bg-white/10 px-3 py-2 text-lg text-inherit outline-none';
-    textarea.rows = 2;
+    textarea.className = 'w-full max-w-xs resize-none border-0 bg-transparent p-0 text-lg text-inherit outline-none';
+    textarea.rows = 1;
     textarea.maxLength = 1000;
     textarea.value = original;
+    textarea.style.height = 'auto';
+    setTimeout(() => { textarea.style.height = textarea.scrollHeight + 'px'; }, 0);
+    textarea.addEventListener('input', () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    });
 
     const acoes = document.createElement('div');
     acoes.className = 'mt-2 flex justify-end gap-2';
