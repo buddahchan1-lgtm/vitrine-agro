@@ -1334,6 +1334,10 @@
     el.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      // No celular, o toque prolongado às vezes dispara o "contextmenu"
+      // nativo praticamente junto do nosso temporizador de seleção.
+      // Se isso acabou de acontecer, ignora — já foi tratado.
+      if (Date.now() - ultimoToqueLongoEm < 600) return;
       handler(e, { x: e.clientX, y: e.clientY });
     });
     el.addEventListener('touchstart', (e) => {
@@ -1346,11 +1350,14 @@
         ultimoToqueLongoEm = Date.now();
         handler(e, ponto);
       }, 500);
-    }, { passive: true });
+    }, { passive: false });
+    el.addEventListener('touchstart', (e) => {
+      // Impede o menu de contexto/seleção de texto nativo do celular
+      // de disparar por cima da nossa seleção customizada.
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
     const cancelarToque = (e) => {
       if (!pressTimer) return;
-      // Só cancela se o dedo realmente deslizou bastante (rolando a tela).
-      // Um tremor mínimo durante o toque e segure não deve cancelar a seleção.
       if (e && e.type === 'touchmove') {
         const touch = e.touches[0];
         if (touch) {
