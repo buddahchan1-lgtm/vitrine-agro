@@ -16,10 +16,8 @@
 
   /* Destaque da mensagem selecionada, estilo WhatsApp */
   .bolha-selecionada {
-    background-color: transparent !important;
-    box-shadow: none !important;
-    outline: 2px solid rgba(16, 185, 129, 0.6);
-    outline-offset: 2px;
+    background-color: rgba(16, 185, 129, 0.20) !important;
+    border-radius: 0.75rem;
   }
 </style>
 
@@ -1398,7 +1396,7 @@
       id: msg.id,
       conversaId: conversaAtual.id,
       textoAtual: msg.texto,
-      elHighlight: wrap.querySelector('div'),
+      elHighlight: wrap,
       souAutor: msg.remetente_id === meuId
     });
   }
@@ -1491,10 +1489,9 @@
     const original = alvo.textoAtual;
 
     const textarea = document.createElement('textarea');
-    textarea.className = 'mt-2 w-full resize-none overflow-y-auto rounded-2xl border-2 border-agro-400 bg-white px-3 py-2 text-lg outline-none break-words';
-    textarea.rows = 1;
-    textarea.style.maxHeight = '220px';
-    textarea.maxLength = 3000;
+    textarea.className = 'w-full max-w-xs resize-none rounded-xl border-2 border-white/60 bg-white/10 px-3 py-2 text-lg text-inherit outline-none';
+    textarea.rows = 2;
+    textarea.maxLength = 1000;
     textarea.value = original;
 
     function ajustarAlturaEdicaoMural() {
