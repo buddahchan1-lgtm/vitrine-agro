@@ -392,7 +392,11 @@
     const video = document.getElementById('webcamVideo');
 
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: 'environment' } }, audio: false });
+      } catch (err) {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      }
       video.srcObject = mediaStream;
       modal.classList.remove('hidden');
     } catch (err) {
