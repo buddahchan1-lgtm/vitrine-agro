@@ -1348,6 +1348,11 @@
     // de verdade, mesmo funcionando com o mouse.
     el.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse') return; // botão direito já tratado acima
+      // Impede o navegador de gerar um "click" de compatibilidade
+      // depois que o dedo soltar a tela. Sem isso, esse clique extra
+      // caía no listener de clique da bolha e desfazia a seleção
+      // que acabamos de fazer — por isso ela aparecia e sumia rápido.
+      if (e.cancelable) e.preventDefault();
       inicioX = e.clientX;
       inicioY = e.clientY;
       pointerIdAtivo = e.pointerId;
