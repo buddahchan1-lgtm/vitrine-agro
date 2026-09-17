@@ -1489,10 +1489,16 @@
     const original = alvo.textoAtual;
 
     const textarea = document.createElement('textarea');
-    textarea.className = 'w-full max-w-xs resize-none rounded-xl border-2 border-white/60 bg-white/10 px-3 py-2 text-lg text-inherit outline-none';
-    textarea.rows = 2;
+    textarea.className = 'w-full max-w-xs resize-none border-0 bg-transparent p-0 text-lg text-inherit outline-none placeholder-white/60';
+    textarea.rows = 1;
     textarea.maxLength = 1000;
     textarea.value = original;
+    textarea.style.height = 'auto';
+    setTimeout(() => { textarea.style.height = textarea.scrollHeight + 'px'; }, 0);
+    textarea.addEventListener('input', () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    });
 
     function ajustarAlturaEdicaoMural() {
       textarea.style.height = 'auto';
