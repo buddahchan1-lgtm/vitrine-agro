@@ -1005,7 +1005,7 @@
     const idsComConversaIndividual = new Set(
       conversasCache.filter((c) => !c.grupo && !c.arquivada && c.participantes[0]).map((c) => c.participantes[0].id)
     );
-    const adminsFixos = filtroConversaAtual === 'tudo'
+    const filtrados = contatosCache.filter((p) => p.whatsapp && somenteDigitos(p.whatsapp) === termoDigitos && !idsComConversaIndividual.has(p.id));
 
     if (!filtrados.length) return container;
 
@@ -1046,7 +1046,7 @@
 
     const termoPreenchido = !!(termoBusca && termoBusca.trim());
     const idsComConversaIndividual = new Set(
-      conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
+      conversasCache.filter((c) => !c.grupo && !c.arquivada && c.participantes[0]).map((c) => c.participantes[0].id)
     );
     const adminsFixos = filtroConversaAtual === 'tudo'
       ? contatosCache.filter((p) => p.tipo_acesso === 'admin' && !idsComConversaIndividual.has(p.id))
@@ -1351,11 +1351,6 @@
         handler(e, ponto);
       }, 500);
     }, { passive: true });
-    el.addEventListener('touchstart', (e) => {
-      // Impede o menu de contexto/seleção de texto nativo do celular
-      // de disparar por cima da nossa seleção customizada.
-      if (e.cancelable) e.preventDefault();
-    }, { passive: false });
     const cancelarToque = (e) => {
       if (!pressTimer) return;
       if (e && e.type === 'touchmove') {
