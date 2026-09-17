@@ -84,8 +84,7 @@
         </div>
 
          <!-- Inputs ocultos para controle da imagem e upload local -->
-        <input type="file" id="photoFileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
-        <input type="file" id="photoCameraInput" accept="image/*" capture="user" class="hidden" onchange="handleFileSelect(event)" />
+       <input type="file" id="photoFileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
         <input type="hidden" id="profileFotoUrl" value="<%= currentUser.foto || '' %>" />
          <span class="text-xs text-slate-500">Clique na foto para ver opções</span>
       </div>
@@ -452,13 +451,6 @@
     document.getElementById('photoFileInput').click();
   }
 
-  function triggerCameraInput() {
-    const menu = document.getElementById('photoOptionsMenu');
-    if (menu) menu.classList.add('hidden');
-    capturaFotoAlvo = 'perfil';
-    document.getElementById('photoCameraInput').click();
-  }
-
  function redimensionarImagemBase64(file, callback) {
     const MAX_SIZE = 500; // px, lado maior
 
@@ -633,7 +625,6 @@
           </button>
         </div>
         <input type="file" id="chatFotoFileInput" accept="image/*" class="hidden" />
-        <input type="file" id="chatFotoCameraInput" accept="image/*" capture="environment" class="hidden" />
       </div>
       <div id="chatInfoArea" class="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-slate-50" title="Ver participantes do grupo">
         <div class="min-w-0 flex-1">
@@ -1629,7 +1620,7 @@
     chatFotoFileInput.click();
   });
 
-  function handleChatFotoFile(event) {
+  chatFotoFileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -1638,9 +1629,7 @@
     }
     redimensionarImagemBase64(file, (base64Image) => salvarFotoGrupoCapturada(base64Image));
     event.target.value = '';
-  }
-  chatFotoFileInput.addEventListener('change', handleChatFotoFile);
-  document.getElementById('chatFotoCameraInput').addEventListener('change', handleChatFotoFile);
+  });
 
   async function salvarFotoGrupoCapturada(base64Foto) {
     if (!conversaAtual || !conversaAtual.grupo) return;
