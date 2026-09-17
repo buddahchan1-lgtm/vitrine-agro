@@ -712,9 +712,11 @@
     <!-- PAINEL DE CHAT (mesma tela, some quando está na lista) -->
     <div id="painelChat" class="hidden flex-1 flex-col overflow-hidden">
       <div class="flex-1 space-y-3 overflow-y-auto px-5 py-4" id="chatMensagens"></div>
-      <form id="formEnviarMensagem" class="flex items-center gap-2 border-t border-slate-100 p-4">
-        <input type="text" id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" class="min-w-0 flex-1 rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3.5 text-lg outline-none focus:border-agro-500 focus:bg-white" />
-        <button type="submit" class="shrink-0 rounded-2xl bg-agro-600 px-6 py-3.5 text-lg font-bold text-white hover:bg-agro-700">Enviar</button>
+      <form id="formEnviarMensagem" class="flex items-end gap-2 border-t border-slate-100 p-4">
+        <textarea id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" rows="1" class="min-w-0 flex-1 resize-none rounded-3xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-lg leading-snug outline-none focus:border-agro-500 focus:bg-white" style="max-height: 140px;"></textarea>
+        <button type="submit" aria-label="Enviar mensagem" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-agro-600 text-white transition hover:bg-agro-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg>
+        </button>
       </form>
     </div>
 
@@ -1738,11 +1740,25 @@
     carregarConversas();
   }
 
-   formEnviar.addEventListener('submit', async (e) => {
+   function ajustarAlturaChatInput() {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
+  }
+  chatInput.addEventListener('input', ajustarAlturaChatInput);
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      formEnviar.requestSubmit();
+    }
+  });
+
+  formEnviar.addEventListener('submit', async (e) => {
     e.preventDefault();
     const texto = chatInput.value.trim();
     if (!texto || !conversaAtual) return;
     chatInput.value = '';
+    ajustarAlturaChatInput();
     const data = await apiFetch('/painel/conversas/' + conversaAtual.id + '/mensagens', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ texto })
