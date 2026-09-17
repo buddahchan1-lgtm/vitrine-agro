@@ -1,6 +1,13 @@
 <style>
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+  /* No celular, segurar o dedo na mensagem não seleciona o texto (some
+     com as bolinhas azuis nativas) — o toque e segure abre nosso menu.
+     No computador (mouse) a seleção continua normal. */
+  @media (pointer: coarse) {
+    .bolha-msg { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  }
 </style>
 
 <!-- ========================================================= -->
@@ -736,6 +743,10 @@
 
 <!-- Menu de contexto (Editar/Excluir) estilo WhatsApp, reaproveitado para todas as mensagens -->
 <div id="menuMensagemContexto" class="hidden fixed z-[90] w-44 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-200 text-slate-700 text-sm">
+  <button type="button" id="btnMenuCopiarMsg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    <span>Copiar</span>
+  </button>
   <button type="button" id="btnMenuEditarMsg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
     <span>Editar</span>
@@ -849,6 +860,7 @@
   const formPublicarMural = document.getElementById('formPublicarMural');
 
   const menuContexto = document.getElementById('menuMensagemContexto');
+  const btnMenuCopiar = document.getElementById('btnMenuCopiarMsg');
   const btnMenuEditar = document.getElementById('btnMenuEditarMsg');
   const btnMenuExcluir = document.getElementById('btnMenuExcluirMsg');
 
@@ -1192,7 +1204,7 @@
             </span>
             <span class="shrink-0 text-xs font-semibold text-slate-500" title="${dataHoraCompleta(m.criado_em)}">${dataHoraCompleta(m.criado_em)}</span>
           </div>
-                    <p class="mt-1 text-lg leading-relaxed text-slate-800 whitespace-pre-wrap break-words" data-msg-texto>${escapeHtml(m.texto)}</p>
+                    <p class="mt-1 text-lg leading-relaxed text-slate-800 whitespace-pre-wrap break-words bolha-msg" data-msg-texto>${escapeHtml(m.texto)}</p>
           ${m.editado_em ? '<p class="mt-1 text-xs font-medium text-slate-400">editado</p>' : ''}
         </div>
       </div>
@@ -1322,24 +1334,48 @@
 
   function abrirMenuContexto(ponto, alvo) {
     menuContextoAlvo = alvo;
+    menuContexto.classList.remove('hidden'); // precisa estar visível pra medir a altura real
 
     const menuLargura = 176; // w-44
-    const menuAltura = 110;
+    const margem = 10; // espaço entre o menu e o dedo/cursor
+    const menuAltura = menuContexto.offsetHeight;
+
     let left = ponto.x - menuLargura / 2;
-    let top = ponto.y - menuAltura / 2;
+    let top = ponto.y - menuAltura - margem; // por padrão, abre ACIMA do ponto pressionado
+
+    // Perto do topo da tela não cabe em cima — abre embaixo do ponto.
+    if (top < 12) top = ponto.y + margem;
+
     if (left + menuLargura > window.innerWidth - 12) left = window.innerWidth - menuLargura - 12;
     if (left < 12) left = 12;
     if (top + menuAltura > window.innerHeight - 12) top = window.innerHeight - menuAltura - 12;
-    if (top < 12) top = 12;
 
     menuContexto.style.left = left + 'px';
     menuContexto.style.top = top + 'px';
-    menuContexto.classList.remove('hidden');
   }
 
   document.addEventListener('click', (e) => {
     if (!menuContexto.classList.contains('hidden') && !menuContexto.contains(e.target)) {
       fecharMenuContexto();
+    }
+  });
+
+  btnMenuCopiar.addEventListener('click', async () => {
+    const alvo = menuContextoAlvo;
+    fecharMenuContexto();
+    if (!alvo) return;
+    try {
+      await navigator.clipboard.writeText(alvo.textoAtual);
+    } catch (err) {
+      // Fallback para quando o navegador não libera a Clipboard API.
+      const areaTemp = document.createElement('textarea');
+      areaTemp.value = alvo.textoAtual;
+      areaTemp.style.position = 'fixed';
+      areaTemp.style.opacity = '0';
+      document.body.appendChild(areaTemp);
+      areaTemp.select();
+      document.execCommand('copy');
+      document.body.removeChild(areaTemp);
     }
   });
 
@@ -1723,7 +1759,7 @@
         <div class="flex w-full min-w-0 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
               <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-600 text-white' : 'bg-slate-100 text-slate-800'}">
             ${!minha ? `<p class="mb-1 text-sm font-bold text-agro-700">${escapeHtml(m.remetente_nome)}</p>` : ''}
-            <p class="whitespace-pre-wrap break-words [overflow-wrap:anywhere]" data-msg-texto>${escapeHtml(m.texto)}</p>
+            <p class="whitespace-pre-wrap break-words [overflow-wrap:anywhere] bolha-msg" data-msg-texto>${escapeHtml(m.texto)}</p>
             <p class="mt-1 text-right text-xs font-medium ${minha ? 'text-white/70' : 'text-slate-400'}">${horaMinuto(m.criado_em)}${m.editado_em ? ' · editado' : ''}</p>
           </div>
         </div>
