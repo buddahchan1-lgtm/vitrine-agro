@@ -664,7 +664,8 @@
                     document.getElementById('viewPhotoModal').classList.remove('hidden');
                   }
                 } else if (acao === 'tirar') {
-                  obterInputCameraProduto().click();
+                  capturaFotoAlvo = 'produto';
+                  openCameraModal();
                 } else if (acao === 'carregar') {
                   const input = produtoFotoAlvoWrapper.querySelector('.produto-foto-input');
                   if (input) input.click();
