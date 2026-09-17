@@ -5,9 +5,17 @@
   /* No celular, segurar o dedo na mensagem não seleciona o texto (some
      com as bolinhas azuis nativas) — o toque e segure abre nosso menu.
      No computador (mouse) a seleção continua normal. */
-  @media (pointer: coarse) {
-    .bolha-msg { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+   @media (pointer: coarse) {
+    #chatMensagens, #chatMensagens *,
+    #listaMuralMensagens, #listaMuralMensagens * {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
   }
+
+  /* Destaque da mensagem selecionada, estilo WhatsApp */
+  .bolha-selecionada { background-color: rgba(16, 185, 129, 0.18) !important; }
 </style>
 
 <!-- ========================================================= -->
@@ -674,6 +682,21 @@
         </div>
       </div>
     </div>
+
+    <!-- Barra de seleção de mensagem (substitui o cabeçalho, estilo WhatsApp) -->
+    <div id="barraSelecaoMensagem" class="hidden items-center gap-1 border-b border-slate-100 bg-agro-50 px-2 py-3">
+      <button type="button" id="btnCancelarSelecao" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl text-slate-600 hover:bg-black/5" aria-label="Cancelar seleção">&times;</button>
+      <span class="flex-1"></span>
+      <button type="button" id="btnSelecaoCopiar" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-black/5" title="Copiar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button type="button" id="btnSelecaoEditar" class="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-black/5" title="Editar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+      </button>
+      <button type="button" id="btnSelecaoExcluir" class="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full text-rose-600 hover:bg-rose-50" title="Excluir">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+      </button>
+    </div>
     <!-- Abas (somem durante o chat) -->
     <div id="abasMensagens" class="flex items-stretch gap-2 border-b border-slate-100 bg-slate-50 p-2">
       <button type="button" data-aba-msg="mural" class="aba-msg-btn flex flex-1 items-center justify-center rounded-2xl px-4 py-3.5 text-center text-lg font-bold leading-tight transition">Mural de avisos</button>
@@ -831,6 +854,12 @@
   const cabecalhoPadrao = document.getElementById('cabecalhoMensagensPadrao');
   const cabecalhoChat = document.getElementById('cabecalhoChat');
   const abasMensagens = document.getElementById('abasMensagens');
+  const barraSelecaoMensagem = document.getElementById('barraSelecaoMensagem');
+  const btnCancelarSelecao = document.getElementById('btnCancelarSelecao');
+  const btnSelecaoCopiar = document.getElementById('btnSelecaoCopiar');
+  const btnSelecaoEditar = document.getElementById('btnSelecaoEditar');
+  const btnSelecaoExcluir = document.getElementById('btnSelecaoExcluir');
+  let mensagemSelecionada = null; // { tipo, id, conversaId, textoAtual, elWrap }
   const chatAvatarWrap = document.getElementById('chatAvatarWrap');
   const chatAvatarButton = document.getElementById('chatAvatarButton');
   const chatAvatarMenu = document.getElementById('chatAvatarMenu');
@@ -1210,22 +1239,7 @@
       </div>
     `;
     if (podeEditar) {
-      const btnOpcoes = document.createElement('button');
-      btnOpcoes.type = 'button';
-      btnOpcoes.className = 'absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-black/5 hover:text-slate-600';
-      btnOpcoes.title = 'Opções do aviso';
-      btnOpcoes.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
-      btnOpcoes.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const rect = btnOpcoes.getBoundingClientRect();
-        abrirMenuContexto({ x: rect.right - 20, y: rect.bottom + 65 }, { tipo: 'mural', id: m.id, conversaId: null, textoAtual: m.texto, elArticle: article });
-      });
-      article.appendChild(btnOpcoes);
-
-      const textoEl = article.querySelector('[data-msg-texto]');
-      anexarMenuContexto(textoEl, (e, ponto) => {
-        abrirMenuContexto(ponto, { tipo: 'mural', id: m.id, conversaId: null, textoAtual: m.texto, elArticle: article });
-      });
+      anexarMenuContexto(article, () => selecionarMensagemMural(m, article));
     }
     return article;
   }
@@ -1326,50 +1340,58 @@
     el.addEventListener('touchmove', cancelarToque);
   }
 
-  // ---- Menu de contexto (Editar / Excluir), botão direito ou toque longo ----
-  function fecharMenuContexto() {
-    menuContexto.classList.add('hidden');
-    menuContextoAlvo = null;
+  // ---- Seleção de mensagem (estilo WhatsApp) ----
+  function selecionarMensagemChat(msg, elWrap) {
+    limparSelecaoMensagem();
+    mensagemSelecionada = { tipo: 'privado', id: msg.id, conversaId: conversaAtual.id, textoAtual: msg.texto, elWrap };
+    elWrap.querySelector('div').classList.add('bolha-selecionada');
+    cabecalhoChat.classList.add('hidden');
+    cabecalhoChat.classList.remove('flex');
+    barraSelecaoMensagem.classList.remove('hidden');
+    barraSelecaoMensagem.classList.add('flex');
+    const souAutor = msg.remetente_id === meuId;
+    btnSelecaoEditar.classList.toggle('hidden', !souAutor);
+    btnSelecaoExcluir.classList.toggle('hidden', !souAutor);
   }
 
-  function abrirMenuContexto(ponto, alvo) {
-    menuContextoAlvo = alvo;
-    menuContexto.classList.remove('hidden'); // precisa estar visível pra medir a altura real
-
-    const menuLargura = 176; // w-44
-    const margem = 10; // espaço entre o menu e o dedo/cursor
-    const menuAltura = menuContexto.offsetHeight;
-
-    let left = ponto.x - menuLargura / 2;
-    let top = ponto.y - menuAltura - margem; // por padrão, abre ACIMA do ponto pressionado
-
-    // Perto do topo da tela não cabe em cima — abre embaixo do ponto.
-    if (top < 12) top = ponto.y + margem;
-
-    if (left + menuLargura > window.innerWidth - 12) left = window.innerWidth - menuLargura - 12;
-    if (left < 12) left = 12;
-    if (top + menuAltura > window.innerHeight - 12) top = window.innerHeight - menuAltura - 12;
-
-    menuContexto.style.left = left + 'px';
-    menuContexto.style.top = top + 'px';
+  function selecionarMensagemMural(m, article) {
+    limparSelecaoMensagem();
+    mensagemSelecionada = { tipo: 'mural', id: m.id, conversaId: null, textoAtual: m.texto, elWrap: article };
+    article.classList.add('bolha-selecionada');
+    cabecalhoPadrao.classList.add('hidden');
+    abasMensagens.classList.add('hidden');
+    barraSelecaoMensagem.classList.remove('hidden');
+    barraSelecaoMensagem.classList.add('flex');
+    btnSelecaoEditar.classList.remove('hidden');
+    btnSelecaoExcluir.classList.remove('hidden');
   }
 
-  document.addEventListener('click', (e) => {
-    if (!menuContexto.classList.contains('hidden') && !menuContexto.contains(e.target)) {
-      fecharMenuContexto();
+  function limparSelecaoMensagem() {
+    if (!mensagemSelecionada) return;
+    const alvo = mensagemSelecionada;
+    if (alvo.elWrap) alvo.elWrap.classList.remove('bolha-selecionada');
+    mensagemSelecionada = null;
+    barraSelecaoMensagem.classList.add('hidden');
+    barraSelecaoMensagem.classList.remove('flex');
+    if (alvo.tipo === 'mural') {
+      cabecalhoPadrao.classList.remove('hidden');
+      abasMensagens.classList.remove('hidden');
+    } else if (conversaAtual) {
+      cabecalhoChat.classList.remove('hidden');
+      cabecalhoChat.classList.add('flex');
     }
-  });
+  }
 
-  btnMenuCopiar.addEventListener('click', async () => {
-    const alvo = menuContextoAlvo;
-    fecharMenuContexto();
-    if (!alvo) return;
+  btnCancelarSelecao.addEventListener('click', limparSelecaoMensagem);
+
+  btnSelecaoCopiar.addEventListener('click', async () => {
+    if (!mensagemSelecionada) return;
+    const texto = mensagemSelecionada.textoAtual;
     try {
-      await navigator.clipboard.writeText(alvo.textoAtual);
+      await navigator.clipboard.writeText(texto);
     } catch (err) {
-      // Fallback para quando o navegador não libera a Clipboard API.
       const areaTemp = document.createElement('textarea');
-      areaTemp.value = alvo.textoAtual;
+      areaTemp.value = texto;
       areaTemp.style.position = 'fixed';
       areaTemp.style.opacity = '0';
       document.body.appendChild(areaTemp);
@@ -1377,23 +1399,21 @@
       document.execCommand('copy');
       document.body.removeChild(areaTemp);
     }
+    limparSelecaoMensagem();
   });
 
-  btnMenuEditar.addEventListener('click', () => {
-    const alvo = menuContextoAlvo;
-    fecharMenuContexto();
-    if (!alvo) return;
-    if (alvo.tipo === 'mural') {
-      iniciarEdicaoMural(alvo);
-    } else {
-      iniciarEdicaoChat(alvo);
-    }
+  btnSelecaoEditar.addEventListener('click', () => {
+    if (!mensagemSelecionada) return;
+    const alvo = mensagemSelecionada;
+    limparSelecaoMensagem();
+    if (alvo.tipo === 'mural') iniciarEdicaoMural(alvo);
+    else iniciarEdicaoChat(alvo);
   });
 
-  btnMenuExcluir.addEventListener('click', () => {
-    const alvo = menuContextoAlvo;
-    fecharMenuContexto();
-    if (!alvo) return;
+  btnSelecaoExcluir.addEventListener('click', () => {
+    if (!mensagemSelecionada) return;
+    const alvo = mensagemSelecionada;
+    limparSelecaoMensagem();
     showConfirm('Excluir mensagem?', 'Essa ação não pode ser desfeita.', async () => {
       if (alvo.tipo === 'mural') {
         const data = await apiFetch(`/painel/mensagens/${alvo.id}/excluir`, { method: 'POST' }, 'Não foi possível excluir o aviso.');
@@ -1411,7 +1431,7 @@
   });
 
   function iniciarEdicaoMural(alvo) {
-    const article = alvo.elArticle;
+    const article = alvo.elWrap;
     const textoEl = article.querySelector('[data-msg-texto]');
     const original = alvo.textoAtual;
 
@@ -1532,11 +1552,12 @@
   });
   function fecharCentralMensagens() {
     modalMensagens.classList.add('hidden');
-    fecharMenuContexto();
+    limparSelecaoMensagem();
   }
 
   // ---- Alternar entre tela de lista e tela de chat, no mesmo modal ----
    function mostrarTelaLista() {
+    limparSelecaoMensagem();
     painelChat.classList.add('hidden');
     cabecalhoChat.classList.add('hidden');
     cabecalhoChat.classList.remove('flex');
@@ -1757,7 +1778,7 @@
       const minha = m.remetente_id === meuId;
       return `
         <div class="flex w-full min-w-0 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
-              <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-600 text-white' : 'bg-slate-100 text-slate-800'}">
+              <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-500 text-white' : 'bg-slate-100 text-slate-800'}">
             ${!minha ? `<p class="mb-1 text-sm font-bold text-agro-700">${escapeHtml(m.remetente_nome)}</p>` : ''}
             <p class="whitespace-pre-wrap break-words [overflow-wrap:anywhere] bolha-msg" data-msg-texto>${escapeHtml(m.texto)}</p>
             <p class="mt-1 text-right text-xs font-medium ${minha ? 'text-white/70' : 'text-slate-400'}">${horaMinuto(m.criado_em)}${m.editado_em ? ' · editado' : ''}</p>
@@ -1766,17 +1787,15 @@
       `;
     }).join('');
 
-    // Só o autor pode editar/excluir sua própria mensagem privada.
+    // Qualquer mensagem pode ser selecionada (pra copiar). Editar/excluir
+    // só aparece pro autor, dentro de selecionarMensagemChat.
     chatMensagens.querySelectorAll('[data-msg-id]').forEach((wrap) => {
       const id = Number(wrap.dataset.msgId);
       const msg = mensagens.find((m) => m.id === id);
-      if (msg && msg.remetente_id === meuId) {
-        const bolha = wrap.querySelector('div');
-        bolha.title = 'Clique com o botão direito (ou segure) para editar ou excluir';
-        anexarMenuContexto(bolha, (e, ponto) => {
-          abrirMenuContexto(ponto, { tipo: 'privado', id: msg.id, conversaId: conversaAtual.id, textoAtual: msg.texto });
-        });
-      }
+      if (!msg) return;
+      const bolha = wrap.querySelector('div');
+      bolha.title = 'Clique com o botão direito (ou segure) para selecionar';
+      anexarMenuContexto(bolha, () => selecionarMensagemChat(msg, wrap));
     });
 
     // Sempre mostra a mensagem mais recente (parte de baixo) ao carregar ou enviar.
@@ -1784,6 +1803,7 @@
   }
 
   async function abrirChat(id, titulo, foto, grupo) {
+    limparSelecaoMensagem();
     conversaAtual = { id, nome: titulo, foto: foto || null, grupo: !!grupo };
     document.getElementById('chatTitulo').textContent = titulo;
     chatAvatarWrap.innerHTML = avatarHtml(foto, titulo, 'h-9 w-9');
