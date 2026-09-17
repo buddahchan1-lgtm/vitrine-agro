@@ -456,31 +456,38 @@
   }
 
   function redimensionarImagemBase64(file, callback) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        const MAX_SIZE = 500; // px, lado maior
-        let { width, height } = img;
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
 
-        if (width > height && width > MAX_SIZE) {
-          height *= MAX_SIZE / width;
-          width = MAX_SIZE;
-        } else if (height > MAX_SIZE) {
-          width *= MAX_SIZE / height;
-          height = MAX_SIZE;
-        }
+    img.onload = function() {
+      const MAX_SIZE = 500; // px, lado maior
+      let { width, height } = img;
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      if (width > height && width > MAX_SIZE) {
+        height *= MAX_SIZE / width;
+        width = MAX_SIZE;
+      } else if (height > MAX_SIZE) {
+        width *= MAX_SIZE / height;
+        height = MAX_SIZE;
+      }
 
-        callback(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.src = e.target.result;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+      URL.revokeObjectURL(objectUrl);
+      callback(canvas.toDataURL('image/jpeg', 0.8));
     };
-    reader.readAsDataURL(file);
+
+    img.onerror = function() {
+      URL.revokeObjectURL(objectUrl);
+      if (typeof showCustomAlert === 'function') {
+        showCustomAlert('Erro ao processar imagem', 'Não foi possível abrir essa foto. Tente novamente ou escolha outra imagem.');
+      }
+    };
+
+    img.src = objectUrl;
   }
 
   function handleFileSelect(event) {
