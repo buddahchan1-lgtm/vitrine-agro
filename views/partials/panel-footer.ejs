@@ -455,41 +455,64 @@
     document.getElementById('photoCameraInput').click();
   }
 
-  function redimensionarImagemBase64(file, callback) {
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
+ function redimensionarImagemBase64(file, callback) {
+    const MAX_SIZE = 500; // px, lado maior
 
-    img.onload = function() {
-      const MAX_SIZE = 500; // px, lado maior
-      let { width, height } = img;
-
+    function finalizarComBitmap(bitmap) {
+      let { width, height } = bitmap;
       if (width > height && width > MAX_SIZE) {
-        height *= MAX_SIZE / width;
+        height = Math.round(height * (MAX_SIZE / width));
         width = MAX_SIZE;
       } else if (height > MAX_SIZE) {
-        width *= MAX_SIZE / height;
+        width = Math.round(width * (MAX_SIZE / height));
         height = MAX_SIZE;
       }
-
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
-      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+      if (bitmap.close) bitmap.close();
+      callback(canvas.toDataURL('image/jpeg', 0.75));
+    }
 
-      URL.revokeObjectURL(objectUrl);
-      callback(canvas.toDataURL('image/jpeg', 0.8));
-    };
+    function viaImageFallback() {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function() {
+        let { width, height } = img;
+        if (width > height && width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        } else if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(objectUrl);
+        callback(canvas.toDataURL('image/jpeg', 0.75));
+      };
+      img.onerror = function() {
+        URL.revokeObjectURL(objectUrl);
+        if (typeof showCustomAlert === 'function') {
+          showCustomAlert('Erro ao processar imagem', 'Não foi possível abrir essa foto. Tente novamente ou escolha outra imagem.');
+        }
+      };
+      img.src = objectUrl;
+    }
 
-    img.onerror = function() {
-      URL.revokeObjectURL(objectUrl);
-      if (typeof showCustomAlert === 'function') {
-        showCustomAlert('Erro ao processar imagem', 'Não foi possível abrir essa foto. Tente novamente ou escolha outra imagem.');
-      }
-    };
-
-    img.src = objectUrl;
+    if (window.createImageBitmap) {
+      // Decodifica a foto já numa resolução reduzida, evitando carregar
+      // o bitmap original (que pode ter dezenas de megapixels) na memória.
+      createImageBitmap(file, { resizeWidth: 1200, resizeQuality: 'medium' })
+        .then(finalizarComBitmap)
+        .catch(viaImageFallback);
+    } else {
+      viaImageFallback();
+    }
   }
-
   function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
