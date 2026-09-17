@@ -586,6 +586,30 @@
           (function () {
             let produtoFotoAlvoWrapper = null;
 
+            function obterInputCameraProduto() {
+              let input = document.getElementById('produtoCameraInput');
+              if (input) return input;
+              input = document.createElement('input');
+              input.type = 'file';
+              input.id = 'produtoCameraInput';
+              input.accept = 'image/*';
+              input.capture = 'environment';
+              input.className = 'hidden';
+              input.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                  if (typeof showCustomAlert === 'function') showCustomAlert('Arquivo inválido', 'Selecione uma imagem válida.');
+                  input.value = '';
+                  return;
+                }
+                if (produtoFotoAlvoWrapper) aplicarFotoProduto(produtoFotoAlvoWrapper, file);
+                input.value = '';
+              });
+              document.body.appendChild(input);
+              return input;
+            }
+
             function fecharMenuFotoProduto() {
               const menu = document.getElementById('menuFotoProduto');
               if (menu) menu.classList.add('hidden');
@@ -640,8 +664,7 @@
                     document.getElementById('viewPhotoModal').classList.remove('hidden');
                   }
                 } else if (acao === 'tirar') {
-                  capturaFotoAlvo = 'produto';
-                  openCameraModal();
+                  obterInputCameraProduto().click();
                 } else if (acao === 'carregar') {
                   const input = produtoFotoAlvoWrapper.querySelector('.produto-foto-input');
                   if (input) input.click();
