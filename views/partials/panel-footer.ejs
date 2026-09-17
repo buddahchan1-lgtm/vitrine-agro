@@ -1003,9 +1003,9 @@
     if (!termoDigitos) return container;
 
     const idsComConversaIndividual = new Set(
-      conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
+      conversasCache.filter((c) => !c.grupo && !c.arquivada && c.participantes[0]).map((c) => c.participantes[0].id)
     );
-    const filtrados = contatosCache.filter((p) => p.whatsapp && somenteDigitos(p.whatsapp) === termoDigitos && !idsComConversaIndividual.has(p.id));
+    const adminsFixos = filtroConversaAtual === 'tudo'
 
     if (!filtrados.length) return container;
 
@@ -1350,7 +1350,7 @@
         ultimoToqueLongoEm = Date.now();
         handler(e, ponto);
       }, 500);
-    }, { passive: false });
+    }, { passive: true });
     el.addEventListener('touchstart', (e) => {
       // Impede o menu de contexto/seleção de texto nativo do celular
       // de disparar por cima da nossa seleção customizada.
