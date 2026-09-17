@@ -49,9 +49,13 @@
 
             <button 
               type="button" 
-              onclick="openCameraModal()" 
+              onclick="triggerCameraInput()" 
               class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 transition text-left font-medium"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              <span>Tirar foto</span>
+            </button>
+
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
               <span>Tirar foto</span>
             </button>
@@ -81,6 +85,7 @@
 
          <!-- Inputs ocultos para controle da imagem e upload local -->
         <input type="file" id="photoFileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+        <input type="file" id="photoCameraInput" accept="image/*" capture="user" class="hidden" onchange="handleFileSelect(event)" />
         <input type="hidden" id="profileFotoUrl" value="<%= currentUser.foto || '' %>" />
          <span class="text-xs text-slate-500">Clique na foto para ver opções</span>
       </div>
@@ -443,6 +448,13 @@
     document.getElementById('photoFileInput').click();
   }
 
+  function triggerCameraInput() {
+    const menu = document.getElementById('photoOptionsMenu');
+    if (menu) menu.classList.add('hidden');
+    capturaFotoAlvo = 'perfil';
+    document.getElementById('photoCameraInput').click();
+  }
+
   function redimensionarImagemBase64(file, callback) {
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -587,6 +599,7 @@
           </button>
         </div>
         <input type="file" id="chatFotoFileInput" accept="image/*" class="hidden" />
+        <input type="file" id="chatFotoCameraInput" accept="image/*" capture="environment" class="hidden" />
       </div>
       <div id="chatInfoArea" class="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-slate-50" title="Ver participantes do grupo">
         <div class="min-w-0 flex-1">
@@ -1571,8 +1584,7 @@
   btnChatTirarFoto.addEventListener('click', () => {
     chatAvatarMenu.classList.add('hidden');
     if (!conversaAtual || !conversaAtual.grupo) return;
-    capturaFotoAlvo = 'grupo';
-    openCameraModal();
+    document.getElementById('chatFotoCameraInput').click();
   });
 
   btnChatCarregarFoto.addEventListener('click', () => {
@@ -1582,7 +1594,7 @@
     chatFotoFileInput.click();
   });
 
-  chatFotoFileInput.addEventListener('change', (event) => {
+  function handleChatFotoFile(event) {
     const file = event.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -1591,7 +1603,9 @@
     }
     redimensionarImagemBase64(file, (base64Image) => salvarFotoGrupoCapturada(base64Image));
     event.target.value = '';
-  });
+  }
+  chatFotoFileInput.addEventListener('change', handleChatFotoFile);
+  document.getElementById('chatFotoCameraInput').addEventListener('change', handleChatFotoFile);
 
   async function salvarFotoGrupoCapturada(base64Foto) {
     if (!conversaAtual || !conversaAtual.grupo) return;
