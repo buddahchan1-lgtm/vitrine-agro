@@ -16,8 +16,10 @@
 
   /* Destaque da mensagem selecionada, estilo WhatsApp */
   .bolha-selecionada {
-    background-color: rgba(16, 185, 129, 0.28) !important;
-    box-shadow: inset 0 0 0 2px rgba(5, 150, 105, 0.55);
+    background-color: transparent !important;
+    box-shadow: none !important;
+    outline: 2px solid rgba(16, 185, 129, 0.6);
+    outline-offset: 2px;
   }
 </style>
 
@@ -690,15 +692,13 @@
     <div id="barraSelecaoMensagem" class="hidden items-center gap-1 border-b border-slate-200 bg-agro-100 px-2 py-3">
     <button type="button" id="btnCancelarSelecao" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl text-slate-600 hover:bg-black/5" aria-label="Cancelar seleção">&times;</button>
     <span id="contadorSelecaoMensagem" class="flex-1 text-base font-bold text-agro-800"></span>
-      <button type="button" id="btnCancelarSelecao" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl text-slate-600 hover:bg-black/5" aria-label="Cancelar seleção">&times;</button>
-      <span class="flex-1"></span>
       <button type="button" id="btnSelecaoCopiar" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-black/5" title="Copiar">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       </button>
-      <button type="button" id="btnSelecaoEditar" class="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-black/5" title="Editar">
+      <button type="button" id="btnSelecaoEditar" class="hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-600 hover:bg-black/5" title="Editar">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
       </button>
-      <button type="button" id="btnSelecaoExcluir" class="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full text-rose-600 hover:bg-rose-50" title="Excluir">
+      <button type="button" id="btnSelecaoExcluir" class="hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-rose-600 hover:bg-rose-50" title="Excluir">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
       </button>
     </div>
@@ -1376,7 +1376,7 @@
     }
 
     if (!mensagensSelecionadas.size) {
-      limparSelecaoMensagem();
+      limparSelecaoMensagem(alvo.tipo);
       return;
     }
 
@@ -1414,9 +1414,9 @@
     });
   }
 
-  function limparSelecaoMensagem() {
-    if (!mensagensSelecionadas.size) return;
-    const tipoAtual = mensagensSelecionadas.values().next().value.tipo;
+  function limparSelecaoMensagem(tipoForcado) {
+    if (!mensagensSelecionadas.size && !tipoForcado) return;
+    const tipoAtual = tipoForcado || mensagensSelecionadas.values().next().value.tipo;
     mensagensSelecionadas.forEach((alvo) => alvo.elHighlight.classList.remove('bolha-selecionada'));
     mensagensSelecionadas.clear();
     barraSelecaoMensagem.classList.add('hidden');
