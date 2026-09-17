@@ -1330,6 +1330,7 @@
   // prolongado / "segurar o dedo" (celular), como no WhatsApp.
   function anexarMenuContexto(el, handler) {
     let pressTimer = null;
+    let inicioX = 0, inicioY = 0;
     el.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1338,15 +1339,31 @@
     el.addEventListener('touchstart', (e) => {
       const touch = e.touches[0];
       const ponto = touch ? { x: touch.clientX, y: touch.clientY } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      inicioX = ponto.x;
+      inicioY = ponto.y;
       pressTimer = setTimeout(() => {
         pressTimer = null;
         ultimoToqueLongoEm = Date.now();
         handler(e, ponto);
       }, 500);
     }, { passive: true });
-    const cancelarToque = () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } };
+    const cancelarToque = (e) => {
+      if (!pressTimer) return;
+      // Só cancela se o dedo realmente deslizou bastante (rolando a tela).
+      // Um tremor mínimo durante o toque e segure não deve cancelar a seleção.
+      if (e && e.type === 'touchmove') {
+        const touch = e.touches[0];
+        if (touch) {
+          const dx = Math.abs(touch.clientX - inicioX);
+          const dy = Math.abs(touch.clientY - inicioY);
+          if (dx < 10 && dy < 10) return;
+        }
+      }
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    };
     el.addEventListener('touchend', cancelarToque);
-    el.addEventListener('touchmove', cancelarToque);
+    el.addEventListener('touchmove', cancelarToque, { passive: true });
   }
 
   // ---- Seleção de mensagens (multi-seleção estilo WhatsApp) ----
