@@ -1491,8 +1491,8 @@
     ativarAbaMsg('mural');
   });
   btnFecharMensagens.addEventListener('click', fecharCentralMensagens);
-  modalMensagens.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) fecharCentralMensagens();
+ modalMensagens.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget && pontoDeInicioClique === e.currentTarget) fecharCentralMensagens();
   });
   function fecharCentralMensagens() {
     modalMensagens.classList.add('hidden');
@@ -1559,7 +1559,7 @@
     modalMensagens.classList.remove('hidden');
   }
   document.getElementById('btnFecharNovaConversa').addEventListener('click', fecharModalNova);
-  modalNova.addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalNova(); });
+  modalNova.addEventListener('click', (e) => { if (e.target === e.currentTarget && pontoDeInicioClique === e.currentTarget) fecharModalNova(); });
 
   btnConfirmarGrupo.addEventListener('click', async () => {
     const ids = Array.from(listaContatosEl.querySelectorAll('input:checked')).map((i) => i.value);
@@ -1592,7 +1592,7 @@
     modalMensagens.classList.remove('hidden');
   }
   document.getElementById('btnFecharParticipantes').addEventListener('click', fecharModalParticipantes);
-  modalParticipantes.addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalParticipantes(); });
+  modalParticipantes.addEventListener('click', (e) => { if (e.target === e.currentTarget && pontoDeInicioClique === e.currentTarget) fecharModalParticipantes(); });
 
   async function abrirParticipantes() {
     if (!conversaAtual || !conversaAtual.grupo) return;
@@ -1627,7 +1627,7 @@
     modalMensagens.classList.remove('hidden');
   }
   document.getElementById('btnFecharFotoGrupo').addEventListener('click', fecharModalFotoGrupo);
-  modalFotoGrupo.addEventListener('click', (e) => { if (e.target === e.currentTarget) fecharModalFotoGrupo(); });
+  modalFotoGrupo.addEventListener('click', (e) => { if (e.target === e.currentTarget && pontoDeInicioClique === e.currentTarget) fecharModalFotoGrupo(); });
 
    chatAvatarButton.addEventListener('click', (e) => {
     e.stopPropagation();
