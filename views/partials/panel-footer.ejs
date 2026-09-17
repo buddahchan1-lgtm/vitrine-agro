@@ -1765,9 +1765,13 @@
   }
   chatInput.addEventListener('input', ajustarAlturaChatInput);
 
-  // Enter envia a mensagem; Shift+Enter pula linha (igual ao WhatsApp).
+  // Detecta se o ponteiro principal é "grosso" (touch/celular) ou fino (mouse/computador).
+  const ehDispositivoTocavel = window.matchMedia('(pointer: coarse)').matches;
+
+  // No computador: Enter envia e Shift+Enter pula linha.
+  // No celular: Enter do teclado sempre pula linha (como no WhatsApp) — só o botão envia.
   chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !ehDispositivoTocavel) {
       e.preventDefault();
       if (formEnviar.requestSubmit) {
         formEnviar.requestSubmit();
