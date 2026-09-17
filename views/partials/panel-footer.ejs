@@ -1,3 +1,8 @@
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+</style>
+
 <!-- ========================================================= -->
 <!-- MODAL DE EDIÇÃO DE PERFIL                                 -->
 <!-- ========================================================= -->
@@ -711,9 +716,9 @@
 
     <!-- PAINEL DE CHAT (mesma tela, some quando está na lista) -->
     <div id="painelChat" class="hidden flex-1 flex-col overflow-hidden">
-      <div class="flex-1 space-y-3 overflow-y-auto px-5 py-4" id="chatMensagens"></div>
+      <div class="flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-5 py-4" id="chatMensagens"></div>
       <form id="formEnviarMensagem" class="flex items-end gap-2 border-t border-slate-100 p-4">
-        <textarea id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" rows="1" class="min-w-0 flex-1 resize-none rounded-3xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-lg leading-snug outline-none focus:border-agro-500 focus:bg-white" style="max-height: 140px;"></textarea>
+        <textarea id="chatInputTexto" placeholder="Escreva uma mensagem..." required maxlength="1000" rows="1" class="no-scrollbar min-w-0 flex-1 resize-none rounded-3xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-lg leading-snug outline-none focus:border-agro-500 focus:bg-white" style="max-height: 140px;"></textarea>
         <button type="submit" aria-label="Enviar mensagem" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-agro-600 text-white transition hover:bg-agro-700">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg>
         </button>
@@ -858,21 +863,29 @@
     return nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
   }
 
+  function parseDataServidor(d) {
+    if (!d) return null;
+    // Se já vem em ISO (contém "T"), usa direto — evita duplicar o "Z"
+    // que estava quebrando o parse e gerando "Invalid Date".
+    if (typeof d === 'string' && d.includes('T')) return new Date(d);
+    return new Date(d.replace(' ', 'T') + 'Z');
+  }
+
   function tempoCurto(d) {
-    if (!d) return '';
-    const dt = new Date(d.replace(' ', 'T') + 'Z');
+    const dt = parseDataServidor(d);
+    if (!dt) return '';
     return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   }
 
   function horaMinuto(d) {
-    if (!d) return '';
-    const dt = new Date(d.replace(' ', 'T') + 'Z');
+    const dt = parseDataServidor(d);
+    if (!dt) return '';
     return dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 
   function dataHoraCompleta(d) {
-    if (!d) return '';
-    const dt = new Date(d.replace(' ', 'T') + 'Z');
+    const dt = parseDataServidor(d);
+    if (!dt) return '';
     return dt.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
@@ -1701,10 +1714,10 @@
     chatMensagens.innerHTML = mensagens.map((m) => {
       const minha = m.remetente_id === meuId;
       return `
-        <div class="flex ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
-              <div class="max-w-[75%] rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-600 text-white' : 'bg-slate-100 text-slate-800'}">
+        <div class="flex w-full min-w-0 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
+              <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-600 text-white' : 'bg-slate-100 text-slate-800'}">
             ${!minha ? `<p class="mb-1 text-sm font-bold text-agro-700">${escapeHtml(m.remetente_nome)}</p>` : ''}
-            <p class="whitespace-pre-wrap" data-msg-texto>${escapeHtml(m.texto)}</p>
+            <p class="whitespace-pre-wrap break-words [overflow-wrap:anywhere]" data-msg-texto>${escapeHtml(m.texto)}</p>
             <p class="mt-1 text-right text-xs font-medium ${minha ? 'text-white/70' : 'text-slate-400'}">${horaMinuto(m.criado_em)}${m.editado_em ? ' · editado' : ''}</p>
           </div>
         </div>
@@ -1745,13 +1758,6 @@
     chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
   }
   chatInput.addEventListener('input', ajustarAlturaChatInput);
-
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      formEnviar.requestSubmit();
-    }
-  });
 
   formEnviar.addEventListener('submit', async (e) => {
     e.preventDefault();
