@@ -1331,41 +1331,49 @@
   function anexarMenuContexto(el, handler) {
     let pressTimer = null;
     let inicioX = 0, inicioY = 0;
+    let pointerIdAtivo = null;
+
     el.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      // No celular, o toque prolongado às vezes dispara o "contextmenu"
-      // nativo praticamente junto do nosso temporizador de seleção.
-      // Se isso acabou de acontecer, ignora — já foi tratado.
       if (Date.now() - ultimoToqueLongoEm < 600) return;
       handler(e, { x: e.clientX, y: e.clientY });
     });
-    el.addEventListener('touchstart', (e) => {
-      const touch = e.touches[0];
-      const ponto = touch ? { x: touch.clientX, y: touch.clientY } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-      inicioX = ponto.x;
-      inicioY = ponto.y;
+
+    // Toque real no celular: usamos Pointer Events (em vez de touch*) e
+    // "prendemos" o toque no elemento com setPointerCapture. Isso evita
+    // que o gesto nativo de toque prolongado do Android/iOS (seleção de
+    // texto, menu do sistema) roube o toque antes do nosso temporizador
+    // completar — era isso que fazia o menu nunca aparecer no celular
+    // de verdade, mesmo funcionando com o mouse.
+    el.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return; // botão direito já tratado acima
+      inicioX = e.clientX;
+      inicioY = e.clientY;
+      pointerIdAtivo = e.pointerId;
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
       pressTimer = setTimeout(() => {
         pressTimer = null;
         ultimoToqueLongoEm = Date.now();
-        handler(e, ponto);
+        handler(e, { x: inicioX, y: inicioY });
       }, 500);
-    }, { passive: true });
+    });
+
     const cancelarToque = (e) => {
-      if (!pressTimer) return;
-      if (e && e.type === 'touchmove') {
-        const touch = e.touches[0];
-        if (touch) {
-          const dx = Math.abs(touch.clientX - inicioX);
-          const dy = Math.abs(touch.clientY - inicioY);
-          if (dx < 10 && dy < 10) return;
-        }
+      if (e && e.pointerId !== undefined && e.pointerId !== pointerIdAtivo) return;
+      if (!pressTimer) { pointerIdAtivo = null; return; }
+      if (e && e.type === 'pointermove') {
+        const dx = Math.abs(e.clientX - inicioX);
+        const dy = Math.abs(e.clientY - inicioY);
+        if (dx < 10 && dy < 10) return;
       }
       clearTimeout(pressTimer);
       pressTimer = null;
+      pointerIdAtivo = null;
     };
-    el.addEventListener('touchend', cancelarToque);
-    el.addEventListener('touchmove', cancelarToque, { passive: true });
+    el.addEventListener('pointerup', cancelarToque);
+    el.addEventListener('pointercancel', cancelarToque);
+    el.addEventListener('pointermove', cancelarToque);
   }
 
   // ---- Seleção de mensagens (multi-seleção estilo WhatsApp) ----
