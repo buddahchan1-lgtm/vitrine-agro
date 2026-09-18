@@ -1658,6 +1658,8 @@
   function fecharCentralMensagens() {
     modalMensagens.classList.add('hidden');
     limparSelecaoMensagem();
+    estavaEmArquivadas = false;
+    filtroConversaAtual = 'tudo';
   }
 
   // ---- Alternar entre tela de lista e tela de chat, no mesmo modal ----
