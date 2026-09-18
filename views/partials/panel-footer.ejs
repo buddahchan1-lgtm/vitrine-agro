@@ -1542,6 +1542,13 @@
       textarea.style.height = 'auto';
       textarea.style.height = textarea.scrollHeight + 'px';
     });
+    // No computador, Enter (sem Shift) salva a edição, como no restante do app.
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !ehDispositivoTocavel) {
+        e.preventDefault();
+        acoes.children[1].click();
+      }
+    });
 
     function ajustarAlturaEdicaoMural() {
       textarea.style.height = 'auto';
@@ -1573,6 +1580,22 @@
     acoes.children[0].addEventListener('click', () => carregarMural());
     acoes.children[1].addEventListener('click', async () => {
       const novoTexto = textarea.value.trim();
+
+      // Apagou tudo e confirmou (Enter ou botão Salvar): pergunta se
+      // quer excluir o aviso, em vez de só travar com "muito curto".
+      if (novoTexto.length === 0) {
+        showConfirm('Excluir aviso?', 'Você apagou todo o texto. Deseja excluir este aviso?', async () => {
+          const data = await apiFetch(`/painel/mensagens/${alvo.id}/excluir`, { method: 'POST' }, 'Não foi possível excluir o aviso.');
+          if (data && data.success) {
+            listaMuralEl.innerHTML = '';
+            const mensagens = data.mensagens || [];
+            if (!mensagens.length) muralVazioEl.classList.remove('hidden');
+            else { muralVazioEl.classList.add('hidden'); mensagens.forEach((m) => listaMuralEl.appendChild(renderMensagemMural(m))); }
+          }
+        });
+        return;
+      }
+
       if (novoTexto.length < 3) {
         showCustomAlert('Aviso muito curto', 'Escreva ao menos 3 caracteres.');
         return;
@@ -1606,6 +1629,13 @@
       textarea.style.height = 'auto';
       textarea.style.height = textarea.scrollHeight + 'px';
     });
+    // No computador, Enter (sem Shift) salva a edição, como no restante do app.
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !ehDispositivoTocavel) {
+        e.preventDefault();
+        acoes.children[1].click();
+      }
+    });
 
     const acoes = document.createElement('div');
     acoes.className = 'mt-2 flex justify-end gap-2';
@@ -1621,7 +1651,17 @@
     acoes.children[0].addEventListener('click', () => abrirChat(conversaAtual.id, conversaAtual.nome, conversaAtual.foto, conversaAtual.grupo));
     acoes.children[1].addEventListener('click', async () => {
       const novoTexto = textarea.value.trim();
-      if (!novoTexto) return;
+
+      // Apagou tudo e confirmou (Enter ou botão enviar): pergunta se
+      // quer excluir a mensagem, em vez de simplesmente não fazer nada.
+      if (!novoTexto) {
+        showConfirm('Excluir mensagem?', 'Você apagou todo o texto. Deseja excluir esta mensagem?', async () => {
+          const data = await apiFetch(`/painel/conversas/${alvo.conversaId}/mensagens/${alvo.id}/excluir`, { method: 'POST' }, 'Não foi possível excluir a mensagem.');
+          if (data && data.success) renderChatMensagens(data.mensagens || []);
+        });
+        return;
+      }
+
       const data = await apiFetch(`/painel/conversas/${alvo.conversaId}/mensagens/${alvo.id}/editar`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ texto: novoTexto })
