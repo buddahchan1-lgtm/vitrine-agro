@@ -170,6 +170,7 @@
                       </div>
 
                       <button type="button" data-action="confirmar-sobra" class="rounded-full bg-agro-600 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-agro-700">Confirmar</button>
+                      <button type="button" data-action="cancelar-alteracao" class="hidden rounded-full px-3 py-1.5 text-xs font-semibold text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">Cancelar</button>
                     </div>
 
                   </div>
@@ -280,6 +281,97 @@
               ativarModo(abaSalva);
             }
 
+            // ===== FUNÇÕES NOVAS DO "ALTERAR" ===========================================
+            function jaSalvo(box) {
+              return box.dataset.sobra !== undefined && box.dataset.sobra !== '';
+            }
+
+            async function postarForm(url, params) {
+              const resp = await fetchComTimeout(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params ? params.toString() : ''
+              }, 15000);
+              const data = await resp.json().catch(function () { return {}; });
+              return { httpOk: resp.ok, data: data };
+            }
+
+            async function salvarBaixa(produtoId, modo, sobra, anterior) {
+              const base = '/painel/produtos/' + produtoId;
+
+              if (anterior) {
+                try {
+                  const r = await postarForm(base + '/reabrir');
+                  if (!r.httpOk || r.data.success === false) {
+                    return { ok: false, message: r.data && r.data.message };
+                  }
+                } catch (e) {
+                  return { ok: false, message: 'Falha de conexão.' };
+                }
+              }
+
+              const params = new URLSearchParams({ modo: modo });
+              if (sobra !== undefined) params.set('sobra', sobra);
+
+              let b;
+              try {
+                b = await postarForm(base + '/baixa', params);
+              } catch (e) {
+                b = { httpOk: false, data: { message: 'Falha de conexão.' } };
+              }
+
+              if (b.httpOk && b.data.success) return { ok: true };
+              if (!anterior && eDuplicidadeJaFechada(b.data)) return { ok: true };
+
+              if (anterior) {
+                try {
+                  const p = new URLSearchParams(
+                    anterior.sobra > 0
+                      ? { modo: 'sobra', sobra: String(anterior.sobra) }
+                      : { modo: 'vendeu_tudo' }
+                  );
+                  const rest = await postarForm(base + '/baixa', p);
+                  if (!(rest.httpOk && rest.data.success)) {
+                    return { ok: false, message: b.data && b.data.message, perdeu: true };
+                  }
+                } catch (e) {
+                  return { ok: false, message: b.data && b.data.message, perdeu: true };
+                }
+              }
+              return { ok: false, message: b.data && b.data.message };
+            }
+
+            function marcarLinhaComoPendente(box) {
+              const dot = box.querySelector('[data-status-dot]');
+              const btnCancelar = box.querySelector('[data-action="cancelar-alteracao"]');
+              box.dataset.sobra = '';
+              box.dataset.editando = '0';
+              if (dot) { dot.classList.remove('bg-emerald-500'); dot.classList.add('bg-slate-300'); }
+              box.querySelector('[data-baixa-status]').classList.add('hidden');
+              box.querySelector('[data-baixa-form]').classList.remove('hidden');
+              if (btnCancelar) btnCancelar.classList.add('hidden');
+            }
+
+            function abrirEdicao(box) {
+              const formBox = box.querySelector('[data-baixa-form]');
+              const inputSobra = formBox.querySelector('.input-sobra');
+              const btnCancelar = formBox.querySelector('[data-action="cancelar-alteracao"]');
+              if (inputSobra) inputSobra.value = Number(box.dataset.sobra) || 0;
+              box.dataset.editando = '1';
+              box.querySelector('[data-baixa-status]').classList.add('hidden');
+              formBox.classList.remove('hidden');
+              if (btnCancelar) btnCancelar.classList.remove('hidden');
+            }
+
+            function fecharEdicao(box) {
+              const formBox = box.querySelector('[data-baixa-form]');
+              const btnCancelar = formBox.querySelector('[data-action="cancelar-alteracao"]');
+              box.dataset.editando = '0';
+              formBox.classList.add('hidden');
+              box.querySelector('[data-baixa-status]').classList.remove('hidden');
+              if (btnCancelar) btnCancelar.classList.add('hidden');
+            }
+
             // ===== PROGRESSO =========================================================
             function atualizarProgresso() {
               const boxes = document.querySelectorAll('[data-baixa-produto]');
@@ -289,7 +381,7 @@
               if (!total) return;
               let feitos = 0;
               boxes.forEach(function (box) {
-                if (!box.querySelector('[data-baixa-status]').classList.contains('hidden')) feitos++;
+                if (jaSalvo(box)) feitos++;
               });
               const concluido = feitos === total;
               el.textContent = concluido
@@ -346,8 +438,10 @@
               }
                 statusBox.classList.remove('hidden');
               formBox.classList.add('hidden');
-              box.dataset.reaberto = '0';
+              box.dataset.editando = '0';
               box.dataset.sobra = sobraValor;
+              const btnCancelar = formBox.querySelector('[data-action="cancelar-alteracao"]');
+              if (btnCancelar) btnCancelar.classList.add('hidden');
             }
 
             // ===== CLIQUE NAS LINHAS (Vendi tudo / Sobra / Confirmar / Refazer) =====
@@ -384,35 +478,9 @@
                 inputSobra.value = total ? Math.min(total, atual + 1) : atual + 1;
                 return;
               }
-
-              if (acao === 'refazer' && statusBox && formBox) {
-                box.dataset.processando = '1';
-                travarLinha(box, true);
-                btn.textContent = 'Reabrindo...';
-                try {
-                  const resp = await fetchComTimeout('/painel/produtos/' + produtoId + '/reabrir', { method: 'POST' }, 15000);
-                  const data = await resp.json().catch(function () { return {}; });
-                  if (!resp.ok || data.success === false) {
-                    vaMostrarAviso('Não foi possível reabrir', (data && data.message) || 'Tente novamente em alguns instantes.');
-                    return;
-                  }
-                  box.dataset.reaberto = '1';
-                  statusBox.classList.add('hidden');
-                  formBox.classList.remove('hidden');
-                  const dot = box.querySelector('[data-status-dot]');
-                  if (dot) { dot.classList.remove('bg-emerald-500'); dot.classList.add('bg-slate-300'); }
-                  atualizarProgresso();
-                } catch (e) {
-                  vaMostrarAviso('Erro de conexão', 'Não foi possível reabrir o fechamento.');
-                } finally {
-                  travarLinha(box, false);
-                  btn.textContent = 'Alterar';
-                  box.dataset.processando = '0';
-                }
-                return;
-              }
-
-              if (acao !== 'vendi-tudo' && acao !== 'confirmar-sobra') return;
+                  
+              if (acao === 'refazer') { abrirEdicao(box); return; }
+              if (acao === 'cancelar-alteracao') { fecharEdicao(box); return; }
 
               let modo = '';
               let sobra;
@@ -434,23 +502,15 @@
               btn.textContent = 'Salvando...';
 
               try {
-                const params = new URLSearchParams();
-                params.set('modo', modo);
-                if (sobra !== undefined) params.set('sobra', sobra);
-                const resp = await fetchComTimeout('/painel/produtos/' + produtoId + '/baixa', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: params.toString()
-                }, 15000);
-                const data = await resp.json().catch(function () { return {}; });
+                const anterior = jaSalvo(box) ? { sobra: Number(box.dataset.sobra || 0) } : null;
+                    const r = await salvarBaixa(produtoId, 'vendeu_tudo', undefined, anterior);
 
-                const sucesso = resp.ok && data.success;
-                const duplicidadeJaFechada = !sucesso && eDuplicidadeJaFechada(data);
-
-                if (!sucesso && !duplicidadeJaFechada) {
-                  vaMostrarAviso('Não foi possível fechar', (data && data.message) || 'Tente novamente em alguns instantes.');
-                  return;
-                }
+                    if (!r.ok) {
+                      if (r.perdeu) marcarLinhaComoPendente(box);
+                      falhas.push(nomeProduto + (r.message ? ' (' + r.message + ')' : ''));
+                    } else {
+                      marcarLinhaComoFechada(box, total, 0, 'kg');
+                    }
 
                 const unidade = (formBox && formBox.querySelector('.input-sobra ~ span'))
                   ? formBox.querySelector('.input-sobra ~ span').textContent.trim() || 'kg'
@@ -493,10 +553,9 @@
                 todasAsLinhas.forEach(function (box) {
                   if (box.dataset.processando === '1') return;
                   const statusBox = box.querySelector('[data-baixa-status]');
-                  const fechado = statusBox && !statusBox.classList.contains('hidden');
                   const sobraAtual = Number(box.dataset.sobra || 0);
 
-                  if (fechado && sobraAtual === 0) {
+                  if (jaSalvo(box) && sobraAtual === 0) {
                     const nome = box.querySelector('h4') ? box.querySelector('h4').textContent.trim() : '';
                     if (nome) jaVendidoTudo.push(nome);
                   } else {
@@ -524,30 +583,34 @@
 
                   if (!produtoId) { falhas.push(nomeProduto || 'produto sem ID'); continue; }
 
-                  box.dataset.processando = '1';
-                  try {
-                    const resp = await fetchComTimeout('/painel/produtos/' + produtoId + '/baixa', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                      body: new URLSearchParams({ modo: 'vendeu_tudo' }).toString()
-                    }, 15000);
-                    const data = await resp.json().catch(function () { return {}; });
+                  const sobraNova = (modo === 'vendeu_tudo') ? 0 : Number(sobra || 0);
+              const editando = box.dataset.editando === '1';
+              const sobraSalva = Number(box.dataset.sobra || 0);
 
-                    const sucesso = resp.ok && data.success;
-                    const duplicidadeJaFechada = !sucesso && eDuplicidadeJaFechada(data);
+              // Estava salvo e o produtor não mudou o valor: não mexe em nada
+              if (editando && sobraNova === sobraSalva) {
+                fecharEdicao(box);
+                return;
+              }
 
-                    if (!sucesso && !duplicidadeJaFechada) {
-                      falhas.push(nomeProduto + ((data && data.message) ? ' (' + data.message + ')' : ''));
-                    } else {
-                      marcarLinhaComoFechada(box, total, 0, 'kg');
-                    }
-                  } catch (e) {
-                    falhas.push(nomeProduto + ' (falha de conexão)');
-                  } finally {
-                    box.dataset.processando = '0';
-                  }
+              box.dataset.processando = '1';
+              travarLinha(box, true);
+              const textoOriginal = btn.textContent;
+              btn.textContent = 'Salvando...';
+
+              try {
+                const r = await salvarBaixa(produtoId, modo, sobra, editando ? { sobra: sobraSalva } : null);
+
+                if (!r.ok) {
+                  if (r.perdeu) { marcarLinhaComoPendente(box); atualizarProgresso(); }
+                  vaMostrarAviso('Não foi possível salvar', r.message || 'Tente novamente em alguns instantes.');
+                  return;
                 }
 
+                const unidade = (formBox && formBox.querySelector('.input-sobra ~ span'))
+                  ? formBox.querySelector('.input-sobra ~ span').textContent.trim() || 'kg'
+                  : 'kg';
+                marcarLinhaComoFechada(box, total - sobraNova, sobraNova, unidade);
                 atualizarProgresso();
 
                 const partesAviso = [];
