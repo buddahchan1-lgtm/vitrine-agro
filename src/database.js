@@ -197,12 +197,19 @@ async function initDatabase() {
 async function getMensagensMural(limite = 30) {
   return dbAll(`
     SELECT m.id, m.texto, m.criado_em, m.editado_em, m.remetente_id,
-           u.nome AS remetente_nome, u.tipo_acesso, u.foto
+           u.nome AS remetente_nome, u.tipo_acesso
     FROM mensagens m
     JOIN usuarios u ON u.id = m.remetente_id
     ORDER BY m.criado_em DESC
     LIMIT $1
   `, [limite]);
+}
+
+// Fotos de todos os usuários, buscadas de uma vez só (payload pequeno,
+// já que cada foto aparece uma única vez, em vez de repetida em cada
+// mensagem do mural — que era o que deixava o carregamento lento).
+async function getMapaAvatares() {
+  return dbAll('SELECT id, foto FROM usuarios');
 }
 
 async function editarMensagemMural(id, texto) {
@@ -884,6 +891,7 @@ module.exports = {
   reabrirBaixaProduto,
   initDatabase,
   getMensagensMural,
+  getMapaAvatares,
   editarMensagemMural,
   excluirMensagemMural,
   getMuralNotificacoes,
