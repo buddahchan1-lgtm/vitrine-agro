@@ -444,7 +444,7 @@
               if (btnCancelar) btnCancelar.classList.add('hidden');
             }
 
-            // ===== CLIQUE NAS LINHAS (Vendi tudo / Sobra / Confirmar / Refazer) =====
+            // ===== CLIQUE NAS LINHAS (Vendi tudo / Sobra / Confirmar / Alterar / Cancelar) =====
             document.addEventListener('click', async function (ev) {
               const btn = ev.target.closest('[data-baixa-produto] [data-action]');
               if (!btn) return;
@@ -458,7 +458,6 @@
               const produtoId = String(box.dataset.baixaProduto || '').trim();
               if (!produtoId || produtoId === 'undefined' || produtoId === 'null') return;
 
-              const statusBox = box.querySelector('[data-baixa-status]');
               const formBox = box.querySelector('[data-baixa-form]');
               const inputSobra = formBox && formBox.querySelector('.input-sobra');
               const total = formBox ? Number(formBox.dataset.quantidadeTotal || 0) : 0;
@@ -478,9 +477,11 @@
                 inputSobra.value = total ? Math.min(total, atual + 1) : atual + 1;
                 return;
               }
-                  
+
               if (acao === 'refazer') { abrirEdicao(box); return; }
               if (acao === 'cancelar-alteracao') { fecharEdicao(box); return; }
+
+              if (acao !== 'vendi-tudo' && acao !== 'confirmar-sobra') return;
 
               let modo = '';
               let sobra;
@@ -496,28 +497,34 @@
                 sobra = valor;
               }
 
+              const sobraNova = (modo === 'vendeu_tudo') ? 0 : Number(sobra || 0);
+              const editando = box.dataset.editando === '1';
+              const sobraSalva = Number(box.dataset.sobra || 0);
+
+              // Estava salvo e o produtor não mudou o valor: não mexe em nada
+              if (editando && sobraNova === sobraSalva) {
+                fecharEdicao(box);
+                return;
+              }
+
               box.dataset.processando = '1';
               travarLinha(box, true);
               const textoOriginal = btn.textContent;
               btn.textContent = 'Salvando...';
 
               try {
-                const anterior = jaSalvo(box) ? { sobra: Number(box.dataset.sobra || 0) } : null;
-                    const r = await salvarBaixa(produtoId, 'vendeu_tudo', undefined, anterior);
+                const r = await salvarBaixa(produtoId, modo, sobra, editando ? { sobra: sobraSalva } : null);
 
-                    if (!r.ok) {
-                      if (r.perdeu) marcarLinhaComoPendente(box);
-                      falhas.push(nomeProduto + (r.message ? ' (' + r.message + ')' : ''));
-                    } else {
-                      marcarLinhaComoFechada(box, total, 0, 'kg');
-                    }
+                if (!r.ok) {
+                  if (r.perdeu) { marcarLinhaComoPendente(box); atualizarProgresso(); }
+                  vaMostrarAviso('Não foi possível salvar', r.message || 'Tente novamente em alguns instantes.');
+                  return;
+                }
 
                 const unidade = (formBox && formBox.querySelector('.input-sobra ~ span'))
                   ? formBox.querySelector('.input-sobra ~ span').textContent.trim() || 'kg'
                   : 'kg';
-                const sobraValor = (modo === 'vendeu_tudo') ? 0 : Number(sobra || 0);
-                const vendidoValor = total - sobraValor;
-                marcarLinhaComoFechada(box, vendidoValor, sobraValor, unidade);
+                marcarLinhaComoFechada(box, total - sobraNova, sobraNova, unidade);
                 atualizarProgresso();
               } catch (e) {
                 vaMostrarAviso('Erro de conexão', 'Não foi possível registrar o fechamento.');
@@ -527,6 +534,94 @@
                 box.dataset.processando = '0';
               }
             });
+
+            // ===== "MARCAR TODOS VENDIDOS" =========================================
+            const btnMarcarTodosVendidos = document.getElementById('btnMarcarTodosVendidos');
+
+            async function processarMarcarTodosVendidos() {
+              if (!btnMarcarTodosVendidos) return;
+              if (btnMarcarTodosVendidos.dataset.busy === '1') return;
+
+              btnMarcarTodosVendidos.dataset.busy = '1';
+              btnMarcarTodosVendidos.disabled = true;
+              btnMarcarTodosVendidos.dataset.textoOriginal = btnMarcarTodosVendidos.textContent;
+              btnMarcarTodosVendidos.textContent = 'Processando...';
+
+              try {
+                await new Promise(function (resolve) { setTimeout(resolve, 0); });
+
+                const todasAsLinhas = Array.from(document.querySelectorAll('[data-baixa-produto]'));
+                const jaVendidoTudo = [];
+                const aMarcar = [];
+
+                todasAsLinhas.forEach(function (box) {
+                  if (box.dataset.processando === '1') return;
+                  const sobraAtual = Number(box.dataset.sobra || 0);
+
+                  if (jaSalvo(box) && sobraAtual === 0) {
+                    const nome = box.querySelector('h4') ? box.querySelector('h4').textContent.trim() : '';
+                    if (nome) jaVendidoTudo.push(nome);
+                  } else {
+                    aMarcar.push(box);
+                  }
+                });
+
+                if (!aMarcar.length) {
+                  atualizarProgresso();
+                  if (jaVendidoTudo.length) {
+                    vaMostrarAviso(
+                      'Tudo certo',
+                      jaVendidoTudo.join(', ') + (jaVendidoTudo.length > 1 ? ' já estavam' : ' já estava') + ' como vendido tudo.'
+                    );
+                  }
+                  return;
+                }
+
+                const falhas = [];
+                for (const box of aMarcar) {
+                  const produtoId = String(box.dataset.baixaProduto || '').trim();
+                  const nomeProduto = box.querySelector('h4') ? box.querySelector('h4').textContent.trim() : produtoId;
+                  const formBox = box.querySelector('[data-baixa-form]');
+                  const total = formBox ? Number(formBox.dataset.quantidadeTotal || 0) : 0;
+
+                  if (!produtoId) { falhas.push(nomeProduto || 'produto sem ID'); continue; }
+
+                  box.dataset.processando = '1';
+                  try {
+                    const anterior = jaSalvo(box) ? { sobra: Number(box.dataset.sobra || 0) } : null;
+                    const r = await salvarBaixa(produtoId, 'vendeu_tudo', undefined, anterior);
+
+                    if (!r.ok) {
+                      if (r.perdeu) marcarLinhaComoPendente(box);
+                      falhas.push(nomeProduto + (r.message ? ' (' + r.message + ')' : ''));
+                    } else {
+                      marcarLinhaComoFechada(box, total, 0, 'kg');
+                    }
+                  } catch (e) {
+                    falhas.push(nomeProduto + ' (falha de conexão)');
+                  } finally {
+                    box.dataset.processando = '0';
+                  }
+                }
+
+                atualizarProgresso();
+
+                const partesAviso = [];
+                if (falhas.length) partesAviso.push('Alguns não puderam ser fechados:\n' + falhas.join('\n'));
+                if (jaVendidoTudo.length) {
+                  partesAviso.push(
+                    jaVendidoTudo.join(', ') + (jaVendidoTudo.length > 1 ? ' já estavam' : ' já estava') + ' como vendido tudo.'
+                  );
+                }
+                if (partesAviso.length) {
+                  vaMostrarAviso(falhas.length ? 'Alguns não puderam ser fechados' : 'Tudo certo', partesAviso.join('\n\n'));
+                }
+              } finally {
+                btnMarcarTodosVendidos.dataset.busy = '0';
+                btnMarcarTodosVendidos.disabled = false;
+                btnMarcarTodosVendidos.textContent = btnMarcarTodosVendidos.dataset.textoOriginal || 'Marcar todos vendidos';
+              }
+            }
 
             // ===== "MARCAR TODOS VENDIDOS" =========================================
             const btnMarcarTodosVendidos = document.getElementById('btnMarcarTodosVendidos');
