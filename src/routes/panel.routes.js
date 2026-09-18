@@ -22,6 +22,7 @@ const {
   excluirMensagemMural,
   getProdutosNotificacoes,
   marcarProdutosNotificacoesLidas,
+  marcarProdutoNotificacaoVisto,
   getMuralNotificacoes,
   marcarMuralNotificacaoVista,
   getContatos,
@@ -298,6 +299,16 @@ router.post('/painel/notificacoes/produtos/ler', requireAuth, async (req, res) =
         res.json({ success: true });
     } catch (err) {
         console.error('Erro ao marcar notificações como lidas:', err);
+        res.status(500).json({ success: false });
+    }
+});
+
+router.post('/painel/notificacoes/produtos/:id/ler', requireAuth, async (req, res) => {
+    try {
+        await marcarProdutoNotificacaoVisto(req.currentUser.id, req.params.id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Erro ao marcar produto como visto:', err);
         res.status(500).json({ success: false });
     }
 });
