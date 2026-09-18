@@ -119,14 +119,13 @@
       </div>
 
       <!-- Painel de comentários: no celular vira bottom sheet sobre a imagem; no desktop fica ao lado -->
-      <div id="comentariosPanel" class="hidden absolute inset-x-0 bottom-0 z-30 max-h-[75%] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:static sm:h-full sm:max-h-none sm:w-[300px] sm:max-w-[85vw] sm:rounded-2xl">
-        <div id="arrastarComentarios" class="mx-auto mt-2 flex h-6 w-full items-center justify-center sm:hidden" style="touch-action: none;">
+      <div id="arrastarComentarios" class="mx-auto mt-1.5 flex h-6 w-full items-center justify-center sm:hidden" style="touch-action: none;">
         <div class="h-1 w-10 rounded-full bg-slate-300"></div>
       </div>
-        <div class="flex items-center justify-between border-b border-slate-100 p-3">
-          <span class="text-sm font-bold text-slate-900">Comentários</span>
-          <button type="button" onclick="fecharPainelComentarios()" class="text-lg leading-none text-slate-400 hover:text-slate-600">&times;</button>
-        </div>
+        <div class="flex items-center justify-between border-b border-slate-100 px-3 pb-2 pt-1">
+        <span class="text-sm font-bold text-slate-900">Comentários</span>
+        <button type="button" onclick="fecharPainelComentarios()" class="text-lg leading-none text-slate-400 hover:text-slate-600">&times;</button>
+      </div>
         <div id="comentariosLista" class="flex-1 space-y-3 overflow-y-auto p-3"></div>
          <form id="formNovoComentario" class="space-y-2 border-t border-slate-100 p-3">
           
