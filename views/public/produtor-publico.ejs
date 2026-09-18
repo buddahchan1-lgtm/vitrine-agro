@@ -92,10 +92,10 @@
 
  <!-- Modal estilo Instagram: imagem quadrada cheia + painel de comentários do lado -->
   <div id="comentariosOverlay" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/85 p-4" onclick="fecharComentarios()">
-    <div class="relative flex h-[85vh] w-full items-center justify-center gap-3 sm:h-[min(82vh,600px)] sm:w-auto" onclick="event.stopPropagation()">
+    <div class="relative flex h-[85vh] w-full items-stretch justify-center gap-3 sm:h-[min(82vh,600px)] sm:w-auto" onclick="event.stopPropagation()">
 
       <!-- Bloco da imagem, com cantos arredondados e margem da tela -->
-      <div id="comentariosCard" class="relative overflow-hidden rounded-2xl bg-black shadow-2xl max-h-[85vh] max-w-[92vw] sm:max-h-[min(82vh,600px)]">
+      <div id="comentariosCard" class="relative self-center overflow-hidden rounded-2xl bg-black shadow-2xl max-h-[85vh] max-w-[92vw] sm:max-h-[min(82vh,600px)]">
         <img id="comentariosImagemProduto" src="" alt="" class="block max-h-[85vh] max-w-[92vw] sm:max-h-[min(82vh,600px)] w-auto h-auto" onerror="this.style.opacity='0'" />
 
         <button type="button" onclick="fecharComentarios()" class="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70">&times;</button>
@@ -120,19 +120,14 @@
 
       <!-- Painel de comentários: no celular vira bottom sheet sobre a imagem; no desktop fica ao lado -->
       <div id="comentariosPanel" class="hidden absolute inset-x-0 bottom-0 z-30 max-h-[75%] w-full flex-col rounded-t-2xl bg-white shadow-2xl sm:static sm:h-full sm:max-h-none sm:w-[300px] sm:max-w-[85vw] sm:rounded-2xl">
-        <div class="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-300 sm:hidden"></div>
+        <div id="arrastarComentarios" class="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-300 sm:hidden"></div>
         <div class="flex items-center justify-between border-b border-slate-100 p-3">
           <span class="text-sm font-bold text-slate-900">Comentários</span>
           <button type="button" onclick="fecharPainelComentarios()" class="text-lg leading-none text-slate-400 hover:text-slate-600">&times;</button>
         </div>
         <div id="comentariosLista" class="flex-1 space-y-3 overflow-y-auto p-3"></div>
          <form id="formNovoComentario" class="space-y-2 border-t border-slate-100 p-3">
-          <div id="googleSignInDiv" class="flex justify-center"></div>
-          <div id="usuarioGoogleLogado" class="hidden items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2">
-            <img id="avatarGoogleImg" src="" alt="" class="h-7 w-7 rounded-full object-cover" />
-            <span id="nomeGoogleSpan" class="text-sm font-semibold text-emerald-800"></span>
-            <button type="button" onclick="sairGoogle()" class="ml-auto text-xs font-semibold text-emerald-700 hover:underline">Sair</button>
-          </div>
+          
           <input type="text" id="comentarioNomeInput" maxlength="60" placeholder="Seu nome (opcional)" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-agro-500 focus:bg-white" />
           <div class="flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 px-3 py-1.5 transition focus-within:border-agro-500 focus-within:bg-white">
           <textarea id="comentarioTextoInput" required maxlength="500" rows="1" placeholder="Adicione um comentário..." class="max-h-24 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-sm leading-5 outline-none"></textarea>
@@ -154,8 +149,6 @@
     </div>
   </div>
 </div>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <script>
    const podeExcluirComentarios = <%= (currentUser && (currentUser.id === produtor.id || currentUser.tipo_acesso === 'admin')) ? 'true' : 'false' %>;
@@ -194,43 +187,6 @@ comentarioTextoInput.addEventListener('keydown', (e) => {
     }
   }
 });
-
-  function initGoogleSignIn() {
-    if (!window.google || !google.accounts || !google.accounts.id) return;
-    google.accounts.id.initialize({
-      client_id: 'SEU_CLIENT_ID_AQUI.apps.googleusercontent.com', // troque pelo seu Client ID
-      callback: handleGoogleLogin
-    });
-    google.accounts.id.renderButton(
-      document.getElementById('googleSignInDiv'),
-      { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', width: 220 }
-    );
-  }
-
-  function handleGoogleLogin(response) {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    avatarGoogleAtual = payload.picture;
-    googleIdAtual = payload.sub;
-    document.getElementById('comentarioNomeInput').value = payload.name;
-    document.getElementById('comentarioNomeInput').classList.add('hidden');
-    document.getElementById('googleSignInDiv').classList.add('hidden');
-    document.getElementById('avatarGoogleImg').src = payload.picture;
-    document.getElementById('nomeGoogleSpan').textContent = payload.name;
-    document.getElementById('usuarioGoogleLogado').classList.remove('hidden');
-    document.getElementById('usuarioGoogleLogado').classList.add('flex');
-  }
-
-  function sairGoogle() {
-    avatarGoogleAtual = null;
-    googleIdAtual = null;
-    document.getElementById('comentarioNomeInput').value = '';
-    document.getElementById('comentarioNomeInput').classList.remove('hidden');
-    document.getElementById('googleSignInDiv').classList.remove('hidden');
-    document.getElementById('usuarioGoogleLogado').classList.add('hidden');
-    document.getElementById('usuarioGoogleLogado').classList.remove('flex');
-  }
-
-  document.addEventListener('DOMContentLoaded', initGoogleSignIn);
 
   function confirmarAcao(mensagem) {
     return new Promise((resolve) => {
@@ -358,6 +314,39 @@ comentarioTextoInput.addEventListener('keydown', (e) => {
     document.getElementById('comentariosPanel').classList.remove('flex');
     document.getElementById('btnAbrirComentarios').classList.remove('hidden');
   }
+ (function configurarArrastarPainel() {
+  const alca = document.getElementById('arrastarComentarios');
+  const painel = document.getElementById('comentariosPanel');
+  if (!alca || !painel) return;
+
+  let inicioY = 0;
+  let deslocamento = 0;
+  let arrastando = false;
+
+  alca.addEventListener('touchstart', (e) => {
+    inicioY = e.touches[0].clientY;
+    arrastando = true;
+    painel.style.transition = 'none';
+  }, { passive: true });
+
+  alca.addEventListener('touchmove', (e) => {
+    if (!arrastando) return;
+    deslocamento = e.touches[0].clientY - inicioY;
+    if (deslocamento > 0) {
+      painel.style.transform = `translateY(${deslocamento}px)`;
+    }
+  }, { passive: true });
+
+  alca.addEventListener('touchend', () => {
+    arrastando = false;
+    painel.style.transition = 'transform 0.2s ease';
+    if (deslocamento > 80) {
+      fecharPainelComentarios();
+    }
+    painel.style.transform = '';
+    deslocamento = 0;
+  });
+})();
 
   function corAvatar(nome) {
     const cores = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'];
