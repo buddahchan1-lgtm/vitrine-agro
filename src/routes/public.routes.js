@@ -20,15 +20,18 @@ function groupPublicRows(rows) {
         produtos: []
       });
     }
+    
     if (row.produto_nome) {
       map.get(row.produtor_id).produtos.push({
         id: row.produto_id,
         nome: row.produto_nome,
         categoria: row.categoria,
         quantidade: row.quantidade,
-        imagem: row.imagem
+        imagem: row.imagem,
+        total_interesses: parseInt(row.produto_interesses, 10) || 0
       });
     }
+    
   });
   return Array.from(map.values());
 }
@@ -44,13 +47,19 @@ router.get('/', async (req, res, next) => {
       p.nome AS produto_nome,
       p.categoria,
       p.quantidade,
-      p.imagem
+      p.imagem,
+      COALESCE(pi.total, 0) AS produto_interesses
     FROM usuarios u
     LEFT JOIN produtos p ON u.id = p.produtor_id
+    LEFT JOIN (
+      SELECT produto_id, COUNT(*) AS total
+      FROM produto_interesses
+      GROUP BY produto_id
+    ) pi ON pi.produto_id = p.id
     WHERE u.tipo_acesso = 'produtor' AND u.status = 'ativo'
     ORDER BY u.nome ASC
   `;
-
+  
   try {
     const result = await db.query(query);
     const produtores = groupPublicRows(result.rows);
