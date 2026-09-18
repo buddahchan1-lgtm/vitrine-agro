@@ -1890,10 +1890,9 @@
       const id = Number(wrap.dataset.msgId);
       const msg = mensagens.find((m) => m.id === id);
       if (!msg) return;
-      const bolha = wrap.querySelector('div');
-      bolha.title = 'Clique com o botão direito (ou segure) para selecionar';
-      anexarMenuContexto(bolha, () => alternarSelecaoChat(msg, wrap));
-      bolha.addEventListener('click', () => {
+      wrap.title = 'Clique com o botão direito (ou segure) para selecionar';
+      anexarMenuContexto(wrap, () => alternarSelecaoChat(msg, wrap));
+      wrap.addEventListener('click', () => {
         if (Date.now() - ultimoToqueLongoEm < 400) return;
         if (mensagensSelecionadas.size > 0) alternarSelecaoChat(msg, wrap);
       });
