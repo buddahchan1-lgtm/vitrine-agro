@@ -100,6 +100,9 @@
         class="producer-card cursor-pointer rounded-3xl border border-slate-200 bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-agro-200 sm:p-5"
         data-search="<%= `${produtor.nome} ${produtor.comunidade} ${produtor.produtos.map((p) => p.nome).join(' ')}`.toLowerCase() %>"
         data-categories="<%= produtor.produtos.map((p) => p.categoria).join('|') %>"
+        data-produtor-id="<%= produtor.id %>"
+        data-tem-produtos="<%= produtor.produtos.length > 0 ? '1' : '0' %>"
+        data-interesses="<%= produtor.produtos.reduce((soma, p) => soma + (p.total_interesses || 0), 0) %>"
         onclick="window.location.href='/produtor/<%= produtor.id %>'"
       >
         <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -158,8 +161,29 @@
         }
       });
     }
+
+    // Ordena os produtores: mais corações primeiro; em empate, quem
+    // tem produtos cadastrados fica acima de quem não tem; e se ainda
+    // empatar, quem foi cadastrado por último (maior id) fica em cima.
+    const listaProdutores = document.getElementById('producerList');
+    if (listaProdutores) {
+      const cards = Array.from(listaProdutores.querySelectorAll('.producer-card'));
+      cards.sort((a, b) => {
+        const interessesA = Number(a.dataset.interesses || 0);
+        const interessesB = Number(b.dataset.interesses || 0);
+        if (interessesA !== interessesB) return interessesB - interessesA;
+
+        const temA = Number(a.dataset.temProdutos || 0);
+        const temB = Number(b.dataset.temProdutos || 0);
+        if (temA !== temB) return temB - temA;
+
+        const idA = Number(a.dataset.produtorId || 0);
+        const idB = Number(b.dataset.produtorId || 0);
+        return idB - idA;
+      });
+      cards.forEach((card) => listaProdutores.appendChild(card));
+    }
   });
 </script>
-
 <script src="/public/js/public-vitrine.js"></script>
 <%- include('../partials/footer') %>
