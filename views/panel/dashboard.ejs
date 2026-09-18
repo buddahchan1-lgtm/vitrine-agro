@@ -148,9 +148,15 @@
         const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
         const TOTAL_CELULAS = 42; // 6 linhas x 7 colunas — fixo, nenhum mês fica maior que o outro
 
+        function parseDataServidor(d) {
+          if (!d) return null;
+          if (typeof d === 'string' && d.includes('T')) return new Date(d);
+          return new Date(d.replace(' ', 'T') + 'Z');
+        }
+
         const avisosPorDia = {};
         mensagensMural.forEach((msg) => {
-          const dataMsg = new Date(msg.criado_em.replace(' ', 'T') + 'Z');
+          const dataMsg = parseDataServidor(msg.criado_em);
           const chave = dataMsg.getFullYear() + '-' + String(dataMsg.getMonth() + 1).padStart(2, '0') + '-' + String(dataMsg.getDate()).padStart(2, '0');
           if (!avisosPorDia[chave]) avisosPorDia[chave] = [];
           avisosPorDia[chave].push({
@@ -385,7 +391,7 @@
           }
           listaMuralVaziaEl.classList.add('hidden');
           mensagensMural.slice(0, 3).forEach((m) => {
-            const dataMsg = new Date(m.criado_em.replace(' ', 'T') + 'Z');
+            const dataMsg = parseDataServidor(m.criado_em);
             const dataTexto = dataMsg.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
             const row = document.createElement('article');
             row.className = 'mural-row relative flex items-start gap-3 rounded-2xl border border-transparent bg-slate-50 p-4 pr-11 transition ' +
