@@ -401,6 +401,9 @@
         window.addEventListener('resize', () => {
           if (!painel.classList.contains('hidden')) posicionarPainelMes();
         });
+        window.addEventListener('scroll', () => {
+          if (!painel.classList.contains('hidden')) posicionarPainelMes();
+        }, true);
         document.addEventListener('click', (e) => {
           if (!painel.contains(e.target) && e.target !== painelBtn) painel.classList.add('hidden');
         });
