@@ -39,9 +39,9 @@
                 Destaque
               </span>
 
-              <span class="produto-interesse-badge absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg <%= (produto.total_interesses || 0) > 0 ? '' : 'hidden' %>" data-produto-interesse="<%= produto.id %>">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>
-                <span class="produto-interesse-count absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white"><%= produto.total_interesses || 0 %></span>
+              <span class="produto-interesse-badge mt-2 inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-1 <%= (produto.total_interesses || 0) > 0 ? '' : 'hidden' %>" data-produto-interesse="<%= produto.id %>">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-rose-500"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>
+                <span class="produto-interesse-count text-[10px] font-bold text-rose-600"><%= produto.total_interesses || 0 %></span>
               </span>
 
               <div class="absolute inset-x-0 bottom-0 rounded-b-2xl bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-6">
@@ -96,7 +96,7 @@
 
       <!-- Bloco da imagem, com cantos arredondados e margem da tela -->
       <div id="comentariosCard" class="relative h-full w-full overflow-hidden rounded-2xl bg-black shadow-2xl sm:aspect-square sm:w-auto sm:max-w-[92vw]">
-        <img id="comentariosImagemProduto" src="" alt="" class="h-full w-full object-cover" onerror="this.style.opacity='0'" />
+        <img id="comentariosImagemProduto" src="" alt="" class="h-full w-full object-contain" onerror="this.style.opacity='0'" />
 
         <button type="button" onclick="fecharComentarios()" class="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70">&times;</button>
 
@@ -295,11 +295,6 @@ comentarioTextoInput.addEventListener('keydown', (e) => {
       contador.classList.add('hidden');
       contador.classList.remove('flex');
     }
-    document.querySelectorAll(`[data-produto-interesse="${produtoAtualComentarios}"]`).forEach((badge) => {
-      badge.classList.toggle('hidden', total <= 0);
-      const contadorEl = badge.querySelector('.produto-interesse-count');
-      if (contadorEl) contadorEl.textContent = total;
-    });
 
     const cardProduto = document.querySelector(`.produto-comentar-btn[data-produto-id="${produtoAtualComentarios}"]`);
     if (cardProduto) {
