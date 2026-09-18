@@ -647,6 +647,21 @@
               });
             }
 
+          // ===== CONFIRMAÇÃO ANTES DE APAGAR PRODUTO =====
+            document.addEventListener('click', function (ev) {
+              const btn = ev.target.closest('[data-excluir-produto]');
+              if (!btn) return;
+              ev.preventDefault();
+              const form = btn.form;
+              const nome = btn.dataset.excluirProduto || 'este produto';
+              vaMostrarConfirmacao(
+                'Apagar produto',
+                'Deseja apagar "' + nome + '"? Essa ação não pode ser desfeita.',
+                function () { form.requestSubmit(btn); },
+                true
+              );
+            });
+
           atualizarProgresso();
           })();
 
