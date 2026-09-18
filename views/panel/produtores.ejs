@@ -120,14 +120,14 @@
                 <div class="space-y-3">
                   <% if (produtor.produtos.length) { %>
                     <% produtor.produtos.forEach((produto) => { %>
-                      <div class="rounded-2xl border border-slate-200 bg-white p-3">
-                        <form action="/painel/produtos/<%= produto.id %>/editar" method="POST" class="grid gap-3 lg:grid-cols-[1fr_140px_110px_auto_auto] lg:items-center">
-                          <input name="nome" value="<%= produto.nome %>" class="rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-agro-500" />
-                           <div class="categoria-dropdown relative">
+                      <div class="rounded-2xl border border-slate-200 bg-white px-3 py-2 transition hover:border-slate-300">
+                        <form action="/painel/produtos/<%= produto.id %>/editar" method="POST" class="grid gap-2 lg:grid-cols-[1fr_130px_100px_auto] lg:items-center">
+                          <input name="nome" value="<%= produto.nome %>" class="w-full rounded-xl border border-transparent bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800 outline-none transition hover:border-slate-200 focus:border-agro-500 focus:bg-white" />
+                          <div class="categoria-dropdown relative">
                             <input type="hidden" name="categoria" class="categoria-dropdown-valor" value="<%= produto.categoria %>" />
-                            <button type="button" class="categoria-dropdown-btn flex w-full items-center justify-between rounded-2xl border border-slate-200 px-4 py-3 text-left text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500 focus:border-agro-500">
+                            <button type="button" class="categoria-dropdown-btn flex w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 px-3 py-2 text-left text-xs font-semibold text-slate-700 outline-none transition hover:border-slate-200 focus:border-agro-500 focus:bg-white">
                               <span class="categoria-dropdown-label truncate"><%= produto.categoria %></span>
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-slate-400"><polyline points="6 9 12 15 18 9"/></svg>
                             </button>
                             <div class="categoria-dropdown-menu hidden absolute left-0 top-full z-20 mt-2 w-56 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
                               <% categorias.forEach((categoria) => { %>
@@ -138,11 +138,17 @@
                             </div>
                           </div>
                           <div class="relative">
-                                <input type="number" name="quantidade_valor" min="0" step="0.01" value="<%= produto.quantidade_valor != null ? produto.quantidade_valor : '' %>" placeholder="Ex: 20" class="w-full rounded-2xl border border-slate-200 px-4 py-3 pr-10 outline-none focus:border-agro-500" />
-                                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
+                            <input type="number" name="quantidade_valor" min="0" step="0.01" value="<%= produto.quantidade_valor != null ? produto.quantidade_valor : '' %>" placeholder="Ex: 20" class="w-full rounded-xl border border-transparent bg-slate-50 px-3 py-2 pr-9 text-sm text-slate-800 outline-none transition hover:border-slate-200 focus:border-agro-500 focus:bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
                           </div>
-                          <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">Editar</button>
-                          <button formaction="/painel/produtos/<%= produto.id %>/excluir" formmethod="POST" type="submit" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100">Apagar</button>
+                          <div class="flex items-center justify-end gap-1">
+                            <button type="submit" title="Salvar alterações" aria-label="Salvar alterações" class="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-agro-500/40">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            </button>
+                            <button formaction="/painel/produtos/<%= produto.id %>/excluir" formmethod="POST" type="submit" title="Apagar produto" aria-label="Apagar produto" class="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/40">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                            </button>
+                          </div>
                         </form>
                       </div>
                     <% }) %>
