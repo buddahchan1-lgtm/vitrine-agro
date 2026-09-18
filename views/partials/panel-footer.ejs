@@ -7,7 +7,8 @@
      No computador (mouse) a seleção continua normal. */
     @media (pointer: coarse) {
     #chatMensagens, #chatMensagens *,
-    #listaMuralMensagens, #listaMuralMensagens * {
+    #listaMuralMensagens, #listaMuralMensagens *,
+    #listaConversas, #listaConversas * {
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
@@ -1377,7 +1378,10 @@ if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.lengt
     // completar — era isso que fazia o menu nunca aparecer no celular
     // de verdade, mesmo funcionando com o mouse.
     el.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'mouse') return; // botão direito já tratado acima
+      // Antes só o botão direito abria o menu no computador. Agora
+      // segurar o botão esquerdo apertado (sem soltar) também abre,
+      // igual ao toque prolongado no celular.
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
       if (e.target.closest('.btn-selecionar-mural, .btn-opcoes-msg')) return; // botão de opções cuida disso via click
       // Impede o navegador de gerar um "click" de compatibilidade
       // depois que o dedo soltar a tela. Sem isso, esse clique extra
