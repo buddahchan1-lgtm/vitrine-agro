@@ -17,6 +17,7 @@ const {
   getComentarioComProdutor,
   excluirComentarioProduto,
   getMensagensMural,
+  getMapaAvatares,
   editarMensagemMural,
   excluirMensagemMural,
   getProdutosNotificacoes,
@@ -257,6 +258,19 @@ router.get('/painel/mensagens', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Erro ao buscar mural:', err);
         res.status(500).json({ success: false, message: 'Não foi possível carregar o mural.' });
+    }
+});
+
+// Mapa de fotos de todos os usuários, buscado uma única vez pelo
+// front e guardado em cache — evita repetir a foto (que pode ter
+// 50-200KB em base64) dentro de cada mensagem do mural.
+router.get('/painel/avatares', requireAuth, async (req, res) => {
+    try {
+        const lista = await getMapaAvatares();
+        res.json({ success: true, avatares: lista });
+    } catch (err) {
+        console.error('Erro ao buscar avatares:', err);
+        res.status(500).json({ success: false, message: 'Não foi possível carregar os avatares.' });
     }
 });
 
