@@ -945,7 +945,7 @@
     if (foto) {
       return `<img src="${foto}" alt="${escapeHtml(nome)}" class="${sizeClass} shrink-0 rounded-full object-cover border-2 border-agro-100" />`;
     }
-    return `<span class="flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-agro-100 text-sm font-bold text-agro-700">${iniciais(nome)}</span>`;
+    return `<img src="${FOTO_PADRAO_SVG}" alt="${escapeHtml(nome)}" class="${sizeClass} shrink-0 rounded-full object-cover border-2 border-agro-100" />`;
   }
 
   async function apiFetch(url, options, mensagemErro) {
@@ -1392,8 +1392,11 @@
     const contador = document.getElementById('contadorSelecaoMensagem');
     if (contador) contador.textContent = alvos.length + (alvos.length === 1 ? ' selecionada' : ' selecionadas');
 
-    // Editar só faz sentido com exatamente 1 mensagem marcada.
-    btnSelecaoEditar.classList.toggle('hidden', alvos.length !== 1);
+    // Editar só faz sentido com exatamente 1 mensagem marcada, E ela
+    // precisa ser sua. Antes o botão aparecia com qualquer mensagem
+    // alheia selecionada, permitindo editar texto de outras pessoas.
+    const podeEditarSelecao = alvos.length === 1 && alvos[0].souAutor;
+    btnSelecaoEditar.classList.toggle('hidden', !podeEditarSelecao);
 
     // Excluir só aparece se TODAS as selecionadas puderem ser apagadas por mim.
     const podeExcluirTodas = alvos.every((alvo) => (alvo.tipo === 'mural' ? souAdmin : alvo.souAutor));
@@ -1488,6 +1491,7 @@
   btnSelecaoEditar.addEventListener('click', () => {
     if (mensagensSelecionadas.size !== 1) return;
     const alvo = mensagensSelecionadas.values().next().value;
+    if (!alvo.souAutor) return; // segurança extra: nunca editar mensagem alheia
     limparSelecaoMensagem();
     if (alvo.tipo === 'mural') iniciarEdicaoMural(alvo);
     else iniciarEdicaoChat(alvo);
