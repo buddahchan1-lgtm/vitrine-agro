@@ -327,49 +327,73 @@ async function atualizarFotoConversaGrupo(conversaId, foto) {
 }
 
 async function getConversasDoUsuario(usuarioId) {
+  // Antes: 1 consulta para listar as conversas + 4 consultas POR
+  // CONVERSA (participantes, última mensagem, leitura, contagem de
+  // não lidas), todas sequenciais. Com N conversas isso virava até
+  // 1 + 4*N idas e voltas ao banco — cada uma com a latência de rede
+  // até o Supabase — e é isso que deixava a tela de mensagens lenta.
+  // Agora: tudo isso sai em só 2 consultas, usando LATERAL/JOIN para
+  // já trazer a última mensagem e a contagem de não lidas junto.
   const conversas = await dbAll(`
-   SELECT c.id, c.nome, c.foto, cp.arquivada, cp.fixada
+    SELECT c.id, c.nome, c.foto, cp.arquivada, cp.fixada,
+           ultima.texto AS ultima_mensagem,
+           ultima.criado_em AS ultima_mensagem_em,
+           COALESCE(naolidas.total, 0) AS nao_lidas
     FROM conversas c
     JOIN conversa_participantes cp ON cp.conversa_id = c.id
+    LEFT JOIN conversa_leituras cl ON cl.conversa_id = c.id AND cl.usuario_id = cp.usuario_id
+    LEFT JOIN LATERAL (
+      SELECT texto, criado_em
+      FROM conversa_mensagens
+      WHERE conversa_id = c.id
+      ORDER BY criado_em DESC
+      LIMIT 1
+    ) ultima ON true
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*) AS total
+      FROM conversa_mensagens
+      WHERE conversa_id = c.id
+        AND remetente_id != cp.usuario_id
+        AND criado_em > COALESCE(cl.ultima_leitura_em, '1970-01-01 00:00:00')
+    ) naolidas ON true
     WHERE cp.usuario_id = $1
   `, [usuarioId]);
 
-  const resultado = [];
-  for (const c of conversas) {
-    const outros = await dbAll(`
-      SELECT u.id, u.nome, u.foto
-      FROM conversa_participantes cp JOIN usuarios u ON u.id = cp.usuario_id
-      WHERE cp.conversa_id = $1 AND cp.usuario_id != $2
-    `, [c.id, usuarioId]);
+  if (!conversas.length) return [];
 
-    const ultima = await dbGet(`
-      SELECT texto, remetente_id, criado_em FROM conversa_mensagens
-      WHERE conversa_id = $1 ORDER BY criado_em DESC LIMIT 1
-    `, [c.id]);
+  // Participantes (exceto você) de todas as conversas, numa única
+  // consulta usando ANY($1) em vez de uma consulta por conversa.
+  const idsConversas = conversas.map((c) => c.id);
+  const todosOutros = await dbAll(`
+    SELECT cp.conversa_id, u.id, u.nome, u.foto
+    FROM conversa_participantes cp
+    JOIN usuarios u ON u.id = cp.usuario_id
+    WHERE cp.conversa_id = ANY($1) AND cp.usuario_id != $2
+  `, [idsConversas, usuarioId]);
 
-    const leitura = await dbGet('SELECT ultima_leitura_em FROM conversa_leituras WHERE conversa_id = $1 AND usuario_id = $2', [c.id, usuarioId]);
-    const ultimaLeituraEm = leitura ? leitura.ultima_leitura_em : '1970-01-01 00:00:00';
+  const outrosPorConversa = new Map();
+  for (const linha of todosOutros) {
+    const lista = outrosPorConversa.get(linha.conversa_id) || [];
+    lista.push({ id: linha.id, nome: linha.nome, foto: linha.foto });
+    outrosPorConversa.set(linha.conversa_id, lista);
+  }
 
-    const contagem = await dbGet(`
-      SELECT COUNT(*) AS total FROM conversa_mensagens
-      WHERE conversa_id = $1 AND remetente_id != $2 AND criado_em > $3
-    `, [c.id, usuarioId, ultimaLeituraEm]);
-
+  const resultado = conversas.map((c) => {
+    const outros = outrosPorConversa.get(c.id) || [];
     const ehGrupo = !!c.nome;
-
-    resultado.push({
+    return {
       id: c.id,
       nome: c.nome || (outros[0] ? outros[0].nome : 'Conversa'),
       grupo: ehGrupo,
       foto: ehGrupo ? (c.foto || null) : (outros[0] ? outros[0].foto : null),
       participantes: outros,
-      ultima_mensagem: ultima ? ultima.texto : null,
-      ultima_mensagem_em: ultima ? ultima.criado_em : null,
-      nao_lidas: parseInt(contagem.total, 10),
+      ultima_mensagem: c.ultima_mensagem || null,
+      ultima_mensagem_em: c.ultima_mensagem_em || null,
+      nao_lidas: parseInt(c.nao_lidas, 10),
       arquivada: !!c.arquivada,
       fixada: !!c.fixada
-    });
-  }
+    };
+  });
 
   return resultado.sort((a, b) => {
     if (!!b.fixada !== !!a.fixada) return (b.fixada ? 1 : 0) - (a.fixada ? 1 : 0);
