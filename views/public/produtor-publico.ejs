@@ -92,11 +92,11 @@
 
  <!-- Modal estilo Instagram: imagem quadrada cheia + painel de comentários do lado -->
   <div id="comentariosOverlay" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/85 p-4" onclick="fecharComentarios()">
-    <div class="relative flex h-[85vh] w-full items-stretch justify-center gap-3 sm:h-[min(82vh,600px)] sm:w-auto" onclick="event.stopPropagation()">
+    <div class="relative flex h-[85vh] w-full items-center justify-center gap-3 sm:h-[min(82vh,600px)] sm:w-auto" onclick="event.stopPropagation()">
 
       <!-- Bloco da imagem, com cantos arredondados e margem da tela -->
-      <div id="comentariosCard" class="relative h-full w-full overflow-hidden rounded-2xl bg-black shadow-2xl sm:aspect-square sm:w-auto sm:max-w-[92vw]">
-        <img id="comentariosImagemProduto" src="" alt="" class="h-full w-full object-contain" onerror="this.style.opacity='0'" />
+      <div id="comentariosCard" class="relative overflow-hidden rounded-2xl bg-black shadow-2xl max-h-[85vh] max-w-[92vw] sm:max-h-[min(82vh,600px)]">
+        <img id="comentariosImagemProduto" src="" alt="" class="block max-h-[85vh] max-w-[92vw] sm:max-h-[min(82vh,600px)] w-auto h-auto" onerror="this.style.opacity='0'" />
 
         <button type="button" onclick="fecharComentarios()" class="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-xl leading-none text-white backdrop-blur-sm transition hover:bg-black/70">&times;</button>
 
