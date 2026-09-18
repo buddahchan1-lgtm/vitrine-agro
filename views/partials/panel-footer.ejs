@@ -1159,8 +1159,11 @@ if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.lengt
     // Admin nunca exclui contato por aqui: o produtor já aparece sozinho
     // na lista, e se a conta dele for apagada em Produtores, ele some
     // automaticamente. E o produtor nunca exclui o contato de um admin.
-    const outroParticipante = conversa.participantes && conversa.participantes[0];
-    const conversaComAdmin = !conversa.grupo && outroParticipante && contatosCache.some((p) => p.id === outroParticipante.id && p.tipo_acesso === 'admin');
+     const outroParticipante = conversa.participantes && conversa.participantes[0];
+    const tipoOutro = outroParticipante
+      ? (outroParticipante.tipo_acesso || (contatosCache.find((p) => p.id === outroParticipante.id) || {}).tipo_acesso)
+      : null;
+    const conversaComAdmin = !conversa.grupo && tipoOutro === 'admin';
     btnMenuExcluirConversa.classList.toggle('hidden', souAdmin || conversaComAdmin);
 
     const iconFixar = document.getElementById('iconMenuFixar');
