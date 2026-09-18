@@ -1228,8 +1228,8 @@
     article.dataset.msgId = m.id;
      article.innerHTML = `
       <div class="flex items-start gap-3">
-        ${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}
-        <div class="min-w-0 flex-1 ${podeEditar ? 'pr-8' : ''}">
+        <span class="${podeEditar ? 'btn-selecionar-mural cursor-pointer' : ''}">${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}</span>
+        <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
             <span class="flex min-w-0 items-center gap-1.5">
               <span class="truncate text-base font-bold text-slate-900">${escapeHtml(m.remetente_nome)}</span>
@@ -1242,15 +1242,12 @@
           ${m.editado_em ? '<p class="mt-1 text-xs font-medium text-slate-400">editado</p>' : ''}
         </div>
       </div>
-      ${podeEditar ? `<button type="button" class="btn-opcoes-mural absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-black/5" aria-label="Opções do aviso">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
-      </button>` : ''}
-    `;
+      `;
     if (podeEditar) {
       anexarMenuContexto(article, () => alternarSelecaoMural(m, article));
-      const btnOpcoes = article.querySelector('.btn-opcoes-mural');
-      if (btnOpcoes) {
-        btnOpcoes.addEventListener('click', (e) => {
+      const btnFoto = article.querySelector('.btn-selecionar-mural');
+      if (btnFoto) {
+        btnFoto.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           alternarSelecaoMural(m, article);
@@ -1360,7 +1357,7 @@
     // de verdade, mesmo funcionando com o mouse.
     el.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse') return; // botão direito já tratado acima
-      if (e.target.closest('.btn-opcoes-mural, .btn-opcoes-msg')) return; // botão de opções cuida disso via click
+      if (e.target.closest('.btn-selecionar-mural, .btn-opcoes-msg')) return; // botão de opções cuida disso via click
       // Impede o navegador de gerar um "click" de compatibilidade
       // depois que o dedo soltar a tela. Sem isso, esse clique extra
       // caía no listener de clique da bolha e desfazia a seleção
@@ -1887,8 +1884,8 @@
     chatMensagens.innerHTML = mensagens.map((m) => {
       const minha = m.remetente_id === meuId;
       const botaoOpcoes = `
-        <button type="button" class="btn-opcoes-msg shrink-0 self-end flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100" aria-label="Opções da mensagem">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
+        <button type="button" class="btn-opcoes-msg shrink-0 self-end flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100" aria-label="Selecionar mensagem">
+          <span class="block h-5 w-5 rounded-full border-2 border-current"></span>
         </button>
       `;
       return `
