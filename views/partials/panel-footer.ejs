@@ -2106,10 +2106,13 @@
         </span>
       `;
       item.addEventListener('click', () => {
+        apiFetch('/painel/notificacoes/produtos/' + p.id + '/ler', { method: 'POST' });
         window.location.href = '/painel/produtores?destaque=' + p.produtor_id;
       });
       listaNotifEl.appendChild(item);
     });
+
+    mensagens.forEach((c) => {
 
     mensagens.forEach((c) => {
       const item = document.createElement('button');
@@ -2141,9 +2144,9 @@
       painelNotif.classList.toggle('hidden');
       if (abrindo) {
         await carregarNotificacoes();
-        apiFetch('/painel/notificacoes/produtos/ler', { method: 'POST' });
       }
     });
+
     document.addEventListener('click', (e) => {
       if (!painelNotif.classList.contains('hidden') && !painelNotif.contains(e.target) && !btnNotif.contains(e.target)) {
         painelNotif.classList.add('hidden');
