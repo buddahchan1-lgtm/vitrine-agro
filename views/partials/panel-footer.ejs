@@ -1867,6 +1867,7 @@
 
   // ---- Chat (mesma tela do modal) ----
   const chatMensagens = document.getElementById('chatMensagens');
+  let ultimasMensagensChat = [];
   const formEnviar = document.getElementById('formEnviarMensagem');
   const chatInput = document.getElementById('chatInputTexto');
 
@@ -1884,23 +1885,81 @@
       `;
     }).join('');
 
-    // Qualquer mensagem pode ser selecionada (pra copiar). Editar/excluir
-    // só aparece pro autor, dentro de selecionarMensagemChat.
-    chatMensagens.querySelectorAll('[data-msg-id]').forEach((wrap) => {
-      const id = Number(wrap.dataset.msgId);
-      const msg = mensagens.find((m) => m.id === id);
-      if (!msg) return;
-      wrap.title = 'Clique com o botão direito (ou segure) para selecionar';
-      anexarMenuContexto(wrap, () => alternarSelecaoChat(msg, wrap));
-      wrap.addEventListener('click', () => {
-        if (Date.now() - ultimoToqueLongoEm < 400) return;
-        if (mensagensSelecionadas.size > 0) alternarSelecaoChat(msg, wrap);
-      });
-    });
+     // Guarda a lista atual para a delegação de eventos usar (ver mais
+    // abaixo), já que agora os toques são tratados no contêiner, não
+    // em cada mensagem individualmente.
+    ultimasMensagensChat = mensagens;
 
     // Sempre mostra a mensagem mais recente (parte de baixo) ao carregar ou enviar.
     chatMensagens.scrollTop = chatMensagens.scrollHeight;
-  }
+
+  // Seleção de mensagens do chat via delegação: um único conjunto de
+  // listeners no contêiner inteiro, que descobre qual mensagem foi
+  // tocada com closest() a partir do ponto exato do toque. Isso cobre
+  // a linha da mensagem por completo (topo, meio, embaixo, laterais),
+  // em vez de depender da área exata de um elemento específico — que
+  // no celular real só respondia bem na primeira linha da bolha.
+  (function configurarSelecaoChatPorDelegacao() {
+    let pressTimer = null;
+    let inicioX = 0, inicioY = 0;
+
+    function pegarWrapAlvo(e) {
+      return e.target.closest('[data-msg-id]');
+    }
+
+    function dispararSelecao(wrap) {
+      const id = Number(wrap.dataset.msgId);
+      const msg = ultimasMensagensChat.find((m) => m.id === id);
+      if (!msg) return;
+      alternarSelecaoChat(msg, wrap);
+    }
+
+    chatMensagens.addEventListener('contextmenu', (e) => {
+      const wrap = pegarWrapAlvo(e);
+      if (!wrap) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (Date.now() - ultimoToqueLongoEm < 600) return;
+      dispararSelecao(wrap);
+    });
+
+    chatMensagens.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return;
+      const wrap = pegarWrapAlvo(e);
+      if (!wrap) return;
+      if (e.cancelable) e.preventDefault();
+      inicioX = e.clientX;
+      inicioY = e.clientY;
+      try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        ultimoToqueLongoEm = Date.now();
+        dispararSelecao(wrap);
+      }, 500);
+    });
+
+    const cancelarToque = (e) => {
+      if (!pressTimer) return;
+      if (e && e.type === 'pointermove') {
+        const dx = Math.abs(e.clientX - inicioX);
+        const dy = Math.abs(e.clientY - inicioY);
+        if (dx < 10 && dy < 10) return;
+      }
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    };
+    chatMensagens.addEventListener('pointerup', cancelarToque);
+    chatMensagens.addEventListener('pointercancel', cancelarToque);
+    chatMensagens.addEventListener('pointermove', cancelarToque);
+
+    chatMensagens.addEventListener('click', (e) => {
+      if (Date.now() - ultimoToqueLongoEm < 400) return;
+      if (!mensagensSelecionadas.size) return;
+      const wrap = pegarWrapAlvo(e);
+      if (!wrap) return;
+      dispararSelecao(wrap);
+    });
+  })();
 
   async function abrirChat(id, titulo, foto, grupo) {
     limparSelecaoMensagem();
