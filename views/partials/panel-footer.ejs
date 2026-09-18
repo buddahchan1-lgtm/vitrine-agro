@@ -1228,7 +1228,7 @@
     article.dataset.msgId = m.id;
      article.innerHTML = `
       <div class="flex items-start gap-3">
-        <span class="${podeEditar ? 'btn-selecionar-mural cursor-pointer' : ''}">${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}</span>
+        ${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
             <span class="flex min-w-0 items-center gap-1.5">
@@ -1242,25 +1242,20 @@
           ${m.editado_em ? '<p class="mt-1 text-xs font-medium text-slate-400">editado</p>' : ''}
         </div>
       </div>
-      `;
+      ${podeEditar ? `<button type="button" class="overlay-selecionar-mural absolute inset-0 rounded-2xl bg-transparent" aria-label="Selecionar aviso"></button>` : ''}
+    `;
     if (podeEditar) {
-      anexarMenuContexto(article, () => alternarSelecaoMural(m, article));
-      const btnFoto = article.querySelector('.btn-selecionar-mural');
-      if (btnFoto) {
-        btnFoto.addEventListener('click', (e) => {
+      const overlay = article.querySelector('.overlay-selecionar-mural');
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           alternarSelecaoMural(m, article);
         });
       }
-      article.addEventListener('click', () => {
-        if (Date.now() - ultimoToqueLongoEm < 400) return;
-        if (mensagensSelecionadas.size > 0) alternarSelecaoMural(m, article);
-      });
     }
     return article;
   }
-
   async function carregarMural() {
     const data = await apiFetch('/painel/mensagens', undefined, 'Não foi possível carregar o mural.');
     if (!data) return;
@@ -1528,6 +1523,8 @@
   function iniciarEdicaoMural(alvo) {
     const article = alvo.elHighlight;
     const textoEl = article.querySelector('[data-msg-texto]');
+    const overlayEdicao = article.querySelector('.overlay-selecionar-mural');
+    if (overlayEdicao) overlayEdicao.style.display = 'none';
     const original = alvo.textoAtual;
 
     const textarea = document.createElement('textarea');
@@ -1590,6 +1587,8 @@
  function iniciarEdicaoChat(alvo) {
     const bolha = chatMensagens.querySelector(`[data-msg-id="${alvo.id}"] [data-msg-texto]`);
     if (!bolha) return;
+    const overlayEdicao = chatMensagens.querySelector(`[data-msg-id="${alvo.id}"] .overlay-selecionar-msg`);
+    if (overlayEdicao) overlayEdicao.style.display = 'none';
     const original = alvo.textoAtual;
 
     const textarea = document.createElement('textarea');
@@ -1883,20 +1882,14 @@
   function renderChatMensagens(mensagens) {
     chatMensagens.innerHTML = mensagens.map((m) => {
       const minha = m.remetente_id === meuId;
-      const botaoOpcoes = `
-        <button type="button" class="btn-opcoes-msg shrink-0 self-end flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100" aria-label="Selecionar mensagem">
-          <span class="block h-5 w-5 rounded-full border-2 border-current"></span>
-        </button>
-      `;
       return `
-        <div class="flex w-full min-w-0 items-end gap-1 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
-          ${minha ? botaoOpcoes : ''}
-          <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-500 text-white' : 'bg-slate-100 text-slate-800'}">
+        <div class="flex w-full min-w-0 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
+          <div class="relative max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-500 text-white' : 'bg-slate-100 text-slate-800'}">
             ${!minha ? `<p class="mb-1 text-sm font-bold text-agro-700">${escapeHtml(m.remetente_nome)}</p>` : ''}
             <p class="whitespace-pre-wrap break-words [overflow-wrap:anywhere] bolha-msg" data-msg-texto>${escapeHtml(m.texto)}</p>
             <p class="mt-1 text-right text-xs font-medium ${minha ? 'text-white/70' : 'text-slate-400'}">${horaMinuto(m.criado_em)}${m.editado_em ? ' · editado' : ''}</p>
+            <button type="button" class="overlay-selecionar-msg absolute inset-0 rounded-2xl bg-transparent" aria-label="Selecionar mensagem"></button>
           </div>
-          ${!minha ? botaoOpcoes : ''}
         </div>
       `;
     }).join('');
@@ -1910,82 +1903,17 @@
     chatMensagens.scrollTop = chatMensagens.scrollHeight;
   }
 
-  // Seleção de mensagens do chat via delegação: um único conjunto de
-  // listeners no contêiner inteiro, que descobre qual mensagem foi
-  // tocada com closest() a partir do ponto exato do toque. Isso cobre
-  // a linha da mensagem por completo (topo, meio, embaixo, laterais),
-  // em vez de depender da área exata de um elemento específico — que
-  // no celular real só respondia bem na primeira linha da bolha.
-  (function configurarSelecaoChatPorDelegacao() {
-    let pressTimer = null;
-    let inicioX = 0, inicioY = 0;
-
-    function pegarWrapAlvo(e) {
-      return e.target.closest('[data-msg-id]');
-    }
-
-    function dispararSelecao(wrap) {
-      const id = Number(wrap.dataset.msgId);
-      const msg = ultimasMensagensChat.find((m) => m.id === id);
-      if (!msg) return;
-      alternarSelecaoChat(msg, wrap);
-    }
-
-    chatMensagens.addEventListener('contextmenu', (e) => {
-      const wrap = pegarWrapAlvo(e);
-      if (!wrap) return;
-      e.preventDefault();
-      e.stopPropagation();
-      if (Date.now() - ultimoToqueLongoEm < 600) return;
-      dispararSelecao(wrap);
-    });
-
-    chatMensagens.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'mouse') return;
-      if (e.target.closest('.btn-opcoes-msg')) return; // botão de opções cuida disso via click
-      const wrap = pegarWrapAlvo(e);
-      if (!wrap) return;
-      if (e.cancelable) e.preventDefault();
-      inicioX = e.clientX;
-      inicioY = e.clientY;
-      try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
-      pressTimer = setTimeout(() => {
-        pressTimer = null;
-        ultimoToqueLongoEm = Date.now();
-        dispararSelecao(wrap);
-      }, 500);
-    });
-
-    const cancelarToque = (e) => {
-      if (!pressTimer) return;
-      if (e && e.type === 'pointermove') {
-        const dx = Math.abs(e.clientX - inicioX);
-        const dy = Math.abs(e.clientY - inicioY);
-        if (dx < 10 && dy < 10) return;
-      }
-      clearTimeout(pressTimer);
-      pressTimer = null;
-    };
-    chatMensagens.addEventListener('pointerup', cancelarToque);
-    chatMensagens.addEventListener('pointercancel', cancelarToque);
-    chatMensagens.addEventListener('pointermove', cancelarToque);
-
-    chatMensagens.addEventListener('click', (e) => {
-      const btnOpcoes = e.target.closest('.btn-opcoes-msg');
-      if (btnOpcoes) {
-        e.preventDefault();
-        e.stopPropagation();
-        const wrap = btnOpcoes.closest('[data-msg-id]');
-        if (wrap) dispararSelecao(wrap);
-        return;
-      }
-      if (Date.now() - ultimoToqueLongoEm < 400) return;
-      if (!mensagensSelecionadas.size) return;
-      const wrap = pegarWrapAlvo(e);
-      if (!wrap) return;
-      dispararSelecao(wrap);
-    });
-  })();
+  // Clique simples no botão invisível que cobre a bolha inteira.
+  chatMensagens.addEventListener('click', (e) => {
+    const overlay = e.target.closest('.overlay-selecionar-msg');
+    if (!overlay) return;
+    const wrap = overlay.closest('[data-msg-id]');
+    if (!wrap) return;
+    const id = Number(wrap.dataset.msgId);
+    const msg = ultimasMensagensChat.find((m) => m.id === id);
+    if (!msg) return;
+    alternarSelecaoChat(msg, wrap);
+  });
 
   async function abrirChat(id, titulo, foto, grupo) {
     limparSelecaoMensagem();
