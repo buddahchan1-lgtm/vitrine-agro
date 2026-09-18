@@ -623,16 +623,6 @@
               }
             }
 
-            } finally {
-                btnMarcarTodosVendidos.dataset.busy = '0';
-                btnMarcarTodosVendidos.disabled = false;
-                btnMarcarTodosVendidos.textContent = btnMarcarTodosVendidos.dataset.textoOriginal || 'Marcar todos vendidos';
-              }
-            }
-
-            if (btnMarcarTodosVendidos) {
-              btnMarcarTodosVendidos.addEventListener('click', function () {
-
             if (btnMarcarTodosVendidos) {
               btnMarcarTodosVendidos.addEventListener('click', function () {
                 vaMostrarConfirmacao(
