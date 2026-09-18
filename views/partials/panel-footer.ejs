@@ -1885,13 +1885,14 @@
       `;
     }).join('');
 
-     // Guarda a lista atual para a delegação de eventos usar (ver mais
+    // Guarda a lista atual para a delegação de eventos usar (ver mais
     // abaixo), já que agora os toques são tratados no contêiner, não
     // em cada mensagem individualmente.
     ultimasMensagensChat = mensagens;
 
     // Sempre mostra a mensagem mais recente (parte de baixo) ao carregar ou enviar.
     chatMensagens.scrollTop = chatMensagens.scrollHeight;
+  }
 
   // Seleção de mensagens do chat via delegação: um único conjunto de
   // listeners no contêiner inteiro, que descobre qual mensagem foi
