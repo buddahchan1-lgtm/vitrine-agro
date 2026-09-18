@@ -50,7 +50,7 @@
             </button>
           <% } else { %>
 
-            <button type="button" class="produto-comentar-btn relative flex h-48 flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/60 p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" data-produto-id="<%= produto.id %>" data-produto-nome="<%= produto.nome %>" data-interesses="<%= produto.total_interesses || 0 %>">
+            <button type="button" class="produto-comentar-btn relative flex h-48 flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100/60 p-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md cursor-default" data-produto-id="<%= produto.id %>" data-produto-nome="<%= produto.nome %>" data-interesses="<%= produto.total_interesses || 0 %>">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-2 text-emerald-500"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
               <span class="produto-destaque-badge mb-1 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-lg ring-2 ring-white/70 <%= produto.mais_cobicado ? '' : 'hidden' %>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -406,6 +406,7 @@ comentarioTextoInput.addEventListener('keydown', (e) => {
   }
 
   document.querySelectorAll('.produto-comentar-btn').forEach((btn) => {
+    if (!btn.dataset.produtoImagem) return; // sem imagem: só o hover com o "destaque", sem abrir comentários
     btn.addEventListener('click', () => abrirComentarios(btn.dataset.produtoId, btn.dataset.produtoNome, btn.dataset.produtoImagem));
   });
 
