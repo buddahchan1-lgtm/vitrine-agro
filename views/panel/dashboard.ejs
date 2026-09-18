@@ -3,6 +3,19 @@
 
      <style>
        html, body { overflow-x: hidden; max-width: 100vw; }
+
+       /* Só no celular: some com o texto do aviso dentro do quadradinho
+          do dia e centraliza a bolinha embaixo do número, em vez de
+          deixar ela espremida no canto. */
+       @media (max-width: 640px) {
+         .aviso-label { display: none !important; }
+         .aviso-badge {
+           right: 50% !important;
+           top: auto !important;
+           bottom: 4px !important;
+           transform: translateX(50%);
+         }
+       }
      </style>
 
      <div class="space-y-6 max-w-full overflow-x-hidden flex flex-col" data-sou-admin="<%= currentUser.tipo_acesso === 'admin' ? 'true' : 'false' %>">
@@ -294,12 +307,12 @@
 
            if (temAviso) {
               const badge = document.createElement('span');
-              badge.className = 'absolute right-1 top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-agro-600 px-1 text-[11px] font-bold text-white shadow-sm';
+              badge.className = 'aviso-badge absolute right-1 top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-agro-600 px-1 text-[11px] font-bold text-white shadow-sm';
               badge.textContent = avisosDoDia.length > 9 ? '9+' : avisosDoDia.length;
               celula.appendChild(badge);
 
               const labelAviso = document.createElement('span');
-              labelAviso.className = 'mt-1 hidden pr-4 text-[11px] font-semibold leading-snug sm:block ' +
+              labelAviso.className = 'aviso-label mt-1 hidden pr-4 text-[11px] font-semibold leading-snug sm:block ' +
               (ehDoMesAtual ? 'text-agro-700' : 'text-slate-400');
               labelAviso.style.cssText = 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;';
               labelAviso.textContent = avisosDoDia.length > 1 ? avisosDoDia.length + ' avisos' : avisosDoDia[0].titulo;
