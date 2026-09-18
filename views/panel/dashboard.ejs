@@ -51,7 +51,7 @@
                   <span class="text-xs font-semibold">Ir para</span>
                 </button>
 
-                <div id="calMesBuscarPainel" class="hidden absolute left-1/2 top-full z-20 mt-2 w-80 -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-96">
+                <div id="calMesBuscarPainel" class="hidden fixed z-20 w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-96">
                   <div class="flex items-center justify-between">
                     <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Ir para um mês</p>
                     <button type="button" id="calMesBuscarHoje" class="text-xs font-semibold text-agro-700 hover:underline">Ir para hoje</button>
@@ -366,15 +366,45 @@
           selectAno.appendChild(opt);
         }
 
+        function posicionarPainelMes() {
+          const rectBtn = painelBtn.getBoundingClientRect();
+
+          // Mede a largura real do painel (varia entre celular e telas maiores)
+          // sem deixar ele piscar visível na posição errada antes de calcular.
+          painel.style.visibility = 'hidden';
+          painel.classList.remove('hidden');
+          const larguraPainel = painel.offsetWidth;
+          const alturaPainel = painel.offsetHeight;
+          painel.classList.add('hidden');
+          painel.style.visibility = '';
+
+          let left = rectBtn.left + rectBtn.width / 2 - larguraPainel / 2;
+          if (left + larguraPainel > window.innerWidth - 12) left = window.innerWidth - larguraPainel - 12;
+          if (left < 12) left = 12;
+
+          let top = rectBtn.bottom + 8;
+          if (top + alturaPainel > window.innerHeight - 12) top = rectBtn.top - alturaPainel - 8;
+          if (top < 12) top = 12;
+
+          painel.style.left = left + 'px';
+          painel.style.top = top + 'px';
+        }
+
         painelBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           selectMes.value = dataAtual.getMonth();
           selectAno.value = dataAtual.getFullYear();
+          const abrindo = painel.classList.contains('hidden');
+          if (abrindo) posicionarPainelMes();
           painel.classList.toggle('hidden');
+        });
+        window.addEventListener('resize', () => {
+          if (!painel.classList.contains('hidden')) posicionarPainelMes();
         });
         document.addEventListener('click', (e) => {
           if (!painel.contains(e.target) && e.target !== painelBtn) painel.classList.add('hidden');
         });
+
         document.getElementById('calMesBuscarAplicar').addEventListener('click', () => {
           dataAtual = new Date(Number(selectAno.value), Number(selectMes.value), 1);
           renderizarCalendario();
