@@ -169,6 +169,12 @@ async function initDatabase() {
       mensagem_id INTEGER NOT NULL REFERENCES mensagens(id) ON DELETE CASCADE,
       PRIMARY KEY (usuario_id, mensagem_id)
     );
+
+    CREATE TABLE IF NOT EXISTS produtos_notificacao_vistos (
+      usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      produto_id INTEGER NOT NULL REFERENCES produtos(id) ON DELETE CASCADE,
+      PRIMARY KEY (usuario_id, produto_id)
+    );
   `);
 
   const row = await dbGet('SELECT COUNT(*) AS total FROM usuarios');
@@ -250,17 +256,21 @@ async function marcarMuralNotificacaoVista(usuarioId, mensagemId) {
 // ---------------------------------------------------------------------
 
 async function getProdutosNotificacoes(usuarioId) {
-  const leitura = await dbGet('SELECT ultima_leitura_em FROM leituras_notificacoes_produtos WHERE usuario_id = $1', [usuarioId]);
-  const ultimaLeituraEm = leitura ? leitura.ultima_leitura_em : '1970-01-01 00:00:00';
+  // Cada produto só some da lista quando o próprio produto é marcado
+  // como visto (clique na notificação) — não mais todos de uma vez
+  // ao abrir o sino.
   return dbAll(`
     SELECT p.id, p.nome AS produto_nome, p.produtor_id, p.criado_em,
            u.nome AS produtor_nome, u.foto AS produtor_foto
     FROM produtos p
     JOIN usuarios u ON u.id = p.produtor_id
-    WHERE p.criado_em IS NOT NULL AND p.criado_em > $1
+    WHERE p.criado_em IS NOT NULL
+      AND p.id NOT IN (
+        SELECT produto_id FROM produtos_notificacao_vistos WHERE usuario_id = $1
+      )
     ORDER BY p.criado_em DESC
     LIMIT 30
-  `, [ultimaLeituraEm]);
+  `, [usuarioId]);
 }
 
 async function marcarProdutosNotificacoesLidas(usuarioId) {
@@ -269,6 +279,13 @@ async function marcarProdutosNotificacoesLidas(usuarioId) {
     VALUES ($1, CURRENT_TIMESTAMP)
     ON CONFLICT(usuario_id) DO UPDATE SET ultima_leitura_em = CURRENT_TIMESTAMP
   `, [usuarioId]);
+}
+
+async function marcarProdutoNotificacaoVisto(usuarioId, produtoId) {
+  await dbRun(
+    'INSERT INTO produtos_notificacao_vistos (usuario_id, produto_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+    [usuarioId, produtoId]
+  );
 }
 
 // ---------------------------------------------------------------------
@@ -898,6 +915,7 @@ module.exports = {
   marcarMuralNotificacaoVista,
   getProdutosNotificacoes,
   marcarProdutosNotificacoesLidas,
+  marcarProdutoNotificacaoVisto,
   getContatos,
   getOuCriarConversaIndividual,
   criarConversaGrupo,
