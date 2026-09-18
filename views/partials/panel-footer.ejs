@@ -1024,6 +1024,7 @@ document.getElementById('confirmExtraBtn').addEventListener('click', () => {
         </span>
       `;
       item.addEventListener('click', () => iniciarConversaCom(p.id, p.nome, p.foto));
+      anexarMenuContexto(item, (e, ponto) => abrirMenuConversaContexto(ponto, { ...p, semConversa: true }));
       container.appendChild(item);
     });
     return container;
@@ -1167,18 +1168,28 @@ if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.lengt
 
   function abrirMenuConversaContexto(ponto, conversa) {
     alvoMenuConversa = conversa;
-   txtMenuFixarConversa.textContent = conversa.fixada ? 'Desafixar' : 'Fixar';
-    txtMenuArquivarConversa.textContent = conversa.arquivada ? 'Desarquivar' : 'Arquivar';
+    const semConversa = !!conversa.semConversa;
 
-    const outroParticipante = conversa.participantes && conversa.participantes[0];
-    const conversaComAdmin = !conversa.grupo && outroParticipante && contatosCache.some((p) => p.id === outroParticipante.id && p.tipo_acesso === 'admin');
-    btnMenuExcluirConversa.classList.toggle('hidden', conversaComAdmin && !souAdmin);
+    btnMenuFixarConversa.classList.toggle('hidden', semConversa);
+    btnMenuArquivarConversa.classList.toggle('hidden', semConversa);
+    btnMenuExcluirConversa.querySelector('span').textContent = semConversa ? 'Apagar contato' : 'Excluir contato';
 
-    const iconFixar = document.getElementById('iconMenuFixar');
-    if (iconFixar) {
-      iconFixar.setAttribute('fill', conversa.fixada ? 'currentColor' : 'none');
-      iconFixar.classList.toggle('text-agro-600', conversa.fixada);
-      iconFixar.classList.toggle('text-slate-500', !conversa.fixada);
+    if (semConversa) {
+      btnMenuExcluirConversa.classList.remove('hidden');
+    } else {
+      txtMenuFixarConversa.textContent = conversa.fixada ? 'Desafixar' : 'Fixar';
+      txtMenuArquivarConversa.textContent = conversa.arquivada ? 'Desarquivar' : 'Arquivar';
+
+      const outroParticipante = conversa.participantes && conversa.participantes[0];
+      const conversaComAdmin = !conversa.grupo && outroParticipante && contatosCache.some((p) => p.id === outroParticipante.id && p.tipo_acesso === 'admin');
+      btnMenuExcluirConversa.classList.toggle('hidden', conversaComAdmin && !souAdmin);
+
+      const iconFixar = document.getElementById('iconMenuFixar');
+      if (iconFixar) {
+        iconFixar.setAttribute('fill', conversa.fixada ? 'currentColor' : 'none');
+        iconFixar.classList.toggle('text-agro-600', conversa.fixada);
+        iconFixar.classList.toggle('text-slate-500', !conversa.fixada);
+      }
     }
 
     const menuLargura = 192;
@@ -1226,11 +1237,25 @@ if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.lengt
     if (data && data.success) carregarConversas();
   });
 
-  btnMenuExcluirConversa.addEventListener('click', async () => {
+  btnMenuExcluirConversa.addEventListener('click', () => {
     if (!alvoMenuConversa) return;
-    const conversa = alvoMenuConversa;
+    const alvo = alvoMenuConversa;
     menuConversaContexto.classList.add('hidden');
     alvoMenuConversa = null;
+
+    if (alvo.semConversa) {
+      showConfirm('Apagar contato?', 'Esse contato não vai aparecer mais na lista de mensagens.', async () => {
+        const data = await apiFetch(`/painel/contatos/${alvo.id}/ocultar`, { method: 'POST' }, 'Não foi possível apagar esse contato.');
+        if (data && data.success) {
+          contatosCache = contatosCache.filter((c) => c.id !== alvo.id);
+          const busca = document.getElementById('buscarContatoInput');
+          renderListaConversas(busca ? busca.value : '');
+        }
+      });
+      return;
+    }
+
+    const conversa = alvo;
     showConfirm(
       'Excluir contato?',
       'Essa conversa vai sumir da sua lista. Se conversarem de novo, começa do zero.',
