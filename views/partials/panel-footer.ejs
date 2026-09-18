@@ -914,6 +914,7 @@
 
    let contatosCache = [];
   let conversasCache = [];
+  let avataresCache = {}; // { usuarioId: foto } — carregado uma vez, evita foto repetida em cada mensagem do mural
   let conversaAtual = null; // { id, nome, grupo, foto }
   let abaAntesDoChat = 'mural';
   let menuContextoAlvo = null; // { tipo: 'mural'|'privado', id, conversaId, textoAtual }
@@ -1233,6 +1234,13 @@
     renderListaConversas(e.target.value);
   });
 
+  async function carregarAvataresSeNecessario() {
+    if (Object.keys(avataresCache).length) return; // já carregado nesta sessão
+    const data = await apiFetch('/painel/avatares', undefined, 'Não foi possível carregar as fotos.');
+    if (!data) return;
+    (data.avatares || []).forEach((u) => { avataresCache[u.id] = u.foto; });
+  }
+
   // ---- Mural (dentro do modal) ----
   function renderMensagemMural(m) {
     const podeEditar = souAdmin;
@@ -1242,7 +1250,7 @@
     article.dataset.msgId = m.id;
      article.innerHTML = `
       <div class="flex items-start gap-3">
-        ${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}
+        ${avatarHtml(avataresCache[m.remetente_id], m.remetente_nome, 'h-10 w-10')}
         <div class="min-w-0 flex-1">
           <div class="flex items-center justify-between gap-2">
             <span class="flex min-w-0 items-center gap-1.5">
@@ -1703,10 +1711,11 @@
     btn.addEventListener('click', () => ativarAbaMsg(btn.dataset.abaMsg));
   });
 
-  btnAbrir.addEventListener('click', (e) => {
+  btnAbrir.addEventListener('click', async (e) => {
     e.stopPropagation();
     modalMensagens.classList.remove('hidden');
     mostrarTelaLista();
+    await carregarAvataresSeNecessario();
     ativarAbaMsg('mural');
   });
   btnFecharMensagens.addEventListener('click', fecharCentralMensagens);
