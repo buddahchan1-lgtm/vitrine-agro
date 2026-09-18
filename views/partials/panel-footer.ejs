@@ -240,7 +240,7 @@
       <button type="button" id="confirmCancelBtn" class="flex-1 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 py-2.5 text-sm font-bold transition">Cancelar</button>
       <button type="button" id="confirmOkBtn" class="flex-1 rounded-2xl bg-agro-600 hover:bg-agro-700 py-2.5 text-sm font-bold text-white transition">Excluir</button>
     </div>
-    <button type="button" id="confirmExtraBtn" class="hidden w-full rounded-2xl border-2 border-rose-200 text-rose-600 hover:bg-rose-50 py-2.5 text-sm font-bold transition">Excluir e apagar contato</button>
+    
   </div>
 </div>
 
@@ -273,37 +273,22 @@
 
   // Confirmação estilizada (substitui o confirm() nativo do navegador para excluir mensagens).
   let _confirmCallback = null;
-let _confirmExtraCallback = null;
-function showConfirm(title, message, onConfirm, extra) {
-  document.getElementById('confirmTitle').innerText = title;
-  document.getElementById('confirmMessage').innerText = message;
-  _confirmCallback = onConfirm;
-  _confirmExtraCallback = extra ? extra.onConfirm : null;
-  const extraBtn = document.getElementById('confirmExtraBtn');
-  if (extra) {
-    extraBtn.textContent = extra.label;
-    extraBtn.classList.remove('hidden');
-  } else {
-    extraBtn.classList.add('hidden');
+  function showConfirm(title, message, onConfirm) {
+    document.getElementById('confirmTitle').innerText = title;
+    document.getElementById('confirmMessage').innerText = message;
+    _confirmCallback = onConfirm;
+    document.getElementById('confirmModal').classList.remove('hidden');
   }
-  document.getElementById('confirmModal').classList.remove('hidden');
-}
-function closeConfirmModal() {
-  document.getElementById('confirmModal').classList.add('hidden');
-  _confirmCallback = null;
-  _confirmExtraCallback = null;
-}
-document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmModal);
-document.getElementById('confirmOkBtn').addEventListener('click', () => {
-  const cb = _confirmCallback;
-  closeConfirmModal();
-  if (cb) cb();
-});
-document.getElementById('confirmExtraBtn').addEventListener('click', () => {
-  const cb = _confirmExtraCallback;
-  closeConfirmModal();
-  if (cb) cb();
-});
+  function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+    _confirmCallback = null;
+  }
+ document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirmModal);
+  document.getElementById('confirmOkBtn').addEventListener('click', () => {
+    const cb = _confirmCallback;
+    closeConfirmModal();
+    if (cb) cb();
+  });
 
  // Menu de configurações (engrenagem)
   const btnAbrirConfig = document.getElementById('btnAbrirConfig');
@@ -1024,7 +1009,6 @@ document.getElementById('confirmExtraBtn').addEventListener('click', () => {
         </span>
       `;
       item.addEventListener('click', () => iniciarConversaCom(p.id, p.nome, p.foto));
-      anexarMenuContexto(item, (e, ponto) => abrirMenuConversaContexto(ponto, { ...p, semConversa: true }));
       container.appendChild(item);
     });
     return container;
@@ -1168,28 +1152,21 @@ if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.lengt
 
   function abrirMenuConversaContexto(ponto, conversa) {
     alvoMenuConversa = conversa;
-    const semConversa = !!conversa.semConversa;
+    txtMenuFixarConversa.textContent = conversa.fixada ? 'Desafixar' : 'Fixar';
+    txtMenuArquivarConversa.textContent = conversa.arquivada ? 'Desarquivar' : 'Arquivar';
 
-    btnMenuFixarConversa.classList.toggle('hidden', semConversa);
-    btnMenuArquivarConversa.classList.toggle('hidden', semConversa);
-    btnMenuExcluirConversa.querySelector('span').textContent = semConversa ? 'Apagar contato' : 'Excluir contato';
+    // Admin nunca exclui contato por aqui: o produtor já aparece sozinho
+    // na lista, e se a conta dele for apagada em Produtores, ele some
+    // automaticamente. E o produtor nunca exclui o contato de um admin.
+    const outroParticipante = conversa.participantes && conversa.participantes[0];
+    const conversaComAdmin = !conversa.grupo && outroParticipante && contatosCache.some((p) => p.id === outroParticipante.id && p.tipo_acesso === 'admin');
+    btnMenuExcluirConversa.classList.toggle('hidden', souAdmin || conversaComAdmin);
 
-    if (semConversa) {
-      btnMenuExcluirConversa.classList.remove('hidden');
-    } else {
-      txtMenuFixarConversa.textContent = conversa.fixada ? 'Desafixar' : 'Fixar';
-      txtMenuArquivarConversa.textContent = conversa.arquivada ? 'Desarquivar' : 'Arquivar';
-
-      const outroParticipante = conversa.participantes && conversa.participantes[0];
-      const conversaComAdmin = !conversa.grupo && outroParticipante && contatosCache.some((p) => p.id === outroParticipante.id && p.tipo_acesso === 'admin');
-      btnMenuExcluirConversa.classList.toggle('hidden', conversaComAdmin && !souAdmin);
-
-      const iconFixar = document.getElementById('iconMenuFixar');
-      if (iconFixar) {
-        iconFixar.setAttribute('fill', conversa.fixada ? 'currentColor' : 'none');
-        iconFixar.classList.toggle('text-agro-600', conversa.fixada);
-        iconFixar.classList.toggle('text-slate-500', !conversa.fixada);
-      }
+    const iconFixar = document.getElementById('iconMenuFixar');
+    if (iconFixar) {
+      iconFixar.setAttribute('fill', conversa.fixada ? 'currentColor' : 'none');
+      iconFixar.classList.toggle('text-agro-600', conversa.fixada);
+      iconFixar.classList.toggle('text-slate-500', !conversa.fixada);
     }
 
     const menuLargura = 192;
@@ -1237,44 +1214,15 @@ if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.lengt
     if (data && data.success) carregarConversas();
   });
 
-  btnMenuExcluirConversa.addEventListener('click', () => {
+  btnMenuExcluirConversa.addEventListener('click', async () => {
     if (!alvoMenuConversa) return;
-    const alvo = alvoMenuConversa;
+    const conversa = alvoMenuConversa;
     menuConversaContexto.classList.add('hidden');
     alvoMenuConversa = null;
-
-    if (alvo.semConversa) {
-      showConfirm('Apagar contato?', 'Esse contato não vai aparecer mais na lista de mensagens.', async () => {
-        const data = await apiFetch(`/painel/contatos/${alvo.id}/ocultar`, { method: 'POST' }, 'Não foi possível apagar esse contato.');
-        if (data && data.success) {
-          contatosCache = contatosCache.filter((c) => c.id !== alvo.id);
-          const busca = document.getElementById('buscarContatoInput');
-          renderListaConversas(busca ? busca.value : '');
-        }
-      });
-      return;
-    }
-
-    const conversa = alvo;
-    showConfirm(
-      'Excluir contato?',
-      'Essa conversa vai sumir da sua lista. Se conversarem de novo, começa do zero.',
-      async () => {
-        const data = await apiFetch(`/painel/conversas/${conversa.id}/excluir-contato`, { method: 'POST' }, 'Não foi possível excluir esse contato.');
-        if (data && data.success) carregarConversas();
-      },
-      {
-        label: 'Excluir e apagar contato',
-        onConfirm: async () => {
-          const data = await apiFetch(`/painel/conversas/${conversa.id}/excluir-contato`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ apagarContato: true })
-          }, 'Não foi possível apagar esse contato.');
-          if (data && data.success) carregarConversas();
-        }
-      }
-    );
+    showConfirm('Excluir contato?', 'Esse contato vai ser apagado definitivamente da sua lista de mensagens.', async () => {
+      const data = await apiFetch(`/painel/conversas/${conversa.id}/excluir-contato`, { method: 'POST' }, 'Não foi possível excluir esse contato.');
+      if (data && data.success) carregarConversas();
+    });
   });
 
   async function carregarConversas() {
