@@ -994,9 +994,9 @@
     return (str || '').replace(/\D/g, '');
   }
 
-  function renderContatosAdminFixos(admins) {
+  function renderContatosFixos(pessoas) {
     const container = document.createElement('div');
-    admins.forEach((p) => {
+    pessoas.forEach((p) => {
       const item = document.createElement('button');
       item.type = 'button';
       item.className = 'flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-agro-50 border-b border-slate-100 bg-agro-50/40';
@@ -1004,7 +1004,7 @@
         ${avatarHtml(p.foto, p.nome, 'h-14 w-14')}
         <span class="min-w-0 flex-1">
           <span class="block truncate text-lg font-bold text-slate-900">${escapeHtml(p.nome)}</span>
-          <span class="block text-sm font-bold uppercase tracking-wide text-agro-700">Gestor a</span>
+          <span class="block text-sm font-bold uppercase tracking-wide text-agro-700">${p.tipo_acesso === 'admin' ? 'Gestor a' : 'Produtor a'}</span>
         </span>
       `;
       item.addEventListener('click', () => iniciarConversaCom(p.id, p.nome, p.foto));
@@ -1064,8 +1064,8 @@
     const idsComConversaIndividual = new Set(
       conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
     );
-    const adminsFixos = filtroConversaAtual === 'tudo'
-      ? contatosCache.filter((p) => p.tipo_acesso === 'admin' && !idsComConversaIndividual.has(p.id))
+    const contatosFixos = filtroConversaAtual === 'tudo'
+      ? contatosCache.filter((p) => (souAdmin ? p.tipo_acesso !== 'admin' : p.tipo_acesso === 'admin') && !idsComConversaIndividual.has(p.id))
       : [];
 
     vaziaEl.classList.add('hidden');
@@ -1092,17 +1092,17 @@
       });
     }
 
-    if (adminsFixos.length) {
-      listaEl.appendChild(renderContatosAdminFixos(adminsFixos));
-    }
+    if (contatosFixos.length) {
+  listaEl.appendChild(renderContatosFixos(contatosFixos));
+}
 
-    if (contatosCache.length && filtroConversaAtual === 'tudo' && termoPreenchido) {
-      listaEl.appendChild(renderContatosFiltrados(termoBusca));
-    }
+if (contatosCache.length && filtroConversaAtual === 'tudo' && termoPreenchido) {
+  listaEl.appendChild(renderContatosFiltrados(termoBusca));
+}
 
-    if (!conversasFiltradas.length && !adminsFixos.length && !(contatosCache.length && filtroConversaAtual === 'tudo' && termoPreenchido)) {
-      vaziaEl.classList.remove('hidden');
-    }
+if (!conversasFiltradas.length && !contatosFixos.length && !(contatosCache.length && filtroConversaAtual === 'tudo' && termoPreenchido)) {
+  vaziaEl.classList.remove('hidden');
+}
   }
 
     function ativarFiltroConversa(filtro) {
