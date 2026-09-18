@@ -1004,7 +1004,7 @@
     if (!termoDigitos) return container;
 
     const idsComConversaIndividual = new Set(
-      conversasCache.filter((c) => !c.grupo && !c.arquivada && c.participantes[0]).map((c) => c.participantes[0].id)
+      conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
     );
     const filtrados = contatosCache.filter((p) => p.whatsapp && somenteDigitos(p.whatsapp) === termoDigitos && !idsComConversaIndividual.has(p.id));
 
@@ -1047,7 +1047,7 @@
 
     const termoPreenchido = !!(termoBusca && termoBusca.trim());
     const idsComConversaIndividual = new Set(
-      conversasCache.filter((c) => !c.grupo && !c.arquivada && c.participantes[0]).map((c) => c.participantes[0].id)
+      conversasCache.filter((c) => !c.grupo && c.participantes[0]).map((c) => c.participantes[0].id)
     );
     const adminsFixos = filtroConversaAtual === 'tudo'
       ? contatosCache.filter((p) => p.tipo_acesso === 'admin' && !idsComConversaIndividual.has(p.id))
