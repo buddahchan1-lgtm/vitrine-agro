@@ -1226,7 +1226,7 @@
     const article = document.createElement('article');
     article.className = `relative rounded-2xl border-2 p-4 ${ehGestora ? 'border-agro-200 bg-agro-50' : 'border-slate-200 bg-slate-50'}`;
     article.dataset.msgId = m.id;
-    article.innerHTML = `
+     article.innerHTML = `
       <div class="flex items-start gap-3">
         ${avatarHtml(m.foto, m.remetente_nome, 'h-10 w-10')}
         <div class="min-w-0 flex-1 ${podeEditar ? 'pr-8' : ''}">
@@ -1242,16 +1242,26 @@
           ${m.editado_em ? '<p class="mt-1 text-xs font-medium text-slate-400">editado</p>' : ''}
         </div>
       </div>
+      ${podeEditar ? `<button type="button" class="btn-opcoes-mural absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-black/5" aria-label="Opções do aviso">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
+      </button>` : ''}
     `;
     if (podeEditar) {
       anexarMenuContexto(article, () => alternarSelecaoMural(m, article));
+      const btnOpcoes = article.querySelector('.btn-opcoes-mural');
+      if (btnOpcoes) {
+        btnOpcoes.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          alternarSelecaoMural(m, article);
+        });
+      }
       article.addEventListener('click', () => {
         if (Date.now() - ultimoToqueLongoEm < 400) return;
         if (mensagensSelecionadas.size > 0) alternarSelecaoMural(m, article);
       });
     }
     return article;
-  }
 
   async function carregarMural() {
     const data = await apiFetch('/painel/mensagens', undefined, 'Não foi possível carregar o mural.');
@@ -1349,6 +1359,7 @@
     // de verdade, mesmo funcionando com o mouse.
     el.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse') return; // botão direito já tratado acima
+      if (e.target.closest('.btn-opcoes-mural, .btn-opcoes-msg')) return; // botão de opções cuida disso via click
       // Impede o navegador de gerar um "click" de compatibilidade
       // depois que o dedo soltar a tela. Sem isso, esse clique extra
       // caía no listener de clique da bolha e desfazia a seleção
@@ -1874,13 +1885,20 @@
   function renderChatMensagens(mensagens) {
     chatMensagens.innerHTML = mensagens.map((m) => {
       const minha = m.remetente_id === meuId;
+      const botaoOpcoes = `
+        <button type="button" class="btn-opcoes-msg shrink-0 self-end flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100" aria-label="Opções da mensagem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="19" r="2.2"/></svg>
+        </button>
+      `;
       return `
-        <div class="flex w-full min-w-0 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
-              <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-500 text-white' : 'bg-slate-100 text-slate-800'}">
+        <div class="flex w-full min-w-0 items-end gap-1 ${minha ? 'justify-end' : 'justify-start'}" data-msg-id="${m.id}">
+          ${minha ? botaoOpcoes : ''}
+          <div class="max-w-[75%] min-w-0 rounded-2xl px-5 py-3.5 text-lg leading-relaxed ${minha ? 'bg-agro-500 text-white' : 'bg-slate-100 text-slate-800'}">
             ${!minha ? `<p class="mb-1 text-sm font-bold text-agro-700">${escapeHtml(m.remetente_nome)}</p>` : ''}
             <p class="whitespace-pre-wrap break-words [overflow-wrap:anywhere] bolha-msg" data-msg-texto>${escapeHtml(m.texto)}</p>
             <p class="mt-1 text-right text-xs font-medium ${minha ? 'text-white/70' : 'text-slate-400'}">${horaMinuto(m.criado_em)}${m.editado_em ? ' · editado' : ''}</p>
           </div>
+          ${!minha ? botaoOpcoes : ''}
         </div>
       `;
     }).join('');
@@ -1926,6 +1944,7 @@
 
     chatMensagens.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse') return;
+      if (e.target.closest('.btn-opcoes-msg')) return; // botão de opções cuida disso via click
       const wrap = pegarWrapAlvo(e);
       if (!wrap) return;
       if (e.cancelable) e.preventDefault();
@@ -1954,6 +1973,14 @@
     chatMensagens.addEventListener('pointermove', cancelarToque);
 
     chatMensagens.addEventListener('click', (e) => {
+      const btnOpcoes = e.target.closest('.btn-opcoes-msg');
+      if (btnOpcoes) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wrap = btnOpcoes.closest('[data-msg-id]');
+        if (wrap) dispararSelecao(wrap);
+        return;
+      }
       if (Date.now() - ultimoToqueLongoEm < 400) return;
       if (!mensagensSelecionadas.size) return;
       const wrap = pegarWrapAlvo(e);
