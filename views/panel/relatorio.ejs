@@ -292,6 +292,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               Escolher datas
             </button>
+            <div id="meuPopoverData" class="hidden fixed z-30 w-[min(20rem,92vw)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80">
               <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Período</p>
 
               <button type="button" id="meuBtnAbrirListaDias"
@@ -757,6 +758,18 @@
   const inputDataFim = document.getElementById('periodoValorDataFim');
   const btnLimpar = document.getElementById('btnLimparPeriodo');
   const resumoTexto = document.getElementById('periodoResumoTexto');
+
+  // Essa seção só existe na visão da gestora ("Últimos lançamentos").
+  // Na visão do produtor esses elementos não existem — sem essa
+  // proteção, o forEach mais abaixo travava a página inteira.
+  if (!inputDataInicio) {
+    return {
+      onChange: () => {},
+      aplicarData: () => {},
+      aplicarDiasSelecionados: () => {},
+      diasSelecionadosAtuais: () => []
+    };
+  }
   const inputFiltroProdutor = document.getElementById('filtroProdutorInput');
   const hiddenFiltroProdutor = document.getElementById('filtroProdutor');
   const sugestoesFiltroProdutor = document.getElementById('filtroProdutorSugestoes');
