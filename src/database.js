@@ -868,8 +868,17 @@ async function editarProdutor(id, { nome, email, comunidade, foto, senhaHash }) 
 }
 
 async function excluirProdutor(id) {
-  const resultado = await dbRun(`DELETE FROM usuarios WHERE id = $1 AND tipo_acesso = 'produtor'`, [id]);
-  return resultado.changes > 0;
+    // Antes de apagar o produtor, remove as conversas INDIVIDUAIS (1 a 1)
+    // dele por inteiro. Sem isso, a conversa ficava "órfã" (só o admin
+    // como participante, sem nome nem foto) e aparecia na lista de
+    // mensagens como uma "Conversa" genérica e sem sentido.
+    await dbRun(`
+        DELETE FROM conversas
+        WHERE nome IS NULL
+          AND id IN (SELECT conversa_id FROM conversa_participantes WHERE usuario_id = $1)
+    `, [id]);
+    const resultado = await dbRun(`DELETE FROM usuarios WHERE id = $1 AND tipo_acesso = 'produtor'`, [id]);
+    return resultado.changes > 0;
 }
 
 async function criarAdministrador({ nome, email, senhaHash }) {
