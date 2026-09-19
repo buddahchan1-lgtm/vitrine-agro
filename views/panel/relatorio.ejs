@@ -111,10 +111,11 @@
   </div>
    <!-- 2. Data / Calendário -->
   <div class="relative">
-    <button type="button" id="btnAbrirData" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500">
-      📅 Escolher datas
+    <button type="button" id="btnAbrirData" class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Escolher datas
     </button>
-    <div id="popoverData" class="hidden absolute left-1/2 top-full z-30 mt-2 w-[min(20rem,92vw)] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80">
+    <div id="popoverData" class="hidden fixed z-30 w-[min(20rem,92vw)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80">
       <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Período</p>
 
       <button type="button" id="btnAbrirListaDias"
@@ -287,10 +288,10 @@
 
         <div class="mt-4 flex flex-wrap items-center gap-3" id="meuSeletorPeriodo">
           <div class="relative">
-            <button type="button" id="meuBtnAbrirData" class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500">
-              📅 Escolher datas
+            <button type="button" id="meuBtnAbrirData" class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 outline-none transition hover:border-agro-500">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Escolher datas
             </button>
-            <div id="meuPopoverData" class="hidden absolute left-0 top-full z-30 mt-2 w-[min(20rem,92vw)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl sm:w-80">
               <p class="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Período</p>
 
               <button type="button" id="meuBtnAbrirListaDias"
@@ -554,6 +555,31 @@
 
    function formatarData(d) {
     return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
+  }
+
+  // Posiciona um popover "fixed" colado no botão que o abriu, sempre
+  // dentro dos limites da tela — reaproveitado pelos dois seletores
+  // de data desta página (gestora e produtor).
+  function posicionarPopoverAncorado(botao, painel) {
+    const rectBtn = botao.getBoundingClientRect();
+
+    painel.style.visibility = 'hidden';
+    painel.classList.remove('hidden');
+    const largura = painel.offsetWidth;
+    const altura = painel.offsetHeight;
+    painel.classList.add('hidden');
+    painel.style.visibility = '';
+
+    let left = rectBtn.left;
+    if (left + largura > window.innerWidth - 12) left = window.innerWidth - largura - 12;
+    if (left < 12) left = 12;
+
+    let top = rectBtn.bottom + 8;
+    if (top + altura > window.innerHeight - 12) top = rectBtn.top - altura - 8;
+    if (top < 12) top = 12;
+
+    painel.style.left = left + 'px';
+    painel.style.top = top + 'px';
   }
 
 
@@ -873,8 +899,16 @@
 
     btnAbrirData.addEventListener('click', (e) => {
       e.stopPropagation();
+      const abrindo = popoverData.classList.contains('hidden');
+      if (abrindo) posicionarPopoverAncorado(btnAbrirData, popoverData);
       popoverData.classList.toggle('hidden');
     });
+    window.addEventListener('resize', () => {
+      if (!popoverData.classList.contains('hidden')) posicionarPopoverAncorado(btnAbrirData, popoverData);
+    });
+    window.addEventListener('scroll', () => {
+      if (!popoverData.classList.contains('hidden')) posicionarPopoverAncorado(btnAbrirData, popoverData);
+    }, true);
 
     document.addEventListener('click', (e) => {
       if (!popoverData.contains(e.target) && e.target !== btnAbrirData) {
@@ -1779,13 +1813,22 @@
     if (btnAbrirData && popoverData) {
       btnAbrirData.addEventListener('click', (e) => {
         e.stopPropagation();
+        const abrindo = popoverData.classList.contains('hidden');
+        if (abrindo) posicionarPopoverAncorado(btnAbrirData, popoverData);
         popoverData.classList.toggle('hidden');
       });
+      window.addEventListener('resize', () => {
+        if (!popoverData.classList.contains('hidden')) posicionarPopoverAncorado(btnAbrirData, popoverData);
+      });
+      window.addEventListener('scroll', () => {
+        if (!popoverData.classList.contains('hidden')) posicionarPopoverAncorado(btnAbrirData, popoverData);
+      }, true);
       document.addEventListener('click', (e) => {
         if (!popoverData.contains(e.target) && e.target !== btnAbrirData) {
           popoverData.classList.add('hidden');
         }
       });
+
       if (btnConfirmarData) {
         btnConfirmarData.addEventListener('click', () => {
           aplicarFiltro();
